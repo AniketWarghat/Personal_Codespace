@@ -6,7 +6,7 @@ subprocess.run([
     "-m",
     "streamlit",
     "run",
-    "app.py",
+    "app-1.py",
     "--server.address=0.0.0.0",
     "--server.port=8501"
 ])
