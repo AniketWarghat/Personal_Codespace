@@ -619,11 +619,7 @@ with tabs[1]:
             .sort_values("Faulty Entries", ascending=False)
         )
         st.markdown("#### Summary by Surveyor")
-        st.dataframe(
-            faulty_summary.style.background_gradient(subset=["Faulty Entries"], cmap="Reds"),
-            use_container_width=True
-        )
-
+        st.dataframe(faulty_summary, use_container_width=True)
         # Detail table
         faulty_display = faulty_base[[
             "Remarks1", "Date", "start_time", "end_time",
@@ -653,12 +649,7 @@ with tabs[1]:
         ]].sort_values(["Surveyor", "Duration (sec)"])
 
         st.markdown("#### All Faulty Entries")
-        st.dataframe(
-            faulty_display.style.highlight_between(
-                subset=["Duration (sec)"], left=0, right=threshold_total_sec, color="#FFE0E0"
-            ),
-            use_container_width=True
-        )
+        st.dataframe(faulty_display, use_container_width=True)
         st.download_button(
             label="⬇️ Download Faulty Entries as CSV",
             data=faulty_display.to_csv(index=False).encode("utf-8"),
