@@ -591,11 +591,16 @@ with tabs[1]:
         return t.hour * 3600 + t.minute * 60 + t.second if t is not None else None
 
     gap_df["start_sec"] = gap_df["start_time"].apply(to_seconds)
+    gap_df["end_sec"] = gap_df["end_time"].apply(to_seconds)
     gap_df = gap_df.sort_values(["Remarks1", "Date", "start_sec"])
-    gap_df["prev_start_sec"] = gap_df.groupby(["Remarks1", "Date"])["start_sec"].shift(1)
-    gap_df["entry_gap_sec"] = gap_df["start_sec"] - gap_df["prev_start_sec"]
-    gap_df["entry_gap_mins"] = gap_df["entry_gap_sec"] / 60
 
+    # Shift end_time of previous entry per surveyor per day
+    gap_df["prev_end_sec"] = gap_df.groupby(["Remarks1", "Date"])["end_sec"].shift(1)
+
+    # Gap = current entry start − previous entry end (true idle time)
+    gap_df["entry_gap_sec"] = gap_df["start_sec"] - gap_df["prev_end_sec"]
+    gap_df["entry_gap_mins"] = gap_df["entry_gap_sec"] / 60
+ 
     faulty_base = gap_df[
         gap_df["entry_gap_sec"].notna() &
         (gap_df["entry_gap_sec"] > 0) &
