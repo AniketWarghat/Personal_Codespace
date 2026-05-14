@@ -581,11 +581,25 @@ with tabs[1]:
             unsafe_allow_html=True
         )
 
-    faulty_base = filtered_df[
-        filtered_df["Remarks1"].notna() &
-        filtered_df["survey_duration_mins"].notna() &
-        (filtered_df["survey_duration_mins"] > 0) &
-        (filtered_df["survey_duration_mins"] < threshold_mins)
+    # Compute gap between consecutive entries per surveyor
+    gap_df = filtered_df[filtered_df["Remarks1"].notna()].copy()
+    gap_df = gap_df[gap_df["start_time"].notna()]
+
+    from datetime import datetime as _dt
+    def to_seconds(t):
+        return t.hour * 3600 + t.minute * 60 + t.second if t is not None else None
+
+    gap_df["start_sec"] = gap_df["start_time"].apply(to_seconds)
+    gap_df = gap_df.sort_values(["Remarks1", "Date", "start_sec"])
+    gap_df["prev_start_sec"] = gap_df.groupby(["Remarks1", "Date"])["start_sec"].shift(1)
+    gap_df["entry_gap_sec"] = gap_df["start_sec"] - gap_df["prev_start_sec"]
+    gap_df["entry_gap_mins"] = gap_df["entry_gap_sec"] / 60
+
+    # Drop first entry of each surveyor per day (no previous entry to compare)
+    faulty_base = gap_df[
+        gap_df["entry_gap_sec"].notna() &
+        (gap_df["entry_gap_sec"] > 0) &
+        (gap_df["entry_gap_sec"] < threshold_total_sec)
     ].copy()
 
     if faulty_base.empty:
@@ -610,8 +624,8 @@ with tabs[1]:
             .agg(
                 **{
                     "Faulty Entries": ("Remarks1", "size"),
-                    "Shortest (sec)": ("survey_duration_mins", lambda x: int(round(x.min() * 60))),
-                    "Avg Faulty Duration (sec)": ("survey_duration_mins", lambda x: int(round(x.mean() * 60))),
+                    "Shortest Gap (sec)": ("entry_gap_sec", lambda x: int(round(x.min()))),
+                    "Avg Gap (sec)": ("entry_gap_sec", lambda x: int(round(x.mean()))),
                 }
             )
             .reset_index()
@@ -626,8 +640,8 @@ with tabs[1]:
             "survey_duration_mins", "3.Vehicle Type", "2.Arm details",
             "unified_origin", "unified_destination"
         ]].copy()
-        faulty_display["Duration (sec)"] = (faulty_display["survey_duration_mins"] * 60).round(0).astype(int)
-        faulty_display["Duration (m:ss)"] = faulty_display["survey_duration_mins"].apply(
+        faulty_display["Gap Duration (sec)"] = faulty_base["entry_gap_sec"].round(0).astype(int)
+        faulty_display["Gap Duration (m:ss)"] = faulty_base["entry_gap_mins"].apply(
             lambda x: f"{int(x)}m {int(round((x % 1) * 60)):02d}s" if pd.notna(x) else "-"
         )
         faulty_display["Date"] = pd.to_datetime(faulty_display["Date"]).dt.strftime("%d-%m-%Y")
@@ -644,7 +658,7 @@ with tabs[1]:
         }).drop(columns=["survey_duration_mins"])
         faulty_display = faulty_display[[
             "Surveyor", "Date", "start_time", "end_time",
-            "Duration (sec)", "Duration (m:ss)",
+            "Gap Duration (sec)", "Gap Duration (m:ss)",
             "Vehicle Type", "Arm", "Origin", "Destination"
         ]].sort_values(["Surveyor", "Duration (sec)"])
 
