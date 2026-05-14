@@ -489,7 +489,7 @@ with tabs[0]:
         st.plotly_chart(fig_d, use_container_width=True)
 
 
-# --------------------------------------------------
+ # --------------------------------------------------
 # TAB 2 — SURVEYORS
 # --------------------------------------------------
 with tabs[1]:
@@ -551,12 +551,13 @@ with tabs[1]:
         )
         fig_sb.update_layout(showlegend=False)
         st.plotly_chart(fig_sb, use_container_width=True)
-     # ── FAULTY SURVEYOR TABLE ──────────────────────────
+
+    # ── FAULTY SURVEYOR TABLE ──────────────────────────
     st.markdown("---")
     st.subheader("⚠️ Faulty Surveyor Entries")
     st.caption(
-        "Entries where the interview was completed faster than the threshold. "
-        "May indicate rushed, skipped, or fabricated surveys."
+        "Flags entries where the gap between a surveyor's consecutive entries "
+        "is less than the threshold — may indicate rushed or fabricated surveys."
     )
 
     fc1, fc2, fc3 = st.columns([1, 1, 4])
@@ -576,16 +577,16 @@ with tabs[1]:
     with fc3:
         st.markdown(
             f"<div style='padding-top:28px;color:#888;font-size:13px;'>"
-            f"Flagging entries under <b>{thresh_min}m {thresh_sec:02d}s</b> "
+            f"Flagging consecutive entries with gap under "
+            f"<b>{thresh_min}m {thresh_sec:02d}s</b> "
             f"({threshold_total_sec} sec)</div>",
             unsafe_allow_html=True
         )
 
-    # Compute gap between consecutive entries per surveyor
+    # Compute gap between consecutive entries per surveyor per day
     gap_df = filtered_df[filtered_df["Remarks1"].notna()].copy()
     gap_df = gap_df[gap_df["start_time"].notna()]
 
-    from datetime import datetime as _dt
     def to_seconds(t):
         return t.hour * 3600 + t.minute * 60 + t.second if t is not None else None
 
@@ -595,7 +596,6 @@ with tabs[1]:
     gap_df["entry_gap_sec"] = gap_df["start_sec"] - gap_df["prev_start_sec"]
     gap_df["entry_gap_mins"] = gap_df["entry_gap_sec"] / 60
 
-    # Drop first entry of each surveyor per day (no previous entry to compare)
     faulty_base = gap_df[
         gap_df["entry_gap_sec"].notna() &
         (gap_df["entry_gap_sec"] > 0) &
@@ -603,15 +603,18 @@ with tabs[1]:
     ].copy()
 
     if faulty_base.empty:
-        st.success(f"✅ No entries under {thresh_min}m {thresh_sec:02d}s in current filters.")
+        st.success(
+            f"✅ No consecutive entries with gap under "
+            f"{thresh_min}m {thresh_sec:02d}s in current filters."
+        )
     else:
         # KPI strip
         fk1, fk2, fk3, fk4 = st.columns(4)
-        fk1.metric("Total Faulty Entries", len(faulty_base))
+        fk1.metric("Total Flagged Entries", len(faulty_base))
         fk2.metric("Surveyors Flagged", faulty_base["Remarks1"].nunique())
         fk3.metric(
-            "Shortest Entry",
-            f"{int(round(faulty_base['survey_duration_mins'].min() * 60))} sec"
+            "Shortest Gap",
+            f"{int(round(faulty_base['entry_gap_sec'].min()))} sec"
         )
         fk4.metric(
             "Most Flagged",
@@ -634,14 +637,17 @@ with tabs[1]:
         )
         st.markdown("#### Summary by Surveyor")
         st.dataframe(faulty_summary, use_container_width=True)
+
         # Detail table
         faulty_display = faulty_base[[
             "Remarks1", "Date", "start_time", "end_time",
-            "survey_duration_mins", "3.Vehicle Type", "2.Arm details",
+            "entry_gap_sec", "entry_gap_mins",
+            "3.Vehicle Type", "2.Arm details",
             "unified_origin", "unified_destination"
         ]].copy()
-        faulty_display["Gap Duration (sec)"] = faulty_base["entry_gap_sec"].round(0).astype(int)
-        faulty_display["Gap Duration (m:ss)"] = faulty_base["entry_gap_mins"].apply(
+
+        faulty_display["Gap (sec)"] = faulty_display["entry_gap_sec"].round(0).astype(int)
+        faulty_display["Gap (m:ss)"] = faulty_display["entry_gap_mins"].apply(
             lambda x: f"{int(x)}m {int(round((x % 1) * 60)):02d}s" if pd.notna(x) else "-"
         )
         faulty_display["Date"] = pd.to_datetime(faulty_display["Date"]).dt.strftime("%d-%m-%Y")
@@ -652,20 +658,24 @@ with tabs[1]:
             lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
         )
         faulty_display = faulty_display.rename(columns={
-            "Remarks1": "Surveyor", "3.Vehicle Type": "Vehicle Type",
-            "2.Arm details": "Arm", "unified_origin": "Origin",
+            "Remarks1": "Surveyor",
+            "3.Vehicle Type": "Vehicle Type",
+            "2.Arm details": "Arm",
+            "unified_origin": "Origin",
             "unified_destination": "Destination",
-        }).drop(columns=["survey_duration_mins"])
+        }).drop(columns=["entry_gap_sec", "entry_gap_mins"])
+
         faulty_display = faulty_display[[
             "Surveyor", "Date", "start_time", "end_time",
-            "Gap Duration (sec)", "Gap Duration (m:ss)",
+            "Gap (sec)", "Gap (m:ss)",
             "Vehicle Type", "Arm", "Origin", "Destination"
-        ]].sort_values(["Surveyor", "Duration (sec)"])
+        ]].sort_values(["Surveyor", "Gap (sec)"])
 
-        st.markdown("#### All Faulty Entries")
+        st.markdown("#### All Flagged Entries (Detail)")
         st.dataframe(faulty_display, use_container_width=True)
+
         st.download_button(
-            label="⬇️ Download Faulty Entries as CSV",
+            label="⬇️ Download Flagged Entries as CSV",
             data=faulty_display.to_csv(index=False).encode("utf-8"),
             file_name="faulty_surveyor_entries.csv",
             mime="text/csv"
