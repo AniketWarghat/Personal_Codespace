@@ -551,6 +551,120 @@ with tabs[1]:
         )
         fig_sb.update_layout(showlegend=False)
         st.plotly_chart(fig_sb, use_container_width=True)
+     # ── FAULTY SURVEYOR TABLE ──────────────────────────
+    st.markdown("---")
+    st.subheader("⚠️ Faulty Surveyor Entries")
+    st.caption(
+        "Entries where the interview was completed faster than the threshold. "
+        "May indicate rushed, skipped, or fabricated surveys."
+    )
+
+    fc1, fc2, fc3 = st.columns([1, 1, 4])
+    with fc1:
+        thresh_min = st.number_input(
+            "Threshold (min)", min_value=0, max_value=10, value=1, step=1,
+            key="faulty_min"
+        )
+    with fc2:
+        thresh_sec = st.number_input(
+            "Threshold (sec)", min_value=0, max_value=59, value=0, step=5,
+            key="faulty_sec"
+        )
+    threshold_total_sec = thresh_min * 60 + thresh_sec
+    threshold_mins = threshold_total_sec / 60
+
+    with fc3:
+        st.markdown(
+            f"<div style='padding-top:28px;color:#888;font-size:13px;'>"
+            f"Flagging entries under <b>{thresh_min}m {thresh_sec:02d}s</b> "
+            f"({threshold_total_sec} sec)</div>",
+            unsafe_allow_html=True
+        )
+
+    faulty_base = filtered_df[
+        filtered_df["Remarks1"].notna() &
+        filtered_df["survey_duration_mins"].notna() &
+        (filtered_df["survey_duration_mins"] > 0) &
+        (filtered_df["survey_duration_mins"] < threshold_mins)
+    ].copy()
+
+    if faulty_base.empty:
+        st.success(f"✅ No entries under {thresh_min}m {thresh_sec:02d}s in current filters.")
+    else:
+        # KPI strip
+        fk1, fk2, fk3, fk4 = st.columns(4)
+        fk1.metric("Total Faulty Entries", len(faulty_base))
+        fk2.metric("Surveyors Flagged", faulty_base["Remarks1"].nunique())
+        fk3.metric(
+            "Shortest Entry",
+            f"{int(round(faulty_base['survey_duration_mins'].min() * 60))} sec"
+        )
+        fk4.metric(
+            "Most Flagged",
+            faulty_base["Remarks1"].value_counts().idxmax()
+        )
+
+        # Summary per surveyor
+        faulty_summary = (
+            faulty_base.groupby("Remarks1")
+            .agg(
+                **{
+                    "Faulty Entries": ("Remarks1", "size"),
+                    "Shortest (sec)": ("survey_duration_mins", lambda x: int(round(x.min() * 60))),
+                    "Avg Faulty Duration (sec)": ("survey_duration_mins", lambda x: int(round(x.mean() * 60))),
+                }
+            )
+            .reset_index()
+            .rename(columns={"Remarks1": "Surveyor"})
+            .sort_values("Faulty Entries", ascending=False)
+        )
+        st.markdown("#### Summary by Surveyor")
+        st.dataframe(
+            faulty_summary.style.background_gradient(subset=["Faulty Entries"], cmap="Reds"),
+            use_container_width=True
+        )
+
+        # Detail table
+        faulty_display = faulty_base[[
+            "Remarks1", "Date", "start_time", "end_time",
+            "survey_duration_mins", "3.Vehicle Type", "2.Arm details",
+            "unified_origin", "unified_destination"
+        ]].copy()
+        faulty_display["Duration (sec)"] = (faulty_display["survey_duration_mins"] * 60).round(0).astype(int)
+        faulty_display["Duration (m:ss)"] = faulty_display["survey_duration_mins"].apply(
+            lambda x: f"{int(x)}m {int(round((x % 1) * 60)):02d}s" if pd.notna(x) else "-"
+        )
+        faulty_display["Date"] = pd.to_datetime(faulty_display["Date"]).dt.strftime("%d-%m-%Y")
+        faulty_display["start_time"] = faulty_display["start_time"].apply(
+            lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
+        )
+        faulty_display["end_time"] = faulty_display["end_time"].apply(
+            lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
+        )
+        faulty_display = faulty_display.rename(columns={
+            "Remarks1": "Surveyor", "3.Vehicle Type": "Vehicle Type",
+            "2.Arm details": "Arm", "unified_origin": "Origin",
+            "unified_destination": "Destination",
+        }).drop(columns=["survey_duration_mins"])
+        faulty_display = faulty_display[[
+            "Surveyor", "Date", "start_time", "end_time",
+            "Duration (sec)", "Duration (m:ss)",
+            "Vehicle Type", "Arm", "Origin", "Destination"
+        ]].sort_values(["Surveyor", "Duration (sec)"])
+
+        st.markdown("#### All Faulty Entries")
+        st.dataframe(
+            faulty_display.style.highlight_between(
+                subset=["Duration (sec)"], left=0, right=threshold_total_sec, color="#FFE0E0"
+            ),
+            use_container_width=True
+        )
+        st.download_button(
+            label="⬇️ Download Faulty Entries as CSV",
+            data=faulty_display.to_csv(index=False).encode("utf-8"),
+            file_name="faulty_surveyor_entries.csv",
+            mime="text/csv"
+        )
 
 
 # --------------------------------------------------
