@@ -1,0 +1,8 @@
+streamlit
+pandas
+openpyxl
+sqlalchemy
+selenium
+webdriver-manager
+plotly
+rapidfuzz
