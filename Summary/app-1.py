@@ -331,6 +331,80 @@ def process_dataframe(raw_bytes):
         if col not in df.columns:
             df[col] = pd.NA
 
+    # --------------------------------------------------
+    # SURVEYOR NAME NORMALIZATION
+    # Maps known spelling variants → canonical name.
+    # Each person is counted as ONE individual regardless
+    # of capitalisation / typos in the field.
+    # --------------------------------------------------
+    SURVEYOR_NORM = {
+        # Rajesh Jha  (case variants)
+        "rajesh jha":          "Rajesh Jha",
+        "Rajesh jha":          "Rajesh Jha",
+        # Ramesh  (keep separate from Rajesh — verify via Remarks2 if needed)
+        "Ramesh":              "Ramesh",
+        "rajesh":              "Rajesh",        # treat as distinct until confirmed
+        # Brijesh  (typos: brijedh, vrijesh)
+        "Brijesh":             "Brijesh",
+        "brijesh":             "Brijesh",
+        "brijedh":             "Brijesh",
+        "vrijesh":             "Brijesh",
+        # Krishna Singh  (singj typo, bare "Krishna")
+        "Krishna singh":       "Krishna Singh",
+        "Krishna Singh":       "Krishna Singh",
+        "Krishna singj":       "Krishna Singh",
+        "Krishna":             "Krishna Singh",
+        # Naitik  (with/without surname Shah)
+        "naitik":              "Naitik Shah",
+        "naitik shah":         "Naitik Shah",
+        "naitik Shah":         "Naitik Shah",
+        "Naitik":              "Naitik Shah",
+        # Ankit Yadav  (case)
+        "Ankit yadav":         "Ankit Yadav",
+        "Ankit Yadav":         "Ankit Yadav",
+        # Vicky  (case)
+        "Vicky":               "Vicky",
+        "vicky":               "Vicky",
+        # Durgesh  (case)
+        "durgesh":             "Durgesh",
+        "Durgesh":             "Durgesh",
+        # Raj Gaud  (goud typo)
+        "Raj gaud":            "Raj Gaud",
+        "Raj goud":            "Raj Gaud",
+        # Vivek  (case)
+        "vivek":               "Vivek",
+        "Vivek":               "Vivek",
+        # Prathmesh Langade  (Prathamesh spelling variant)
+        "Prathmesh langade":   "Prathmesh Langade",
+        "Prathamesh langade":  "Prathmesh Langade",
+        # Kishan  (trailing garbage "kishan in")
+        "kishan":              "Kishan",
+        "kishan in":           "Kishan",
+        # Trisha  (case)
+        "trisha":              "Trisha",
+        "Trisha":              "Trisha",
+        # Yash Shukla  (bare "Yash")
+        "yash shukla":         "Yash Shukla",
+        "Yash":                "Yash Shukla",
+        # Subhankar Das  (bare "subhankar")
+        "subhankar Das":       "Subhankar Das",
+        "subhankar":           "Subhankar Das",
+        # Clean single-name surveyors (title-case)
+        "karan":               "Karan",
+        "Ranjit":              "Ranjit",
+        "amit":                "Amit",
+        "suhani":              "Suhani",
+        "Pravin":              "Pravin",
+        "Santosh Ingale":      "Santosh Ingale",
+        "Udaykumar":           "Udaykumar",
+        "sudhanshu Kumar":     "Sudhanshu Kumar",
+        "chandan":             "Chandan",
+        "krishna Kumar":       "Krishna Kumar",
+        "sonu":                "Sonu",
+        "kuldeep Rajpoot":     "Kuldeep Rajpoot",
+        "Arvind Murkute":      "Arvind Murkute",
+    }
+
     # Surveyor name
     if safe_col(df, "Remarks1"):
         df["Remarks1"] = (
@@ -338,7 +412,11 @@ def process_dataframe(raw_bytes):
             .str.strip()
             .replace({"nan": pd.NA, "None": pd.NA, "": pd.NA})
         )
-        df["Remarks1"] = df["Remarks1"].str.title()
+        # Apply explicit normalization map first, then fall back to title-case
+        df["Remarks1"] = df["Remarks1"].map(
+            lambda x: SURVEYOR_NORM.get(x, x.title() if isinstance(x, str) else x)
+            if pd.notna(x) else pd.NA
+        )
 
     # Dates
     if safe_col(df, "Date"):
