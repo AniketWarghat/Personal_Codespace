@@ -70,8 +70,21 @@ INVALID_LOCATION_VALUES = {
     "null", "na", "", "n/a", ".", "x", "nil"
 }
 
-# FIXED: Use exact column names from the Excel file
-VEHICLE_MAPPING = {
+# --------------------------------------------------
+# SCHEMA DETECTION
+# Schema A = Mumbai/JJ file  (has "3.Vehicle Type", "2.Arm details")
+# Schema B = Dahisar Toll    (has "2.Type of Vehicle", "1.Direction")
+# --------------------------------------------------
+def detect_schema(df):
+    if "3.Vehicle Type" in df.columns:
+        return "A"
+    if "2.Type of Vehicle" in df.columns:
+        return "B"
+    return "A"  # fallback
+
+
+# Vehicle mapping for Schema A (Mumbai/JJ)
+VEHICLE_MAPPING_A = {
     "Car": (
         "3a4.Trip Origin",
         "3a5.Trip Destination",
@@ -124,7 +137,7 @@ VEHICLE_MAPPING = {
     ),
 }
 
-BUS_OCC_COLS = [
+BUS_OCC_COLS_A = [
     "3c5.Mention the Occupancy (In Percentage)",
     "3d5.Mention the Occupancy (In Percentage)",
     "3e5.Mention the Occupancy (In Percentage)",
@@ -132,6 +145,105 @@ BUS_OCC_COLS = [
     "3g5.Mention the Occupancy (In Percentage)",
     "3h5.Mention the Occupancy (In Percentage)",
 ]
+
+# Vehicle mapping for Schema B (Dahisar Toll)
+# Passenger sub-types: 2a1a=Car, 2a1b=Taxi, 2a1e/f/g/h=buses
+# Goods sub-types: 2b1.Vehicle Type
+VEHICLE_MAPPING_B = {
+    "Car": (
+        "2a1a2.Trip Origin",
+        "2a1a3.Trip destination",
+        "2a1a1.Occupancy (Including Driver)"
+    ),
+    "Taxi": (
+        "2a1b2.Trip Origin",
+        "2a1b3.Trip destination",
+        "2a1b1.Occupancy (Including Driver)"
+    ),
+    "City Bus- Govt (BEST)": (
+        "2a1e2.Trip Origin",
+        "2a1e3.Trip destination",
+        "2a1e1.Mention the Occupancy (In percentage)"
+    ),
+    "City Bus- private(Chalo, city flow)": (
+        "2a1f2.Trip Origin",
+        "2a1f3.Trip destination",
+        "2a1f1.Mention the Occupancy (In percentage)"
+    ),
+    "Inter city Bus - Govt": (
+        "2a1g2.Trip Origin",
+        "2a1g3.Trip destination",
+        "2a1g1.Mention the Occupancy (In percentage)"
+    ),
+    "Inter City Bus - Private": (
+        "2a1h2.Trip Origin",
+        "2a1h3.Trip destination",
+        "2a1h1.Mention the Occupancy (In percentage)"
+    ),
+    # Goods vehicles
+    "LCV": ("2b2.Origin", "2b3.Destination", None),
+    "Mini LCV": ("2b2.Origin", "2b3.Destination", None),
+    "2-Axle Truck": ("2b2.Origin", "2b3.Destination", None),
+    "3-Axle Truck": ("2b2.Origin", "2b3.Destination", None),
+    "MAV": ("2b2.Origin", "2b3.Destination", None),
+    "OSV": ("2b2.Origin", "2b3.Destination", None),
+}
+
+BUS_OCC_COLS_B = [
+    "2a1e1.Mention the Occupancy (In percentage)",
+    "2a1f1.Mention the Occupancy (In percentage)",
+    "2a1g1.Mention the Occupancy (In percentage)",
+    "2a1h1.Mention the Occupancy (In percentage)",
+]
+
+
+def normalize_schema_b(df):
+    """
+    Normalize Schema B (Dahisar) columns into the canonical Schema A column names
+    so the rest of the app works unchanged.
+    The unified vehicle type is derived from 2a1.Type of Vehicle (passenger)
+    or 2b1.Vehicle Type (goods).
+    """
+    out = df.copy()
+
+    # Derive unified vehicle type column -> "3.Vehicle Type"
+    def get_vehicle_type(row):
+        vtype = str(row.get("2.Type of Vehicle", "-")).strip()
+        if vtype == "Passenger":
+            v = str(row.get("2a1.Type of Vehicle", "-")).strip()
+            return v if v and v != "-" else pd.NA
+        elif vtype == "Goods":
+            v = str(row.get("2b1.Vehicle Type", "-")).strip()
+            return v if v and v != "-" else pd.NA
+        return pd.NA
+
+    out["3.Vehicle Type"] = out.apply(get_vehicle_type, axis=1)
+
+    # Derive arm/direction column -> "2.Arm details"
+    out["2.Arm details"] = out.get("1.Direction", pd.NA)
+
+    return out
+
+
+def get_od_b(row):
+    """O-D extractor for Schema B rows (already normalized vehicle type)."""
+    vt = row.get("3.Vehicle Type", None)
+    if pd.isna(vt):
+        return pd.Series([None, None, None])
+    vt_clean = " ".join(str(vt).strip().split())
+    cols = VEHICLE_MAPPING_B.get(vt_clean)
+    if not cols:
+        for k, v in VEHICLE_MAPPING_B.items():
+            if " ".join(k.strip().split()).lower() == vt_clean.lower():
+                cols = v
+                break
+    if not cols:
+        return pd.Series([None, None, None])
+    origin_col, dest_col, occ_col = cols
+    origin = row.get(origin_col, None)
+    destination = row.get(dest_col, None)
+    occupancy = row.get(occ_col, None) if occ_col else None
+    return pd.Series([origin, destination, occupancy])
 
 
 # --------------------------------------------------
@@ -170,14 +282,16 @@ def fuzzy_normalize_location(value, canonical_list, threshold=75):
     return raw.title(), False, "No canonical match"
 
 
-def get_od(row):
+def get_od(row, vehicle_mapping=None):
+    if vehicle_mapping is None:
+        vehicle_mapping = VEHICLE_MAPPING_A
     vt = row.get("3.Vehicle Type", None)
     if pd.isna(vt):
         return pd.Series([None, None, None])
     vt_clean = " ".join(str(vt).strip().split())
-    cols = VEHICLE_MAPPING.get(vt_clean)
+    cols = vehicle_mapping.get(vt_clean)
     if not cols:
-        for k, v in VEHICLE_MAPPING.items():
+        for k, v in vehicle_mapping.items():
             if " ".join(k.strip().split()).lower() == vt_clean.lower():
                 cols = v
                 break
@@ -186,7 +300,7 @@ def get_od(row):
     origin_col, dest_col, occ_col = cols
     origin = row.get(origin_col, None)
     destination = row.get(dest_col, None)
-    occupancy = row.get(occ_col, None)
+    occupancy = row.get(occ_col, None) if occ_col else None
     return pd.Series([origin, destination, occupancy])
 
 
@@ -201,6 +315,21 @@ def clean_location_series(series):
 @st.cache_data(show_spinner=False)
 def process_dataframe(raw_bytes):
     df = pd.read_excel(io.BytesIO(raw_bytes), sheet_name=SHEET_NAME, engine="openpyxl")
+
+    # Auto-detect schema and normalise to canonical columns
+    schema = detect_schema(df)
+    if schema == "B":
+        df = normalize_schema_b(df)
+        vehicle_mapping = VEHICLE_MAPPING_B
+        bus_occ_cols = BUS_OCC_COLS_B
+    else:
+        vehicle_mapping = VEHICLE_MAPPING_A
+        bus_occ_cols = BUS_OCC_COLS_A
+
+    # Ensure canonical columns exist (fallback to NA if missing)
+    for col in ["3.Vehicle Type", "2.Arm details"]:
+        if col not in df.columns:
+            df[col] = pd.NA
 
     # Surveyor name
     if safe_col(df, "Remarks1"):
@@ -234,7 +363,9 @@ def process_dataframe(raw_bytes):
     df["survey_duration_mins"] = df["survey_duration"].apply(timedelta_to_minutes)
 
     # Unified O-D
-    df[["raw_origin", "raw_destination", "unified_occupancy"]] = df.apply(get_od, axis=1)
+    df[["raw_origin", "raw_destination", "unified_occupancy"]] = df.apply(
+        lambda row: get_od(row, vehicle_mapping), axis=1
+    )
     df["raw_origin"] = clean_location_series(df["raw_origin"])
     df["raw_destination"] = clean_location_series(df["raw_destination"])
 
@@ -285,7 +416,7 @@ def process_dataframe(raw_bytes):
 
     # Bus sitting %
     df["avg_sitting_pct_source"] = pd.NA
-    for col in BUS_OCC_COLS:
+    for col in bus_occ_cols:
         if safe_col(df, col):
             temp = pd.to_numeric(
                 df[col].astype(str).str.replace("%", "", regex=False).str.strip(),
