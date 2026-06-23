@@ -38,6 +38,474 @@ check_password()
 # ── Imports ───────────────────────────────────────────────────────────────────
 import io
 import os
+import re
+from datetime import datetime, time
+
+import pandas as pd
+import plotly.express as px
+from rapidfuzz import fuzz, process as rfprocess
+
+# ── Page config ───────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="Mumbai Traffic Survey Dashboard",
+    layout="wide",
+    page_icon="🚦",
+)
+
+PRIMARY_COLOR = "#0057A8"
+SHEET_NAME = "Survey Results"
+
+# Colour palette shared by the Commuter Survey section
+SECONDARY = "#00A3E0"
+SUCCESS = "#28A745"
+WARNING = "#FFC107"
+DANGER = "#DC3545"
+GREY = "#6C757D"
+
+# ── Sidebar page selector ─────────────────────────────────────────────────────
+st.sidebar.title("🚦 Mumbai Survey Dashboard")
+st.sidebar.markdown("---")
+
+PAGES = {
+    "🚦 Traffic Survey (JJ / Dahisar)": "traffic",
+    "🚇 Commuter Survey (Dharavi Metro)": "commuter",
+}
+
+selected_page = st.sidebar.radio("Navigate to", list(PAGES.keys()), key="nav_page")
+page_key = PAGES[selected_page]
+
+st.sidebar.markdown("---")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  SECTION: COMMUTER SURVEY  — constants & helpers
+#  (formerly commuter_survey_page.py, inlined; names prefixed/renamed to avoid
+#   collisions with the Traffic Survey section below)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Canonical surveyor name map (commuter survey) ─────────────────────────────
+COMMUTER_SURVEYOR_NORM: dict[str, str] = {
+    # Abdul
+    "Abdul": "Abdul",
+    "abdul": "Abdul",
+    # Shahjahan Shaikh
+    "shahjahan shaikh": "Shahjahan Shaikh",
+    "shahjahan shaikh ": "Shahjahan Shaikh",
+    # Karan
+    "karan": "Karan",
+    "karan ": "Karan",
+    # Amit Mishra
+    "amit mishra": "Amit Mishra",
+    "amit ": "Amit Mishra",
+    "amit": "Amit Mishra",
+    # Ramgopal Chaurasiya
+    "ramgopal chaurasiya": "Ramgopal Chaurasiya",
+    "ramgopal chaurasiya ": "Ramgopal Chaurasiya",
+    "Ramgopal chaurasiya ": "Ramgopal Chaurasiya",
+    # Rushikesh
+    "rushikesh": "Rushikesh",
+    "rushikesh ": "Rushikesh",
+    # Manas
+    "manas": "Manas",
+    "manas ": "Manas",
+    "Manas ": "Manas",
+    # Shariq
+    "shariq": "Shariq",
+    # Uttkarsh Yadav
+    "uttkarsh yadav": "Uttkarsh Yadav",
+    "uttkarsh yadav ": "Uttkarsh Yadav",
+    "Uttkarsh Yadav ": "Uttkarsh Yadav",
+    "uttkarsh ": "Uttkarsh Yadav",
+    "uttkarsh": "Uttkarsh Yadav",
+    "Uttkarsh": "Uttkarsh Yadav",
+    "Uttkarsh ": "Uttkarsh Yadav",
+    # Anash Khan
+    "anash khan": "Anash Khan",
+    "anash ": "Anash Khan",
+    "anash": "Anash Khan",
+    "Anash": "Anash Khan",
+    "Anash ": "Anash Khan",
+    "Anash Khan": "Anash Khan",
+    # Nirvan Mamidi
+    "nirvan ravi mamidi": "Nirvan Mamidi",
+    "Nirvan Ravi Mamidi ": "Nirvan Mamidi",
+    "Nirvan Ravi Mamidi": "Nirvan Mamidi",
+    "nirvan mamidi": "Nirvan Mamidi",
+    "Nirvan Mamidi": "Nirvan Mamidi",
+    "Nirvan ": "Nirvan Mamidi",
+    "nirvan ": "Nirvan Mamidi",
+    "Nirvan": "Nirvan Mamidi",
+}
+
+# ── Location clean-up helpers (commuter survey) ───────────────────────────────
+COMMUTER_LOCATION_NORM: dict[str, str | None] = {
+    "dharavi": "Dharavi",
+    "dharavi ": "Dharavi",
+    "Dharavi ": "Dharavi",
+    "dhravi ": "Dharavi",
+    "dhravi": "Dharavi",
+    "dharvi ": "Dharavi",
+    "bkc": "BKC",
+    "Bkc": "BKC",
+    "midc": "MIDC",
+    "t2": "Airport T2",
+    "T2": "Airport T2",
+    "t1 airport": "Airport T1",
+    "t1 airport ": "Airport T1",
+    "andheri ": "Andheri",
+    "andheri": "Andheri",
+    "mahim": "Mahim",
+    "dadar": "Dadar",
+    "Dadar": "Dadar",
+    "koliwada ": "Koliwada",
+    "koliwada": "Koliwada",
+    "wadala ": "Wadala",
+    "shitladevi": "Shitladevi",
+    "mahalakshmi": "Mahalaxmi",
+    "mahalaxmi": "Mahalaxmi",
+    "need ": None,   # junk entry
+    "-": None,
+}
+
+COMMUTER_INVALID_SET = {"-", "nan", "none", "", "nil", "na"}
+
+
+def _commuter_clean_loc(val: str | None) -> str | None:
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return None
+    s = str(val).strip()
+    if s.lower() in COMMUTER_INVALID_SET:
+        return None
+    return COMMUTER_LOCATION_NORM.get(s, s.title())
+
+
+def _commuter_clean_str(val) -> str | None:
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return None
+    s = str(val).strip()
+    return None if s.lower() in COMMUTER_INVALID_SET else s
+
+
+# ── Journey time parsing (1b7.Total Journey Time (Min)) ──────────────────────
+# Field-collected values aren't uniformly numeric. Observed shapes in the
+# DC513MH05 Dharavi survey export:
+#   '10', '20'                  -> bare integer minutes
+#   '2min', '20min'             -> integer + 'min'/'mins', no space
+#   '20 min', '20 minutes'      -> integer + space + 'min'/'mins'/'minute(s)'
+#   '1hr'                       -> hour unit, must be converted (x60), not
+#                                   just digit-extracted (would read as 1 min)
+#   '35-40', '40-45 mins'       -> dash range, no single correct value;
+#                                   left unparsed (NaN) and flagged rather
+#                                   than guessed at (e.g. via midpoint)
+_JOURNEY_RANGE_RE = re.compile(r"^\s*\d+(\.\d+)?\s*-\s*\d+(\.\d+)?\s*(min|mins|minute|minutes)?\s*$",
+                                re.IGNORECASE)
+_JOURNEY_HOUR_RE = re.compile(r"^\s*(\d+(\.\d+)?)\s*(hr|hrs|hour|hours)\s*$", re.IGNORECASE)
+_JOURNEY_MIN_RE = re.compile(r"^\s*(\d+(\.\d+)?)\s*(min|mins|minute|minutes)?\s*$", re.IGNORECASE)
+
+
+def parse_journey_time_minutes(val) -> tuple[float | None, str | None]:
+    """Parse a raw journey-time string into minutes (float) plus an issue
+    label (None if cleanly parsed). Returns (minutes, issue)."""
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return None, None
+    raw = str(val).strip()
+    if not raw or raw.lower() in COMMUTER_INVALID_SET:
+        return None, None
+
+    if _JOURNEY_RANGE_RE.match(raw):
+        return None, f"Range, not parsed: '{raw}'"
+
+    m = _JOURNEY_HOUR_RE.match(raw)
+    if m:
+        return float(m.group(1)) * 60.0, None
+
+    m = _JOURNEY_MIN_RE.match(raw)
+    if m:
+        return float(m.group(1)), None
+
+    return None, f"Unrecognized format: '{raw}'"
+
+
+def _commuter_parse_time(series: pd.Series) -> pd.Series:
+    return pd.to_datetime(
+        series.astype(str), format="%H:%M:%S", errors="coerce"
+    ).dt.time
+
+
+@st.cache_data(show_spinner=False)
+def load_commuter_data(raw_bytes: bytes) -> tuple[pd.DataFrame, int, list[str]]:
+    df = pd.read_excel(io.BytesIO(raw_bytes), sheet_name="Survey Results",
+                        engine="openpyxl")
+
+    # ── Location-branch filter ──────────────────────────────────────────────
+    # This survey file contains two parallel question blocks selected by
+    # "1.Location Name": the Dharavi Metro Station block (1b* columns, which
+    # all the parsing below is built around) and a separate LTT block (1c*
+    # columns). The 1c* questions aren't equivalent to the 1b* ones (e.g.
+    # 1c7 "Mode of Travel" asks current mode, not "mode before metro" like
+    # 1b9; 1c12 "Waiting Time" is a free-text range, not a clean number), so
+    # rather than guess at a mapping, LTT rows are dropped here and the
+    # caller is told how many were excluded.
+    dropped_locations: list[str] = []
+    if "1.Location Name" in df.columns:
+        loc = df["1.Location Name"].astype(str).str.strip()
+        is_dharavi = loc.eq("Dharavi Metro Station")
+        dropped_locations = sorted(loc[~is_dharavi].unique().tolist())
+        n_dropped = int((~is_dharavi).sum())
+        df = df[is_dharavi].copy()
+    else:
+        n_dropped = 0
+
+    # ── Surveyor normalisation ─────────────────────────────────────────────
+    if "Remarks1" in df.columns:
+        df["surveyor"] = (
+            df["Remarks1"].astype(str).str.strip()
+            .map(lambda x: COMMUTER_SURVEYOR_NORM.get(
+                x, x.title() if x.lower() not in COMMUTER_INVALID_SET else None))
+        )
+    else:
+        df["surveyor"] = None
+
+    # ── Date / time ────────────────────────────────────────────────────────
+    if "Date" in df.columns:
+        df["Date"] = pd.to_datetime(df["Date"], format="%d/%m/%Y", errors="coerce")
+    if "start_time" in df.columns:
+        df["start_time"] = _commuter_parse_time(df["start_time"])
+    if "end_time" in df.columns:
+        df["end_time"] = _commuter_parse_time(df["end_time"])
+
+    df["start_hour"] = df["start_time"].apply(
+        lambda x: x.hour if x and not pd.isna(x) else None)
+
+    # Survey duration
+    def _dur(row):
+        s, e = row.get("start_time"), row.get("end_time")
+        if s is None or e is None:
+            return None
+        sd = datetime.combine(datetime.today(), s)
+        ed = datetime.combine(datetime.today(), e)
+        diff = (ed - sd).total_seconds() / 60
+        return diff if diff >= 0 else None
+    df["survey_duration_mins"] = df.apply(_dur, axis=1)
+
+    # ── Clean commuter attribute columns ──────────────────────────────────
+    def _tidy(col):
+        if col not in df.columns:
+            return pd.Series([None] * len(df))
+        return df[col].apply(_commuter_clean_str)
+
+    df["age"] = _tidy("1b1.Age (years)")
+    df["gender"] = _tidy("1b2.Gender")
+    df["occupation"] = _tidy("1b3.Occupation")
+    df["income"] = _tidy("1b4.Individual Monthly Income (Rs.)")
+    df["trip_freq"] = _tidy("1b10.Trip Frequency")
+    df["trip_purpose"] = _tidy("1b11. Trip Purpose")
+    df["prev_mode"] = df["1b9.Main mode of travel before Dharavi Line\u20113 Metro became operational ?"].apply(_commuter_clean_str) \
+        if "1b9.Main mode of travel before Dharavi Line\u20113 Metro became operational ?" in df.columns else None
+    df["line11_bandra"] = _tidy("1b12. Will you use Line 11 extended till Bandra Terminus ?")
+    df["line8_bkc"] = _tidy("1b13. Will you use Metro Line 8 connection to Dharavi  via BKC ?")
+
+    # Clean locations
+    if "1b5.Trip Origin (Start point of the trip before using metro line)" in df.columns:
+        df["origin"] = df["1b5.Trip Origin (Start point of the trip before using metro line)"].apply(_commuter_clean_loc)
+    if "1b6.Trip Destination (End point of the trip after using metro line)" in df.columns:
+        df["destination"] = df["1b6.Trip Destination (End point of the trip after using metro line)"].apply(_commuter_clean_loc)
+
+    # Journey time: free-text in the source data ('10', '20min', '1hr',
+    # '35-40', etc.) — see parse_journey_time_minutes() for the full pattern
+    # breakdown. Dash-ranges and any unrecognized format come back as NaN
+    # with a reason in journey_time_issue rather than being silently dropped.
+    jt_col = "1b7.Total Journey Time (Min)"
+    if jt_col in df.columns:
+        jt_parsed = df[jt_col].apply(parse_journey_time_minutes)
+        df["journey_time_min"] = jt_parsed.apply(lambda x: x[0])
+        df["journey_time_issue"] = jt_parsed.apply(lambda x: x[1])
+    else:
+        df["journey_time_min"] = pd.NA
+        df["journey_time_issue"] = None
+    df["travel_cost_rs"] = pd.to_numeric(df.get("1b8.Total Travel Cost (Rs.)", pd.NA), errors="coerce")
+
+    # Strip leading spaces from categoricals
+    for col in ["age", "gender", "occupation", "income", "trip_freq",
+                "trip_purpose", "prev_mode", "line11_bandra", "line8_bkc"]:
+        if col in df.columns:
+            df[col] = df[col].str.strip() if df[col].dtype == object else df[col]
+
+    return df, n_dropped, dropped_locations
+
+
+def _commuter_sidebar_filters(df: pd.DataFrame) -> pd.DataFrame:
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🚇 Commuter Survey Filters")
+
+    # Date
+    valid_dates = df["Date"].dropna()
+    if valid_dates.empty:
+        filtered = df
+    else:
+        mn, mx = valid_dates.min().date(), valid_dates.max().date()
+        sel = st.sidebar.date_input("Survey Date Range", (mn, mx), min_value=mn, max_value=mx)
+        if isinstance(sel, tuple) and len(sel) == 2:
+            s_date, e_date = sel
+        else:
+            s_date = e_date = mn
+        filtered = df[(df["Date"].dt.date >= s_date) & (df["Date"].dt.date <= e_date)]
+
+    # Surveyor
+    surveyors = sorted(filtered["surveyor"].dropna().unique().tolist())
+    all_s = st.sidebar.checkbox("All Surveyors", value=True, key="cs_all_s")
+    sel_s = st.sidebar.multiselect("Surveyor", surveyors,
+                                    default=surveyors if all_s else [], key="cs_surv")
+    if sel_s:
+        filtered = filtered[filtered["surveyor"].isin(sel_s)]
+
+    # Gender
+    genders = sorted(filtered["gender"].dropna().unique().tolist())
+    all_g = st.sidebar.checkbox("All Genders", value=True, key="cs_all_g")
+    sel_g = st.sidebar.multiselect("Gender", genders,
+                                    default=genders if all_g else [], key="cs_gen")
+    if sel_g:
+        filtered = filtered[filtered["gender"].isin(sel_g)]
+
+    # Occupation
+    occs = sorted(filtered["occupation"].dropna().unique().tolist())
+    all_o = st.sidebar.checkbox("All Occupations", value=True, key="cs_all_o")
+    sel_o = st.sidebar.multiselect("Occupation", occs,
+                                    default=occs if all_o else [], key="cs_occ")
+    if sel_o:
+        filtered = filtered[filtered["occupation"].isin(sel_o)]
+
+    return filtered
+
+
+def _commuter_kpi(col, label: str, value, delta=None, help_text: str | None = None):
+    col.metric(label, value, delta=delta, help=help_text)
+
+
+def _commuter_tab_overview(df: pd.DataFrame):
+    st.subheader("📊 Overview")
+
+    total = len(df)
+    male_pct = round(df["gender"].eq("Male").sum() / total * 100, 1) if total else 0
+    avg_time = round(df["journey_time_min"].mean(), 1)
+    avg_cost = round(df["travel_cost_rs"].mean(), 1)
+    surveyors = df["surveyor"].nunique()
+
+    c1, c2, c3, c4, c5 = st.columns(5)
+    _commuter_kpi(c1, "Total Responses", total, help_text="Commuter interviews recorded")
+    _commuter_kpi(c2, "Male / Female", f"{male_pct}% / {round(100 - male_pct, 1)}%")
+    _commuter_kpi(c3, "Avg Journey Time", f"{avg_time} min")
+    _commuter_kpi(c4, "Avg Travel Cost", f"₹{avg_cost}")
+    _commuter_kpi(c5, "Surveyors Active", surveyors)
+
+    st.markdown("---")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        hr = df["start_hour"].dropna().astype(int).value_counts().sort_index()
+        fig = px.bar(x=hr.index, y=hr.values,
+                     labels={"x": "Hour of Day", "y": "Responses"},
+                     title="Survey Responses by Hour",
+                     color_discrete_sequence=[PRIMARY_COLOR])
+        fig.update_layout(margin=dict(t=40, b=20), height=300)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        sc = df["surveyor"].value_counts().reset_index()
+        sc.columns = ["Surveyor", "Count"]
+        fig = px.bar(sc, x="Count", y="Surveyor", orientation="h",
+                     title="Responses per Surveyor",
+                     color_discrete_sequence=[SECONDARY])
+        fig.update_layout(yaxis=dict(autorange="reversed"),
+                           margin=dict(t=40, b=20), height=300)
+        st.plotly_chart(fig, use_container_width=True)
+
+    jt_clean = df["journey_time_min"].dropna()
+    if not jt_clean.empty:
+        fig = px.histogram(jt_clean, nbins=20,
+                            labels={"value": "Journey Time (min)", "count": "Responses"},
+                            title="Journey Time Distribution",
+                            color_discrete_sequence=[PRIMARY_COLOR])
+        fig.update_layout(showlegend=False, margin=dict(t=40, b=20), height=280)
+        st.plotly_chart(fig, use_container_width=True)
+
+
+def _commuter_tab_demographics(df: pd.DataFrame):
+    st.subheader("👥 Traveller Demographics")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        gd = df["gender"].value_counts().reset_index()
+        gd.columns = ["Gender", "Count"]
+        fig = px.pie(gd, names="Gender", values="Count", title="Gender Split",
+                     color_discrete_sequence=[PRIMARY_COLOR, SECONDARY, GREY])
+        fig.update_traces(textposition="inside", textinfo="percent+label")
+        fig.update_layout(margin=dict(t=40), height=320)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        AGE_ORDER = ["<18", "18-25", "25-44", "45-59", ">60"]
+        age_col = df["age"].dropna()
+        age_col = age_col.str.strip()
+        age_counts = age_col.value_counts().reindex(AGE_ORDER, fill_value=0)
+        fig = px.bar(x=age_counts.index, y=age_counts.values,
+                     labels={"x": "Age Group", "y": "Count"},
+                     title="Age Distribution",
+                     color_discrete_sequence=[SECONDARY])
+        fig.update_layout(margin=dict(t=40), height=320)
+        st.plotly_chart(fig, use_container_width=True)
+
+    col3, col4 = st.columns(2)
+
+    with col3:
+        occ = df["occupation"].value_counts().reset_index()
+        occ.columns = ["Occupation", "Count"]
+        fig = px.bar(occ, x="Count", y="Occupation", orientation="h",
+                     title="Occupation Breakdown",
+                     color_discrete_sequence=[PRIMARY_COLOR])
+        fig.update_layout(yaxis=dict(autorange="reversed"),
+                           margin=dict(t=40, b=20), height=300)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col4:
+        INCOME_ORDER = ["No Income", "< 10000", "10001-25000", "25001-50000",
+                         "50001-75000", "75001-100000", "100000-200000", ">200000"]
+        inc = df["income"].str.strip().value_counts().reindex(INCOME_ORDER).dropna()
+        fig = px.bar(x=inc.values, y=inc.index, orientation="h",
+                     labels={"x": "Count", "y": "Income Range (₹)"},
+                     title="Income Distribution",
+                     color_discrete_sequence=[SECONDARY])
+        fig.update_layout(yaxis=dict(autorange="reversed"),
+                           margin=dict(t=40, b=20), height=300)
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("##### Gender × Occupation")
+    cross = (df.groupby(["occupation", "gender"])
+               .size().reset_index(name="Count"))
+    fig = px.bar(cross, x="occupation", y="Count", color="gender",
+                 barmode="stack",
+                 color_discrete_sequence=[PRIMARY_COLOR, SECONDARY, GREY],
+                 labels={"occupation": "Occupation"})
+    fig.update_layout(margin=dict(t=20, b=20), height=300)
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def _commuter_tab_trip_patterns(df: pd.DataFrame):
+    st.subheader("🗺️ Trip Patterns")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        tp = df["trip_purpose"].str.strip().value_counts().reset_index()
+        tp.columns = ["Purpose", "Count"]
+        fig = px.pie(tp, names="Purpose", values="Count", title="Trip Purpose",
+                     color_discrete_sequence=px.colors.qualitative.Set2)
+       
+# ── Imports ───────────────────────────────────────────────────────────────────
+import io
+import os
 from datetime import datetime, time
 
 import pandas as pd
