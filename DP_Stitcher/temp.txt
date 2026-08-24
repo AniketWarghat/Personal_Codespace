@@ -1,0 +1,1 @@
+python dp_stitch.py --input input/ --output output/stitched_map --layout "WS31,WS32;WS36,WS37"

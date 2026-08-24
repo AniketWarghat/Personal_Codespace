@@ -1,6 +1,7 @@
 import streamlit as st
 import io
 import os
+import subprocess
 from datetime import datetime, time
 
 import pandas as pd
@@ -23,6 +24,13 @@ init_db()
 
 PRIMARY_COLOR = "#0057A8"
 SHEET_NAME = "Survey Results"
+
+FAULTY_DEFAULT_THRESHOLD_SEC = 60
+FUZZY_MATCH_THRESHOLD = 75
+TOP_OD_PAIRS_LIMIT = 20
+TOP_LOCATIONS_LIMIT = 15
+MAP_LAT = 18.9633
+MAP_LON = 72.8355
 
 # --------------------------------------------------
 # CANONICAL LOCATIONS & CONSTANTS
@@ -125,7 +133,7 @@ def safe_col(df, col):
 
 
 def parse_time_column(series):
-    parsed = pd.to_datetime(series.astype(str), format="%H:%M:%S", errors="coerce")
+    parsed = pd.to_datetime(series.astype(str).str.strip(), errors="coerce")
     return parsed.dt.time
 
 
@@ -135,7 +143,7 @@ def timedelta_to_minutes(td):
     return td.total_seconds() / 60
 
 
-def fuzzy_normalize_location(value, canonical_list, threshold=75):
+def fuzzy_normalize_location(value, canonical_list, threshold=FUZZY_MATCH_THRESHOLD):
     if pd.isna(value):
         return None, False, "Missing"
     raw = str(value).strip()
@@ -293,7 +301,8 @@ def filter_dataframe(df):
         "Date Range",
         value=(min_date, max_date),
         min_value=min_date,
-        max_value=max_date
+        max_value=max_date,
+        key="global_date_range"
     )
 
     if isinstance(selected_dates, tuple) and len(selected_dates) == 2:
@@ -301,31 +310,34 @@ def filter_dataframe(df):
     else:
         start_date = end_date = min_date
 
-    time_from = st.sidebar.time_input("Survey Start Time From", value=time(0, 0))
-    time_to = st.sidebar.time_input("Survey Start Time To", value=time(23, 59))
+    time_from = st.sidebar.time_input("Survey Start Time From", value=time(0, 0), key="global_time_from")
+    time_to = st.sidebar.time_input("Survey Start Time To", value=time(23, 59), key="global_time_to")
 
     surveyors = sorted(df["Remarks1"].dropna().unique().tolist()) if "Remarks1" in df.columns else []
-    sel_all_s = st.sidebar.checkbox("Select All Surveyors", value=True)
+    sel_all_s = st.sidebar.checkbox("Select All Surveyors", value=True, key="select_all_surveyors")
     selected_surveyors = st.sidebar.multiselect(
         "Surveyor Name",
         options=surveyors,
-        default=surveyors if sel_all_s else []
+        default=surveyors if sel_all_s else [],
+        key="selected_surveyors"
     )
 
     vehicles = sorted(df["3.Vehicle Type"].dropna().unique().tolist()) if "3.Vehicle Type" in df.columns else []
-    sel_all_v = st.sidebar.checkbox("Select All Vehicle Types", value=True)
+    sel_all_v = st.sidebar.checkbox("Select All Vehicle Types", value=True, key="select_all_vehicles")
     selected_vehicles = st.sidebar.multiselect(
         "Vehicle Type",
         options=vehicles,
-        default=vehicles if sel_all_v else []
+        default=vehicles if sel_all_v else [],
+        key="selected_vehicles"
     )
 
     arms = sorted(df["2.Arm details"].dropna().unique().tolist()) if "2.Arm details" in df.columns else []
-    sel_all_a = st.sidebar.checkbox("Select All Arms / Directions", value=True)
+    sel_all_a = st.sidebar.checkbox("Select All Arms / Directions", value=True, key="select_all_arms")
     selected_arms = st.sidebar.multiselect(
         "Arm / Direction",
         options=arms,
-        default=arms if sel_all_a else []
+        default=arms if sel_all_a else [],
+        key="selected_arms"
     )
 
     filtered = df[
@@ -351,6 +363,47 @@ def make_download_csv(df_in):
     return df_in.to_csv(index=False).encode("utf-8")
 
 
+def compute_entry_gaps(df_in: pd.DataFrame) -> pd.DataFrame:
+    out = df_in[
+        df_in["Remarks1"].notna() &
+        df_in["start_time"].notna() &
+        df_in["end_time"].notna() &
+        df_in["Date"].notna()
+    ].copy()
+
+    if out.empty:
+        out["start_sec"] = pd.Series(dtype="float64")
+        out["end_sec"] = pd.Series(dtype="float64")
+        out["prev_end_sec"] = pd.Series(dtype="float64")
+        out["prev_entry_end_time"] = pd.Series(dtype="object")
+        out["entry_gap_sec"] = pd.Series(dtype="float64")
+        out["entry_gap_mins"] = pd.Series(dtype="float64")
+        return out
+
+    start_dt = pd.to_datetime(out["start_time"].astype(str), errors="coerce")
+    end_dt = pd.to_datetime(out["end_time"].astype(str), errors="coerce")
+
+    out["start_sec"] = (
+        start_dt.dt.hour * 3600 +
+        start_dt.dt.minute * 60 +
+        start_dt.dt.second
+    ).astype("float64")
+
+    out["end_sec"] = (
+        end_dt.dt.hour * 3600 +
+        end_dt.dt.minute * 60 +
+        end_dt.dt.second
+    ).astype("float64")
+
+    out = out.sort_values(["Remarks1", "Date", "start_sec"])
+    out["prev_end_sec"] = out.groupby(["Remarks1", "Date"])["end_sec"].shift(1)
+    out["prev_entry_end_time"] = out.groupby(["Remarks1", "Date"])["end_time"].shift(1)
+    out["entry_gap_sec"] = out["start_sec"] - out["prev_end_sec"]
+    out["entry_gap_mins"] = out["entry_gap_sec"] / 60.0
+
+    return out
+
+
 # --------------------------------------------------
 # DATABASE LOAD
 # --------------------------------------------------
@@ -368,6 +421,14 @@ if not recent_syncs.empty:
     st.sidebar.dataframe(recent_syncs, use_container_width=True)
 else:
     st.sidebar.info("No sync history available yet.")
+
+if st.sidebar.button("🔄 Sync Now (Run Scraper)", key="sync_now_button"):
+    try:
+        subprocess.Popen(["python", "scraper.py"])
+        st.sidebar.success("Scraper started — data will update in ~30 seconds.")
+        st.rerun()
+    except Exception as e:
+        st.sidebar.error(f"Could not start scraper: {e}")
 
 with st.spinner("Loading and processing survey data..."):
     df = process_dataframe(raw_df)
@@ -433,6 +494,11 @@ with tabs[0]:
     c4.metric("Date Range", date_range_label)
     c5.metric("Peak Hour", peak_hour)
     c6.metric("Data Quality", f"{data_quality_score}%")
+
+    location_df = pd.DataFrame({"lat": [MAP_LAT], "lon": [MAP_LON]})
+    st.map(location_df, zoom=14)
+    st.caption("📍 EEH JJ Junction, Mumbai — Survey Location")
+
     col_l, col_r = st.columns(2)
 
     with col_l:
@@ -531,7 +597,23 @@ with tabs[1]:
 
         st.dataframe(summary, use_container_width=True)
 
-        top_s = summary.iloc[0]["Surveyor Name"]
+        heat_data = filtered_df.groupby(
+            ["Remarks1", filtered_df["Date"].dt.strftime("%d-%m")]
+        ).size().reset_index(name="Count")
+        heat_data.columns = ["Remarks1", "Date", "Count"]
+
+        if not heat_data.empty:
+            fig_heat = px.density_heatmap(
+                heat_data,
+                x="Date",
+                y="Remarks1",
+                z="Count",
+                title="Survey Heatmap — Surveyor × Date",
+                color_continuous_scale="Blues"
+            )
+            st.plotly_chart(fig_heat, use_container_width=True)
+
+        top_s = summary.iloc[0]["Surveyor Name"] if not summary.empty else "N/A"
         summary["Highlight"] = summary["Surveyor Name"].apply(
             lambda x: "Top Performer" if x == top_s else "Others"
         )
@@ -570,7 +652,7 @@ with tabs[1]:
             "Threshold (min)",
             min_value=0,
             max_value=10,
-            value=1,
+            value=FAULTY_DEFAULT_THRESHOLD_SEC // 60,
             step=1,
             key="faulty_min"
         )
@@ -579,7 +661,7 @@ with tabs[1]:
             "Threshold (sec)",
             min_value=0,
             max_value=59,
-            value=0,
+            value=FAULTY_DEFAULT_THRESHOLD_SEC % 60,
             step=5,
             key="faulty_sec"
         )
@@ -595,109 +677,92 @@ with tabs[1]:
             unsafe_allow_html=True
         )
 
-    gap_df = filtered_df[filtered_df["Remarks1"].notna()].copy()
-    gap_df = gap_df[gap_df["start_time"].notna() & gap_df["end_time"].notna()].copy()
-
-    # Convert time values safely to seconds-from-midnight
-    gap_df["start_sec"] = pd.to_datetime(
-        gap_df["start_time"].astype(str), errors="coerce"
-    ).dt.hour * 3600 + pd.to_datetime(
-        gap_df["start_time"].astype(str), errors="coerce"
-    ).dt.minute * 60 + pd.to_datetime(
-        gap_df["start_time"].astype(str), errors="coerce"
-    ).dt.second
-
-    gap_df["end_sec"] = pd.to_datetime(
-        gap_df["end_time"].astype(str), errors="coerce"
-    ).dt.hour * 3600 + pd.to_datetime(
-        gap_df["end_time"].astype(str), errors="coerce"
-    ).dt.minute * 60 + pd.to_datetime(
-        gap_df["end_time"].astype(str), errors="coerce"
-    ).dt.second
-
-    gap_df = gap_df.sort_values(["Remarks1", "Date", "start_sec"])
-
-    gap_df["prev_end_sec"] = gap_df.groupby(["Remarks1", "Date"])["end_sec"].shift(1)
-    gap_df["entry_gap_sec"] = gap_df["start_sec"] - gap_df["prev_end_sec"]
-    gap_df["entry_gap_mins"] = gap_df["entry_gap_sec"] / 60.0
-
-    faulty_base = gap_df[
-        gap_df["entry_gap_sec"].notna() &
-        (gap_df["entry_gap_sec"] > 0) &
-        (gap_df["entry_gap_sec"] < threshold_total_sec)
-    ].copy()
-
-    if faulty_base.empty:
-        st.success(
-            f"✅ No consecutive entries with gap under "
-            f"{thresh_min}m {thresh_sec:02d}s in current filters."
-        )
+    if threshold_total_sec == 0:
+        st.warning("Please set a threshold greater than 0 seconds.")
     else:
-        fk1, fk2, fk3, fk4 = st.columns(4)
-        fk1.metric("Total Flagged Entries", len(faulty_base))
-        fk2.metric("Surveyors Flagged", faulty_base["Remarks1"].nunique())
-        fk3.metric("Shortest Gap", f"{int(round(faulty_base['entry_gap_sec'].min()))} sec")
-        fk4.metric("Most Flagged", faulty_base["Remarks1"].value_counts().idxmax())
+        gap_df = compute_entry_gaps(filtered_df)
 
-        faulty_summary = (
-            faulty_base.groupby("Remarks1")
-            .agg(
-                **{
-                    "Faulty Entries": ("Remarks1", "size"),
-                    "Shortest Gap (sec)": ("entry_gap_sec", lambda x: int(round(x.min()))),
-                    "Avg Gap (sec)": ("entry_gap_sec", lambda x: int(round(x.mean()))),
-                }
+        faulty_base = gap_df[
+            gap_df["entry_gap_sec"].notna() &
+            (gap_df["entry_gap_sec"] > 0) &
+            (gap_df["entry_gap_sec"] < threshold_total_sec)
+        ].copy()
+
+        if faulty_base.empty:
+            st.success(
+                f"✅ No consecutive entries with gap under "
+                f"{thresh_min}m {thresh_sec:02d}s in current filters."
             )
-            .reset_index()
-            .rename(columns={"Remarks1": "Surveyor"})
-            .sort_values("Faulty Entries", ascending=False)
-        )
+        else:
+            fk1, fk2, fk3, fk4 = st.columns(4)
+            fk1.metric("Total Flagged Entries", len(faulty_base))
+            fk2.metric("Surveyors Flagged", faulty_base["Remarks1"].nunique())
+            fk3.metric("Shortest Gap", f"{int(round(faulty_base['entry_gap_sec'].min()))} sec")
+            fk4.metric("Most Flagged", faulty_base["Remarks1"].value_counts().idxmax())
 
-        st.markdown("#### Summary by Surveyor")
-        st.dataframe(faulty_summary, use_container_width=True)
+            faulty_summary = (
+                faulty_base.groupby("Remarks1")
+                .agg(
+                    **{
+                        "Faulty Entries": ("Remarks1", "size"),
+                        "Shortest Gap (sec)": ("entry_gap_sec", lambda x: int(round(x.min()))),
+                        "Avg Gap (sec)": ("entry_gap_sec", lambda x: int(round(x.mean()))),
+                    }
+                )
+                .reset_index()
+                .rename(columns={"Remarks1": "Surveyor"})
+                .sort_values("Faulty Entries", ascending=False)
+            )
 
-        faulty_display = faulty_base[[
-            "Remarks1", "Date", "start_time", "end_time",
-            "entry_gap_sec", "entry_gap_mins",
-            "3.Vehicle Type", "2.Arm details",
-            "unified_origin", "unified_destination"
-        ]].copy()
+            st.markdown("#### Summary by Surveyor")
+            st.dataframe(faulty_summary, use_container_width=True)
 
-        faulty_display["Gap (sec)"] = faulty_display["entry_gap_sec"].round(0).astype(int)
-        faulty_display["Gap (m:ss)"] = faulty_display["entry_gap_mins"].apply(
-            lambda x: f"{int(x)}m {int(round((x % 1) * 60)):02d}s" if pd.notna(x) else "-"
-        )
-        faulty_display["Date"] = pd.to_datetime(faulty_display["Date"]).dt.strftime("%d-%m-%Y")
-        faulty_display["start_time"] = faulty_display["start_time"].apply(
-            lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
-        )
-        faulty_display["end_time"] = faulty_display["end_time"].apply(
-            lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
-        )
+            faulty_display = faulty_base[[
+                "Remarks1", "Date", "prev_entry_end_time", "start_time", "end_time",
+                "entry_gap_sec", "entry_gap_mins",
+                "3.Vehicle Type", "2.Arm details",
+                "unified_origin", "unified_destination"
+            ]].copy()
 
-        faulty_display = faulty_display.rename(columns={
-            "Remarks1": "Surveyor",
-            "3.Vehicle Type": "Vehicle Type",
-            "2.Arm details": "Arm",
-            "unified_origin": "Origin",
-            "unified_destination": "Destination",
-        }).drop(columns=["entry_gap_sec", "entry_gap_mins"])
+            faulty_display["Gap (sec)"] = faulty_display["entry_gap_sec"].round(0).astype(int)
+            faulty_display["Gap (m:ss)"] = faulty_display["entry_gap_mins"].apply(
+                lambda x: f"{int(x)}m {int(round((x % 1) * 60)):02d}s" if pd.notna(x) else "-"
+            )
+            faulty_display["Date"] = pd.to_datetime(faulty_display["Date"]).dt.strftime("%d-%m-%Y")
+            faulty_display["prev_entry_end_time"] = faulty_display["prev_entry_end_time"].apply(
+                lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
+            )
+            faulty_display["start_time"] = faulty_display["start_time"].apply(
+                lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
+            )
+            faulty_display["end_time"] = faulty_display["end_time"].apply(
+                lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
+            )
 
-        faulty_display = faulty_display[[
-            "Surveyor", "Date", "start_time", "end_time",
-            "Gap (sec)", "Gap (m:ss)",
-            "Vehicle Type", "Arm", "Origin", "Destination"
-        ]].sort_values(["Surveyor", "Gap (sec)"])
+            faulty_display = faulty_display.rename(columns={
+                "Remarks1": "Surveyor",
+                "prev_entry_end_time": "Prev Entry Ended At",
+                "3.Vehicle Type": "Vehicle Type",
+                "2.Arm details": "Arm",
+                "unified_origin": "Origin",
+                "unified_destination": "Destination",
+            }).drop(columns=["entry_gap_sec", "entry_gap_mins"])
 
-        st.markdown("#### All Flagged Entries (Detail)")
-        st.dataframe(faulty_display, use_container_width=True)
+            faulty_display = faulty_display[[
+                "Surveyor", "Date", "Prev Entry Ended At", "start_time", "end_time",
+                "Gap (sec)", "Gap (m:ss)",
+                "Vehicle Type", "Arm", "Origin", "Destination"
+            ]].sort_values(["Surveyor", "Gap (sec)"])
 
-        st.download_button(
-            label="⬇️ Download Flagged Entries as CSV",
-            data=faulty_display.to_csv(index=False).encode("utf-8"),
-            file_name="faulty_surveyor_entries.csv",
-            mime="text/csv"
-        )
+            st.markdown("#### All Flagged Entries (Detail)")
+            st.dataframe(faulty_display, use_container_width=True)
+
+            st.download_button(
+                label="⬇️ Download Flagged Entries as CSV",
+                data=faulty_display.to_csv(index=False).encode("utf-8"),
+                file_name="faulty_surveyor_entries.csv",
+                mime="text/csv"
+            )
 
 # --------------------------------------------------
 # TAB 3 — VEHICLES
@@ -799,6 +864,23 @@ with tabs[2]:
     else:
         st.info("No arm-wise vehicle data available.")
 
+    st.markdown("### Hourly Vehicle Type Distribution")
+    hveh = filtered_df.groupby(["start_hour", "3.Vehicle Type"]).size().reset_index(name="Count")
+    hveh = hveh[hveh["start_hour"].notna()].sort_values("start_hour")
+    if not hveh.empty:
+        fig_hveh = px.bar(
+            hveh,
+            x="start_hour",
+            y="Count",
+            color="3.Vehicle Type",
+            title="Hourly Vehicle Type Distribution",
+            barmode="stack",
+            labels={"start_hour": "Hour of Day", "3.Vehicle Type": "Vehicle Type"}
+        )
+        st.plotly_chart(fig_hveh, use_container_width=True)
+    else:
+        st.info("No hourly vehicle distribution available.")
+
 # --------------------------------------------------
 # TAB 4 — ORIGINS & DESTINATIONS
 # --------------------------------------------------
@@ -806,6 +888,19 @@ with tabs[3]:
     st.subheader("Origins & Destinations")
 
     od = filtered_df.copy()
+
+    od_vehicle_options = sorted(od["3.Vehicle Type"].dropna().unique().tolist())
+    od_veh_filter = st.multiselect(
+        "Filter O-D by Vehicle Type",
+        options=od_vehicle_options,
+        default=od_vehicle_options,
+        key="od_veh_filter"
+    )
+
+    if od_veh_filter:
+        od = od[od["3.Vehicle Type"].isin(od_veh_filter)].copy()
+    else:
+        od = od.iloc[0:0].copy()
 
     od["display_origin"] = od.apply(
         lambda r: best_location(r["unified_origin"], r["raw_origin"]), axis=1
@@ -827,7 +922,7 @@ with tabs[3]:
         .size()
         .reset_index(name="Trip Count")
         .sort_values("Trip Count", ascending=False)
-        .head(20)
+        .head(TOP_OD_PAIRS_LIMIT)
     )
 
     if not od_pairs.empty:
@@ -845,11 +940,11 @@ with tabs[3]:
 
         with col_c:
             fig_od = px.bar(
-                od_pairs.sort_values("Trip Count", ascending=True).head(15),
+                od_pairs.sort_values("Trip Count", ascending=True).head(TOP_LOCATIONS_LIMIT),
                 x="Trip Count",
                 y="Origin → Destination",
                 orientation="h",
-                title="Top 15 O-D Pairs",
+                title="Top O-D Pairs",
                 color_discrete_sequence=[PRIMARY_COLOR]
             )
             fig_od.update_traces(
@@ -860,7 +955,7 @@ with tabs[3]:
         st.info("No O-D pair data available for the current filters.")
 
     st.markdown("### Top Origins")
-    top_orig = od_valid["display_origin"].dropna().value_counts().head(15).reset_index()
+    top_orig = od_valid["display_origin"].dropna().value_counts().head(TOP_LOCATIONS_LIMIT).reset_index()
     top_orig.columns = ["Origin", "Count"]
 
     if not top_orig.empty:
@@ -869,7 +964,7 @@ with tabs[3]:
             x="Count",
             y="Origin",
             orientation="h",
-            title="Top 15 Origins",
+            title="Top Origins",
             labels={"Count": "Frequency"},
             color_discrete_sequence=[PRIMARY_COLOR]
         )
@@ -881,7 +976,7 @@ with tabs[3]:
         st.info("No origin data available.")
 
     st.markdown("### Top Destinations")
-    top_dest = od_valid["display_destination"].dropna().value_counts().head(15).reset_index()
+    top_dest = od_valid["display_destination"].dropna().value_counts().head(TOP_LOCATIONS_LIMIT).reset_index()
     top_dest.columns = ["Destination", "Count"]
 
     if not top_dest.empty:
@@ -890,7 +985,7 @@ with tabs[3]:
             x="Count",
             y="Destination",
             orientation="h",
-            title="Top 15 Destinations",
+            title="Top Destinations",
             labels={"Count": "Frequency"},
             color_discrete_sequence=["#1F77B4"]
         )
@@ -902,39 +997,41 @@ with tabs[3]:
         st.info("No destination data available.")
 
     st.markdown("### 🚩 Location Data Quality Report")
-    bad = filtered_df[filtered_df["bad_location_entry"] == True].copy()
+    bad = od[od["bad_location_entry"] == True].copy()
 
     if bad.empty:
         st.success("No location data issues found in the current filtered data.")
     else:
-        bad_pct = round(len(bad) / len(filtered_df) * 100, 1) if len(filtered_df) else 0
+        bad_pct = round(len(bad) / len(od) * 100, 1) if len(od) else 0
         st.warning(
             f"**{len(bad):,}** records ({bad_pct}%) have suspicious or unresolved "
             "origin/destination entries."
         )
 
         bad_display = bad[[
-    "Date", "Remarks1", "3.Vehicle Type",
-    "raw_origin", "raw_destination", "location_issue_type"
-    ]].copy()
-    bad_display["Date"] = pd.to_datetime(bad_display["Date"]).dt.strftime("%d-%m-%Y")
-    bad_display = bad_display.rename(columns={
+            "Date", "Remarks1", "3.Vehicle Type",
+            "raw_origin", "raw_destination", "location_issue_type"
+        ]].copy()
+
+        bad_display["Date"] = pd.to_datetime(bad_display["Date"]).dt.strftime("%d-%m-%Y")
+        bad_display = bad_display.rename(columns={
             "Remarks1": "Surveyor",
             "3.Vehicle Type": "Vehicle Type",
             "raw_origin": "Raw Origin",
             "raw_destination": "Raw Destination",
             "location_issue_type": "Issue"
         })
-    st.dataframe(bad_display, use_container_width=True)
 
-    st.markdown("#### Bad Entries per Surveyor")
-    bad_by_s = (
+        st.dataframe(bad_display, use_container_width=True)
+
+        st.markdown("#### Bad Entries per Surveyor")
+        bad_by_s = (
             bad.groupby("Remarks1").size()
             .reset_index(name="Bad Entries")
             .sort_values("Bad Entries", ascending=False)
             .rename(columns={"Remarks1": "Surveyor"})
         )
-    st.dataframe(bad_by_s, use_container_width=True)
+        st.dataframe(bad_by_s, use_container_width=True)
 
 # --------------------------------------------------
 # TAB 5 — INDIVIDUAL SURVEYOR
@@ -942,11 +1039,12 @@ with tabs[3]:
 with tabs[4]:
     st.subheader("Individual Surveyor Deep Dive")
 
-    surveyor_list = sorted(df["Remarks1"].dropna().unique().tolist())
+    surveyor_list = sorted(df["Remarks1"].dropna().unique().tolist()) if "Remarks1" in df.columns else []
     selected_surveyor = st.selectbox(
         "Select a Surveyor",
         options=surveyor_list,
-        help="Shows all data for this surveyor regardless of global filters."
+        help="Shows all data for this surveyor regardless of global filters.",
+        key="selected_surveyor"
     )
 
     if selected_surveyor:
@@ -1038,7 +1136,7 @@ with tabs[4]:
             .size()
             .reset_index(name="Trip Count")
             .sort_values("Trip Count", ascending=False)
-            .head(15)
+            .head(TOP_LOCATIONS_LIMIT)
         )
 
         if not ind_pairs.empty:
@@ -1077,8 +1175,48 @@ with tabs[4]:
             label=f"Download {selected_surveyor}'s Data as CSV",
             data=make_download_csv(ind_display),
             file_name=f"surveyor_{selected_surveyor.replace(' ', '_')}_data.csv",
-            mime="text/csv"
+            mime="text/csv",
+            key="download_individual_surveyor"
         )
+
+        st.markdown("#### ⚠️ Flagged Entries for This Surveyor")
+        ind_gap = compute_entry_gaps(ind)
+        ind_faulty = ind_gap[
+            ind_gap["entry_gap_sec"].notna() &
+            (ind_gap["entry_gap_sec"] > 0) &
+            (ind_gap["entry_gap_sec"] < 60)
+        ].copy()
+
+        if ind_faulty.empty:
+            st.success("No entries with gap under 60 sec found for this surveyor.")
+        else:
+            st.warning(f"{len(ind_faulty)} potentially rushed entries found.")
+            ind_faulty_display = ind_faulty[[
+                "Date", "prev_entry_end_time", "start_time", "end_time",
+                "entry_gap_sec", "3.Vehicle Type"
+            ]].copy()
+
+            ind_faulty_display["Date"] = pd.to_datetime(ind_faulty_display["Date"]).dt.strftime("%d-%m-%Y")
+            ind_faulty_display["prev_entry_end_time"] = ind_faulty_display["prev_entry_end_time"].apply(
+                lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
+            )
+            ind_faulty_display["start_time"] = ind_faulty_display["start_time"].apply(
+                lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
+            )
+            ind_faulty_display["end_time"] = ind_faulty_display["end_time"].apply(
+                lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
+            )
+            ind_faulty_display["entry_gap_sec"] = ind_faulty_display["entry_gap_sec"].round(0).astype(int)
+
+            ind_faulty_display = ind_faulty_display.rename(columns={
+                "prev_entry_end_time": "Prev Entry Ended At",
+                "start_time": "Start Time",
+                "end_time": "End Time",
+                "entry_gap_sec": "Gap (sec)",
+                "3.Vehicle Type": "Vehicle Type"
+            })
+
+            st.dataframe(ind_faulty_display, use_container_width=True)
 
 # --------------------------------------------------
 # TAB 6 — SURVEYOR PRESENCE
@@ -1133,6 +1271,7 @@ with tabs[5]:
             ).sort_index(axis=1).reset_index()
 
             st.markdown("### Surveyor Presence by Date and Half-Day")
+            st.caption("Presence matrix uses all data regardless of filters.")
             st.dataframe(pivot, use_container_width=True)
 
             hourly_s = (
@@ -1207,39 +1346,55 @@ with tabs[5]:
 with tabs[6]:
     st.subheader("Filtered Raw Data")
 
-    raw = filtered_df[[
+    all_cols = list(filtered_df.columns)
+    display_default = [
         "Date", "start_time", "end_time", "Remarks1",
         "3.Vehicle Type", "2.Arm details",
-        "unified_origin", "unified_destination",
-        "unified_occupancy", "survey_duration_mins"
-    ]].copy()
-
-    raw["Date"] = pd.to_datetime(raw["Date"]).dt.strftime("%d-%m-%Y")
-    raw["start_time"] = raw["start_time"].apply(
-        lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
+        "unified_origin", "unified_destination"
+    ]
+    selected_cols = st.multiselect(
+        "Select columns to display",
+        options=all_cols,
+        default=[c for c in display_default if c in all_cols],
+        key="raw_data_columns"
     )
-    raw["end_time"] = raw["end_time"].apply(
-        lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
-    )
-    raw["survey_duration_mins"] = raw["survey_duration_mins"].round(1)
 
-    raw = raw.rename(columns={
-        "Remarks1": "Surveyor",
-        "3.Vehicle Type": "Vehicle Type",
-        "2.Arm details": "Arm",
-        "unified_origin": "Origin",
-        "unified_destination": "Destination",
-        "unified_occupancy": "Occupancy",
-        "survey_duration_mins": "Duration (mins)"
-    })
+    if not selected_cols:
+        st.warning("Please select at least one column to display.")
+    else:
+        raw = filtered_df[selected_cols].copy()
 
-    st.dataframe(raw, use_container_width=True)
-    st.download_button(
-        label="Download Filtered Data as CSV",
-        data=make_download_csv(raw),
-        file_name="filtered_survey_data.csv",
-        mime="text/csv"
-    )
+        if "Date" in raw.columns:
+            raw["Date"] = pd.to_datetime(raw["Date"]).dt.strftime("%d-%m-%Y")
+        if "start_time" in raw.columns:
+            raw["start_time"] = raw["start_time"].apply(
+                lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
+            )
+        if "end_time" in raw.columns:
+            raw["end_time"] = raw["end_time"].apply(
+                lambda x: x.strftime("%H:%M:%S") if pd.notna(x) and x is not None else "-"
+            )
+        if "survey_duration_mins" in raw.columns:
+            raw["survey_duration_mins"] = raw["survey_duration_mins"].round(1)
+
+        raw = raw.rename(columns={
+            "Remarks1": "Surveyor",
+            "3.Vehicle Type": "Vehicle Type",
+            "2.Arm details": "Arm",
+            "unified_origin": "Origin",
+            "unified_destination": "Destination",
+            "unified_occupancy": "Occupancy",
+            "survey_duration_mins": "Duration (mins)"
+        })
+
+        st.dataframe(raw, use_container_width=True)
+        st.download_button(
+            label="Download Filtered Data as CSV",
+            data=make_download_csv(raw),
+            file_name="filtered_survey_data.csv",
+            mime="text/csv",
+            key="download_filtered_data"
+        )
 
 # --------------------------------------------------
 # FOOTER

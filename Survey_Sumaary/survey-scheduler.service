@@ -1,0 +1,37 @@
+# survey-scheduler.service
+# ─────────────────────────────────────────────────────────────────────────────
+# Place this file at:  /etc/systemd/system/survey-scheduler.service
+#
+# Then run:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable survey-scheduler
+#   sudo systemctl start  survey-scheduler
+#   sudo systemctl status survey-scheduler
+#
+# View logs:
+#   sudo journalctl -u survey-scheduler -f
+# ─────────────────────────────────────────────────────────────────────────────
+
+[Unit]
+Description=Survey Dashboard Auto-Sync Scheduler
+After=network.target
+
+[Service]
+Type=simple
+
+# ── Change these two paths to match your server ──
+User=ubuntu
+WorkingDirectory=/home/ubuntu/survey_app
+
+# Reads the .env file automatically via python-dotenv inside scheduler.py
+ExecStart=/home/ubuntu/survey_app/venv/bin/python scheduler.py
+
+Restart=on-failure
+RestartSec=30
+
+# Log to journald (also written to scheduler.log by the script itself)
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

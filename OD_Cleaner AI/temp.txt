@@ -1,0 +1,3 @@
+python "C:\Users\awarghat\OneDrive - SystraGroup\Live Project\Python\Personal_Codespace\OD_Cleaner AI\od_cleaner_gemini.py" "C:\Aniket Warghat\Python\DC513MH04 _DC513MH04 Mumbai_2026-05-18 12_45_46__survey_results.xlsx"
+
+$env:GEMINI_API_KEY="AIzaSyBZ-cW2Q7s3LITNDsaMvqaio_i8zZOHm3o"
