@@ -821,26 +821,99 @@ def prepare_display(df_in: pd.DataFrame) -> pd.DataFrame:
 # ─────────────────────────────────────────────────────────────────────────────
 st.sidebar.title("🚦 Delhi OD Dashboard")
 st.sidebar.markdown("---")
-st.sidebar.subheader("📂 Upload Survey File")
+
+# ── TrafficLenz Auto-Download ─────────────────────────────────────────────
+st.sidebar.subheader("🔄 Live Data from TrafficLenz")
+
+_downloader_available = False
+try:
+    from downloader import (
+        config_from_secrets,
+        config_is_valid,
+        download_excel_bytes,
+        has_saved_session,
+        perform_interactive_login,
+    )
+    _tl_config = config_from_secrets()
+    _tl_ok, _tl_reason = config_is_valid(_tl_config)
+    _downloader_available = _tl_ok
+except Exception as _dl_import_err:
+    _tl_ok = False
+    _tl_reason = str(_dl_import_err)
+
+if _downloader_available:
+    _has_session = has_saved_session(_tl_config)
+    
+    if _has_session:
+        st.sidebar.success("🟢 TrafficLenz Connected")
+    else:
+        st.sidebar.warning("🟠 One-time login required")
+
+    col_btn1, col_btn2 = st.sidebar.columns(2)
+    with col_btn1:
+        if st.button("🔑 Login / Connect", use_container_width=True, help="Opens browser to complete 1-time CAPTCHA login"):
+            with st.spinner("Opening browser for login... Please check the 'I am not a robot' CAPTCHA."):
+                try:
+                    success = perform_interactive_login(_tl_config)
+                    if success:
+                        st.sidebar.success("✅ Logged in & session saved!")
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.sidebar.error("❌ Login was not completed.")
+                except Exception as _login_err:
+                    st.sidebar.error(f"Login error: {_login_err}")
+
+    with col_btn2:
+        sync_clicked = st.button("🔄 Sync Data", use_container_width=True, help="Fetch latest survey report directly into memory")
+
+    if sync_clicked:
+        with st.spinner("🌐 Syncing latest survey data from TrafficLenz..."):
+            try:
+                _raw_bytes, _ts = download_excel_bytes(_tl_config)
+                st.session_state["tl_data_bytes"] = _raw_bytes
+                st.session_state["tl_sync_time"] = _ts
+                st.sidebar.success(f"✅ Synced at {_ts}")
+                process_dataframe.clear()
+                st.rerun()
+            except Exception as _sync_err:
+                st.sidebar.error(f"❌ Sync failed: {_sync_err}")
+                st.sidebar.info("💡 If your session expired or captcha is required, click '🔑 Login / Connect' above.")
+
+    if "tl_sync_time" in st.session_state:
+        st.sidebar.caption(f"Last synced: **{st.session_state['tl_sync_time']}**")
+else:
+    if _tl_reason:
+        st.sidebar.info(f"ℹ️ Auto-download not configured:\n{_tl_reason}")
+
+st.sidebar.markdown("---")
+
+# ── Manual Upload (always available as fallback) ──────────────────────────
+st.sidebar.subheader("📂 Or Upload File Manually")
 
 uploaded_file = st.sidebar.file_uploader(
     "Upload Delhi OD Excel file",
     type=["xlsx"],
 )
 
+# ── Resolve which file to use (priority: uploaded > live sync > default) ──
 if uploaded_file is not None:
     file_bytes = uploaded_file.read()
     file_name = uploaded_file.name
     st.sidebar.success(f"✅ Loaded: {file_name}")
+elif "tl_data_bytes" in st.session_state and st.session_state["tl_data_bytes"]:
+    file_bytes = st.session_state["tl_data_bytes"]
+    _last_ts = st.session_state.get("tl_sync_time", "")
+    file_name = f"TrafficLenz Live Report ({_last_ts})"
+    st.sidebar.info(f"📊 Using live synced data ({_last_ts})")
+elif os.path.exists(DEFAULT_FILE):
+    with open(DEFAULT_FILE, "rb") as f:
+        file_bytes = f.read()
+    file_name = DEFAULT_FILE
+    st.sidebar.info(f"Using default file: {DEFAULT_FILE}")
 else:
-    if os.path.exists(DEFAULT_FILE):
-        with open(DEFAULT_FILE, "rb") as f:
-            file_bytes = f.read()
-        file_name = DEFAULT_FILE
-        st.sidebar.info(f"Using default file: {DEFAULT_FILE}")
-    else:
-        st.warning("⚠️ No survey file loaded. Please upload the Delhi Excel file.")
-        st.stop()
+    st.warning("⚠️ No survey file loaded. Click **🔄 Sync Data** or upload a file manually.")
+    st.stop()
 
 
 with st.spinner("Loading and processing Delhi OD survey data..."):

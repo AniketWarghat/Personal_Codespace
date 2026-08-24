@@ -1,0 +1,98 @@
+{
+  "recorded_at": "2026-08-24 17:43:30",
+  "start_url": "https://www.trafficlenz.com/",
+  "final_url": "https://www.trafficlenz.com/Home/viewgraph",
+  "download_url": "blob:https://www.trafficlenz.com/8cfcc730-950b-4d97-aca5-ab607e972928",
+  "clicks": [
+    {
+      "tag": "a",
+      "id": "dashboardBtn",
+      "cls": "waves-effect waves-block waves-light",
+      "name": "",
+      "text": "tabs",
+      "href": "myDashboardView",
+      "selector": "#dashboardBtn"
+    },
+    {
+      "tag": "input",
+      "id": "job_code",
+      "cls": "autocomplete",
+      "name": "",
+      "text": "",
+      "href": "",
+      "selector": "#job_code"
+    },
+    {
+      "tag": "button",
+      "id": "search_jobs",
+      "cls": "btn   center",
+      "name": "action",
+      "text": "Search",
+      "href": "",
+      "selector": "#search_jobs"
+    },
+    {
+      "tag": "a",
+      "id": "",
+      "cls": " modal-trigger",
+      "name": "",
+      "text": "DC513DL01 - Delhi OD",
+      "href": "",
+      "selector": ".modal-trigger"
+    },
+    {
+      "tag": "button",
+      "id": "submit_job_id",
+      "cls": "",
+      "name": "button",
+      "text": "view",
+      "href": "",
+      "selector": "#submit_job_id"
+    },
+    {
+      "tag": "div",
+      "id": "",
+      "cls": "mapboxgl-marker mapboxgl-marker-anchor-center",
+      "name": "",
+      "text": "Map marker",
+      "href": "",
+      "selector": ".mapboxgl-marker.mapboxgl-marker-anchor-center"
+    },
+    {
+      "tag": "a",
+      "id": "",
+      "cls": "",
+      "name": "",
+      "text": "",
+      "href": "javascript:;",
+      "selector": ""
+    },
+    {
+      "tag": "button",
+      "id": "button_642AD95B",
+      "cls": "",
+      "name": "",
+      "text": "+",
+      "href": "",
+      "selector": "#button_642AD95B"
+    },
+    {
+      "tag": "a",
+      "id": "",
+      "cls": "waves-effect waves-light",
+      "name": "",
+      "text": "download",
+      "href": "",
+      "selector": ".waves-effect.waves-light"
+    },
+    {
+      "tag": "a",
+      "id": "",
+      "cls": "",
+      "name": "",
+      "text": "",
+      "href": "blob:https://www.trafficlenz.com/8cfcc730-950b-4d97-aca5-ab607e972928",
+      "selector": ""
+    }
+  ]
+}
