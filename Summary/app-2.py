@@ -656,10 +656,15 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             max_value=max_date,
         )
 
-        if isinstance(selected_dates, tuple) and len(selected_dates) == 2:
-            start_date, end_date = selected_dates
+        if isinstance(selected_dates, (tuple, list)):
+            if len(selected_dates) == 2:
+                start_date, end_date = selected_dates
+            elif len(selected_dates) == 1:
+                start_date = end_date = selected_dates[0]
+            else:
+                start_date = end_date = min_date
         else:
-            start_date = end_date = min_date
+            start_date = end_date = selected_dates
 
         filtered = filtered[
             (filtered[COL_DATE].dt.date >= start_date)
