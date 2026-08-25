@@ -209,10 +209,23 @@ def download_excel_bytes(config: TrafficLenzConfig) -> Tuple[bytes, str]:
     temp_file = Path(config.save_dir) / f"temp_{int(time.time())}.xlsx"
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=config.headless,
-            args=["--ignore-certificate-errors", "--disable-web-security"],
-        )
+        launch_kwargs = {
+            "headless": config.headless,
+            "args": [
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--ignore-certificate-errors",
+                "--disable-web-security",
+            ],
+        }
+        for exe in ["/usr/bin/chromium", "/usr/bin/chromium-browser"]:
+            if os.path.exists(exe):
+                launch_kwargs["executable_path"] = exe
+                logger.info("Using system Chromium at %s", exe)
+                break
+
+        browser = p.chromium.launch(**launch_kwargs)
 
         context_kwargs = {"accept_downloads": True, "ignore_https_errors": True}
         if config.session_path.exists():
