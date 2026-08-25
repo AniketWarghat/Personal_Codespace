@@ -65,31 +65,45 @@ def _ensure_cloud_session(config: TrafficLenzConfig) -> None:
     if not config.session_path.exists():
         try:
             import streamlit as st
-            session_str = st.secrets.get("TL_SESSION_JSON")
-            if session_str:
+            import json
+            session_val = st.secrets.get("TL_SESSION_JSON")
+            if session_val:
                 Path(config.save_dir).mkdir(parents=True, exist_ok=True)
                 with open(config.session_path, "w", encoding="utf-8") as f:
-                    f.write(str(session_str))
+                    if isinstance(session_val, (dict, list)):
+                        json.dump(session_val, f, indent=2)
+                    else:
+                        f.write(str(session_val).strip("'\""))
                 logger.info("Restored session from Streamlit Secrets (TL_SESSION_JSON).")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Could not restore cloud session: %s", e)
 
 
 def _ensure_chromium_installed() -> None:
     """Automatically install Chromium on Linux cloud containers if missing."""
+    if not PLAYWRIGHT_AVAILABLE:
+        return
     import subprocess
     import sys
     try:
-        # Check if already installed
         with sync_playwright() as p:
             b = p.chromium.launch(headless=True)
             b.close()
-    except Exception:
-        logger.info("Chromium not found. Installing playwright chromium...")
+    except Exception as e:
+        logger.info("Playwright Chromium browser binary not found (%s). Installing now...", e)
         try:
-            subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], check=True)
-        except Exception as e:
-            logger.warning("Could not auto-install chromium: %s", e)
+            cmd = [sys.executable, "-m", "playwright", "install", "chromium"]
+            res = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            logger.info("Playwright Chromium installed successfully: %s", res.stdout)
+        except Exception as install_err:
+            logger.error("Failed to auto-install chromium: %s", install_err)
+
+
+# Run check on import in cloud environments
+if PLAYWRIGHT_AVAILABLE:
+    import sys
+    if sys.platform.startswith("linux"):
+        _ensure_chromium_installed()
 
 
 def has_saved_session(config: TrafficLenzConfig) -> bool:
@@ -105,6 +119,16 @@ def perform_interactive_login(config: TrafficLenzConfig, wait_timeout_sec: int =
     """
     if not PLAYWRIGHT_AVAILABLE:
         raise ImportError("Playwright is not installed. Run: pip install playwright && playwright install chromium")
+
+    _ensure_chromium_installed()
+
+    # Cloud environment check: No GUI display on headless Linux servers
+    import sys
+    if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+        raise EnvironmentError(
+            "Interactive login cannot open a popup window on a cloud server without a display.\n"
+            "👉 Please run 'python login.py' on your local computer once, then paste the contents of 'data/session.json' into Streamlit Cloud Secrets under TL_SESSION_JSON."
+        )
 
     Path(config.save_dir).mkdir(parents=True, exist_ok=True)
 
