@@ -667,8 +667,28 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         & (filtered[COL_DATE].dt.date <= end_date)
     ]
 
-    time_from = st.sidebar.time_input("Survey Start Time From", value=time(0, 0), step=60)
-    time_to = st.sidebar.time_input("Survey Start Time To", value=time(23, 59), step=60)
+    # Searchable, scrollable time dropdowns (15-min intervals from 00:00 to 23:59)
+    time_options = [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 15, 30, 45)]
+    if "23:59" not in time_options:
+        time_options.append("23:59")
+
+    time_from_str = st.sidebar.selectbox(
+        "Survey Start Time From",
+        options=time_options,
+        index=0,
+        help="Type or scroll to select start time (e.g. 08:00)",
+    )
+    time_to_str = st.sidebar.selectbox(
+        "Survey Start Time To",
+        options=time_options,
+        index=len(time_options) - 1,
+        help="Type or scroll to select end time (e.g. 22:00)",
+    )
+
+    h_f, m_f = map(int, time_from_str.split(":"))
+    h_t, m_t = map(int, time_to_str.split(":"))
+    time_from = time(h_f, m_f)
+    time_to = time(h_t, m_t, 59 if (h_t == 23 and m_t == 59) else 0)
 
     filtered = filtered[
         filtered[COL_START].apply(
