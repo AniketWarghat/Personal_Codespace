@@ -16,8 +16,10 @@ from __future__ import annotations
 import io
 import os
 import re
-from datetime import datetime, time
+from datetime import datetime, time, timezone, timedelta
 from typing import Any
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 import pandas as pd
 import plotly.express as px
@@ -643,53 +645,36 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     valid_dates = filtered[COL_DATE].dropna()
 
-    if not valid_dates.empty:
-        min_date = valid_dates.min().date()
-        max_date = valid_dates.max().date()
+    min_date = filtered[COL_DATE].min().date() if filtered[COL_DATE].notna().any() else datetime.today().date()
+    max_date = filtered[COL_DATE].max().date() if filtered[COL_DATE].notna().any() else datetime.today().date()
 
-        if min_date < max_date:
-            selected_dates = st.sidebar.date_input(
-                "Date Range",
-                value=(min_date, max_date),
-                min_value=min_date,
-                max_value=max_date,
-            )
-            if isinstance(selected_dates, (tuple, list)):
-                if len(selected_dates) == 2:
-                    start_date, end_date = selected_dates
-                elif len(selected_dates) == 1:
-                    start_date = end_date = selected_dates[0]
-                else:
-                    start_date, end_date = min_date, max_date
-            else:
-                start_date = end_date = selected_dates
-        else:
-            selected_dates = st.sidebar.date_input(
-                "Date",
-                value=min_date,
-                min_value=min_date,
-                max_value=max_date,
-            )
-            start_date = end_date = min_date
+    selected_dates = st.sidebar.date_input(
+        "Date Range",
+        value=(min_date, max_date),
+        min_value=min_date,
+        max_value=max_date,
+    )
 
-        filtered = filtered[
-            (filtered[COL_DATE].dt.date >= start_date)
-            & (filtered[COL_DATE].dt.date <= end_date)
-        ]
+    if isinstance(selected_dates, tuple) and len(selected_dates) == 2:
+        start_date, end_date = selected_dates
+    elif isinstance(selected_dates, (tuple, list)) and len(selected_dates) == 1:
+        start_date = end_date = selected_dates[0]
+    else:
+        start_date = end_date = min_date
 
-    col_t1, col_t2 = st.sidebar.columns(2)
-    with col_t1:
-        time_from = st.time_input("Start Time From", value=time(0, 0))
-    with col_t2:
-        time_to = st.time_input("Start Time To", value=time(23, 59, 59))
+    filtered = filtered[
+        (filtered[COL_DATE].dt.date >= start_date)
+        & (filtered[COL_DATE].dt.date <= end_date)
+    ]
 
-    is_full_day = (time_from == time(0, 0)) and (time_to.hour == 23 and time_to.minute >= 59)
-    if not is_full_day:
-        filtered = filtered[
-            filtered[COL_START].apply(
-                lambda x: (x is not None and pd.notna(x) and time_from <= x <= time_to)
-            )
-        ]
+    time_from = st.sidebar.time_input("Survey Start Time From", value=time(0, 0), step=60)
+    time_to = st.sidebar.time_input("Survey Start Time To", value=time(23, 59), step=60)
+
+    filtered = filtered[
+        filtered[COL_START].apply(
+            lambda x: x is not None and pd.notna(x) and time_from <= x <= time_to
+        )
+    ]
 
     survey_types = safe_unique(filtered["survey_type"])
     all_types = st.sidebar.checkbox("Select All Survey Types", value=True)
@@ -962,7 +947,7 @@ st.title("Delhi OD Passenger / Goods Survey Dashboard")
 
 st.caption(
     f"File: {file_name} | Last updated: "
-    f"{datetime.now().strftime('%d %b %Y %H:%M:%S')}"
+    f"{datetime.now(IST).strftime('%d %b %Y %I:%M:%S %p')} IST"
 )
 
 if COL_LOCATION in df.columns and df[COL_LOCATION].notna().any():

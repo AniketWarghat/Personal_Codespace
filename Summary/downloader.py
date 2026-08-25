@@ -318,7 +318,9 @@ def download_excel_bytes(config: TrafficLenzConfig) -> Tuple[bytes, str]:
             context.close()
             browser.close()
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    from datetime import timezone, timedelta
+    ist = timezone(timedelta(hours=5, minutes=30))
+    timestamp = datetime.now(ist).strftime("%d-%m-%Y %I:%M:%S %p")
     return file_bytes, timestamp
 
 
