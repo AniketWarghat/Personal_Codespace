@@ -134,6 +134,8 @@ PASSENGER_OCCUPANCY_COLS = [
     "1a8b1.Occupancy (including Driver)",
     "1a8c1.Occupancy (including Driver)",
     "1a8d1.Occupancy (including Driver)",
+    "1a8h1.Occupancy (including Driver)",
+    "1a8i1.Occupancy (including Driver)",
 ]
 
 PASSENGER_BUS_PERCENT_COLS = [
@@ -601,6 +603,31 @@ def process_dataframe(raw_bytes: bytes) -> pd.DataFrame:
                     return val
         return None
 
+    def derive_occupancy(row: pd.Series) -> str | None:
+        for col in PASSENGER_OCCUPANCY_COLS:
+            if col in row.index:
+                val = str(row.get(col) or "").strip()
+                if val and val.lower() not in INVALID_TEXT:
+                    try:
+                        num = float(val.replace("%", "").replace("℅", "").strip())
+                        return str(int(num)) if num.is_integer() else str(num)
+                    except Exception:
+                        return val
+
+        for col in PASSENGER_BUS_PERCENT_COLS:
+            if col in row.index:
+                val = str(row.get(col) or "").strip()
+                if val and val.lower() not in INVALID_TEXT:
+                    clean_val = val.replace("℅", "%").strip()
+                    if not clean_val.endswith("%"):
+                        try:
+                            num = float(clean_val)
+                            return f"{int(num)}%" if num.is_integer() else f"{num}%"
+                        except Exception:
+                            pass
+                    return clean_val
+        return None
+
     df["vehicle_type"] = df.apply(derive_vehicle, axis=1)
     df["origin"] = df.apply(derive_origin, axis=1)
     df["destination"] = df.apply(derive_destination, axis=1)
@@ -609,6 +636,7 @@ def process_dataframe(raw_bytes: bytes) -> pd.DataFrame:
     df["trip_purpose_or_commodity"] = df.apply(derive_purpose_or_commodity, axis=1)
     df["passenger_occupancy"] = df.apply(derive_passenger_occupancy, axis=1)
     df["bus_sitting_pct"] = df.apply(derive_bus_sitting_pct, axis=1)
+    df["occupancy"] = df.apply(derive_occupancy, axis=1)
 
     # Final cleaning
     df["vehicle_type"] = df["vehicle_type"].apply(lambda x: clean_text(x, title_case=True))
@@ -771,6 +799,7 @@ def prepare_display(df_in: pd.DataFrame) -> pd.DataFrame:
         "survey_type",
         "direction",
         "vehicle_type",
+        "occupancy",
         "origin",
         "destination",
         "entry_duration_sec",
@@ -814,6 +843,7 @@ def prepare_display(df_in: pd.DataFrame) -> pd.DataFrame:
             "survey_type": "Survey Type",
             "direction": "Direction",
             "vehicle_type": "Vehicle Type",
+            "occupancy": "Occupancy",
             "origin": "Origin",
             "destination": "Destination",
             "entry_duration_sec": "Entry Duration (sec)",
@@ -833,6 +863,7 @@ def prepare_display(df_in: pd.DataFrame) -> pd.DataFrame:
         "Survey Type",
         "Direction",
         "Vehicle Type",
+        "Occupancy",
         "Origin",
         "Destination",
         "Duration (mins)",
