@@ -643,59 +643,31 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     filtered = df.copy()
 
-    # Compute full survey date bounds from unfiltered dataset
-    if COL_DATE in df.columns and df[COL_DATE].notna().any():
-        min_date = df[COL_DATE].dropna().min().date()
-        max_date = df[COL_DATE].dropna().max().date()
-    else:
-        min_date = max_date = datetime.today().date()
+    valid_dates = df[COL_DATE].dropna()
 
-    selected_dates = st.sidebar.date_input(
-        "Date Range",
-        value=(min_date, max_date),
-        min_value=min_date,
-        max_value=max_date,
-        key="global_date_range_picker",
-    )
+    if not valid_dates.empty:
+        min_date = valid_dates.min().date()
+        max_date = valid_dates.max().date()
 
-    if isinstance(selected_dates, (tuple, list)):
-        if len(selected_dates) == 2:
-            d1, d2 = selected_dates
-            start_date, end_date = (min(d1, d2), max(d1, d2))
-        elif len(selected_dates) == 1:
-            start_date = end_date = selected_dates[0]
+        selected_dates = st.sidebar.date_input(
+            "Date Range",
+            value=(min_date, max_date),
+            min_value=min_date,
+            max_value=max_date,
+        )
+
+        if isinstance(selected_dates, tuple) and len(selected_dates) == 2:
+            start_date, end_date = selected_dates
         else:
-            start_date, end_date = min_date, max_date
-    else:
-        start_date = end_date = selected_dates
+            start_date = end_date = min_date
 
-    filtered = filtered[
-        (filtered[COL_DATE].dt.date >= start_date)
-        & (filtered[COL_DATE].dt.date <= end_date)
-    ]
+        filtered = filtered[
+            (filtered[COL_DATE].dt.date >= start_date)
+            & (filtered[COL_DATE].dt.date <= end_date)
+        ]
 
-    # Searchable, scrollable time dropdowns (15-min intervals from 00:00 to 23:59)
-    time_options = [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 15, 30, 45)]
-    if "23:59" not in time_options:
-        time_options.append("23:59")
-
-    time_from_str = st.sidebar.selectbox(
-        "Survey Start Time From",
-        options=time_options,
-        index=0,
-        help="Type or scroll to select start time (e.g. 08:00)",
-    )
-    time_to_str = st.sidebar.selectbox(
-        "Survey Start Time To",
-        options=time_options,
-        index=len(time_options) - 1,
-        help="Type or scroll to select end time (e.g. 22:00)",
-    )
-
-    h_f, m_f = map(int, time_from_str.split(":"))
-    h_t, m_t = map(int, time_to_str.split(":"))
-    time_from = time(h_f, m_f)
-    time_to = time(h_t, m_t, 59 if (h_t == 23 and m_t == 59) else 0)
+    time_from = st.sidebar.time_input("Survey Start Time From", value=time(0, 0))
+    time_to = st.sidebar.time_input("Survey Start Time To", value=time(23, 59))
 
     filtered = filtered[
         filtered[COL_START].apply(
