@@ -647,16 +647,29 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         min_date = valid_dates.min().date()
         max_date = valid_dates.max().date()
 
-        selected_dates = st.sidebar.date_input(
-            "Date Range",
-            value=(min_date, max_date),
-            min_value=min_date,
-            max_value=max_date,
-        )
-
-        if isinstance(selected_dates, tuple) and len(selected_dates) == 2:
-            start_date, end_date = selected_dates
+        if min_date < max_date:
+            selected_dates = st.sidebar.date_input(
+                "Date Range",
+                value=(min_date, max_date),
+                min_value=min_date,
+                max_value=max_date,
+            )
+            if isinstance(selected_dates, (tuple, list)):
+                if len(selected_dates) == 2:
+                    start_date, end_date = selected_dates
+                elif len(selected_dates) == 1:
+                    start_date = end_date = selected_dates[0]
+                else:
+                    start_date, end_date = min_date, max_date
+            else:
+                start_date = end_date = selected_dates
         else:
+            selected_dates = st.sidebar.date_input(
+                "Date",
+                value=min_date,
+                min_value=min_date,
+                max_value=max_date,
+            )
             start_date = end_date = min_date
 
         filtered = filtered[
@@ -664,14 +677,19 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             & (filtered[COL_DATE].dt.date <= end_date)
         ]
 
-    time_from = st.sidebar.time_input("Survey Start Time From", value=time(0, 0))
-    time_to = st.sidebar.time_input("Survey Start Time To", value=time(23, 59))
+    col_t1, col_t2 = st.sidebar.columns(2)
+    with col_t1:
+        time_from = st.time_input("Start Time From", value=time(0, 0))
+    with col_t2:
+        time_to = st.time_input("Start Time To", value=time(23, 59, 59))
 
-    filtered = filtered[
-        filtered[COL_START].apply(
-            lambda x: x is not None and pd.notna(x) and time_from <= x <= time_to
-        )
-    ]
+    is_full_day = (time_from == time(0, 0)) and (time_to.hour == 23 and time_to.minute >= 59)
+    if not is_full_day:
+        filtered = filtered[
+            filtered[COL_START].apply(
+                lambda x: (x is not None and pd.notna(x) and time_from <= x <= time_to)
+            )
+        ]
 
     survey_types = safe_unique(filtered["survey_type"])
     all_types = st.sidebar.checkbox("Select All Survey Types", value=True)
