@@ -843,29 +843,41 @@ except Exception as _dl_import_err:
 
 if _downloader_available:
     _has_session = has_saved_session(_tl_config)
+    import sys
+    _is_cloud = sys.platform.startswith("linux") and not os.environ.get("DISPLAY")
     
     if _has_session:
         st.sidebar.success("🟢 TrafficLenz Connected")
     else:
         st.sidebar.warning("🟠 One-time login required")
 
-    col_btn1, col_btn2 = st.sidebar.columns(2)
-    with col_btn1:
-        if st.button("🔑 Login / Connect", use_container_width=True, help="Opens browser to complete 1-time CAPTCHA login"):
-            with st.spinner("Opening browser for login... Please check the 'I am not a robot' CAPTCHA."):
-                try:
-                    success = perform_interactive_login(_tl_config)
-                    if success:
-                        st.sidebar.success("✅ Logged in & session saved!")
-                        time.sleep(1)
-                        st.rerun()
-                    else:
-                        st.sidebar.error("❌ Login was not completed.")
-                except Exception as _login_err:
-                    st.sidebar.error(f"Login error: {_login_err}")
+    sync_clicked = False
 
-    with col_btn2:
-        sync_clicked = st.button("🔄 Sync Data", use_container_width=True, help="Fetch latest survey report directly into memory")
+    if _is_cloud:
+        # On Cloud: only show Sync button if session exists, otherwise show secret guidance
+        if _has_session:
+            sync_clicked = st.sidebar.button("🔄 Sync Data", use_container_width=True, help="Fetch latest survey report directly into memory")
+        else:
+            st.sidebar.info("💡 To enable sync on Streamlit Cloud, add your `TL_SESSION_JSON` into App Secrets.")
+    else:
+        # On Local Desktop: show both 1-Click Login and Sync Data buttons
+        col_btn1, col_btn2 = st.sidebar.columns(2)
+        with col_btn1:
+            if st.button("🔑 Login / Connect", use_container_width=True, help="Opens browser to complete 1-time CAPTCHA login"):
+                with st.spinner("Opening browser for login... Please check the 'I am not a robot' CAPTCHA."):
+                    try:
+                        success = perform_interactive_login(_tl_config)
+                        if success:
+                            st.sidebar.success("✅ Logged in & session saved!")
+                            time.sleep(1)
+                            st.rerun()
+                        else:
+                            st.sidebar.error("❌ Login was not completed.")
+                    except Exception as _login_err:
+                        st.sidebar.error(f"Login error: {_login_err}")
+
+        with col_btn2:
+            sync_clicked = st.button("🔄 Sync Data", use_container_width=True, help="Fetch latest survey report directly into memory")
 
     if sync_clicked:
         with st.spinner("🌐 Syncing latest survey data from TrafficLenz..."):
@@ -878,7 +890,10 @@ if _downloader_available:
                 st.rerun()
             except Exception as _sync_err:
                 st.sidebar.error(f"❌ Sync failed: {_sync_err}")
-                st.sidebar.info("💡 If your session expired or captcha is required, click '🔑 Login / Connect' above.")
+                if _is_cloud:
+                    st.sidebar.info("💡 If your session expired, update `TL_SESSION_JSON` in your Streamlit Cloud Secrets.")
+                else:
+                    st.sidebar.info("💡 If your session expired or captcha is required, click '🔑 Login / Connect' above.")
 
     if "tl_sync_time" in st.session_state:
         st.sidebar.caption(f"Last synced: **{st.session_state['tl_sync_time']}**")
