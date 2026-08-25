@@ -643,24 +643,31 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     filtered = df.copy()
 
-    valid_dates = filtered[COL_DATE].dropna()
-
-    min_date = filtered[COL_DATE].min().date() if filtered[COL_DATE].notna().any() else datetime.today().date()
-    max_date = filtered[COL_DATE].max().date() if filtered[COL_DATE].notna().any() else datetime.today().date()
+    # Compute full survey date bounds from unfiltered dataset
+    if COL_DATE in df.columns and df[COL_DATE].notna().any():
+        min_date = df[COL_DATE].dropna().min().date()
+        max_date = df[COL_DATE].dropna().max().date()
+    else:
+        min_date = max_date = datetime.today().date()
 
     selected_dates = st.sidebar.date_input(
         "Date Range",
         value=(min_date, max_date),
         min_value=min_date,
         max_value=max_date,
+        key="global_date_range_picker",
     )
 
-    if isinstance(selected_dates, tuple) and len(selected_dates) == 2:
-        start_date, end_date = selected_dates
-    elif isinstance(selected_dates, (tuple, list)) and len(selected_dates) == 1:
-        start_date = end_date = selected_dates[0]
+    if isinstance(selected_dates, (tuple, list)):
+        if len(selected_dates) == 2:
+            d1, d2 = selected_dates
+            start_date, end_date = (min(d1, d2), max(d1, d2))
+        elif len(selected_dates) == 1:
+            start_date = end_date = selected_dates[0]
+        else:
+            start_date, end_date = min_date, max_date
     else:
-        start_date = end_date = min_date
+        start_date = end_date = selected_dates
 
     filtered = filtered[
         (filtered[COL_DATE].dt.date >= start_date)
