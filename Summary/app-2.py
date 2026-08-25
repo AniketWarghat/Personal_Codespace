@@ -911,11 +911,33 @@ if _downloader_available:
         st.sidebar.warning("🟠 One-time login required")
 
     sync_clicked = False
+    auto_sync_on = st.sidebar.toggle(
+        "⏱️ Auto-Sync (15m, 6 AM - 11 PM)",
+        value=True,
+        help="Automatically fetches fresh data from TrafficLenz every 15 minutes between 6:00 AM and 11:00 PM IST.",
+    )
+
+    def is_in_sync_window() -> bool:
+        now_time = datetime.now(IST).time()
+        return time(6, 0) <= now_time <= time(23, 0)
+
+    in_window = is_in_sync_window()
+    now_epoch = time.time()
+    last_sync_epoch = st.session_state.get("tl_last_sync_epoch", 0)
+    elapsed_sec = now_epoch - last_sync_epoch
+    sync_interval_sec = 900  # 15 minutes
+
+    should_auto_sync = (
+        _has_session
+        and auto_sync_on
+        and in_window
+        and (elapsed_sec >= sync_interval_sec or "tl_data_bytes" not in st.session_state)
+    )
 
     if _is_cloud:
         # On Cloud: only show Sync button if session exists, otherwise show secret guidance
         if _has_session:
-            sync_clicked = st.sidebar.button("🔄 Sync Data", use_container_width=True, help="Fetch latest survey report directly into memory")
+            sync_clicked = st.sidebar.button("🔄 Sync Data Now", use_container_width=True, help="Force immediate survey download")
         else:
             st.sidebar.info("💡 To enable sync on Streamlit Cloud, add your `TL_SESSION_JSON` into App Secrets.")
     else:
@@ -936,14 +958,16 @@ if _downloader_available:
                         st.sidebar.error(f"Login error: {_login_err}")
 
         with col_btn2:
-            sync_clicked = st.button("🔄 Sync Data", use_container_width=True, help="Fetch latest survey report directly into memory")
+            sync_clicked = st.button("🔄 Sync Data Now", use_container_width=True, help="Force immediate survey download")
 
-    if sync_clicked:
-        with st.spinner("🌐 Syncing latest survey data from TrafficLenz..."):
+    if sync_clicked or should_auto_sync:
+        _action_label = "Auto-syncing" if (should_auto_sync and not sync_clicked) else "Syncing"
+        with st.spinner(f"🌐 {_action_label} latest survey data from TrafficLenz..."):
             try:
                 _raw_bytes, _ts = download_excel_bytes(_tl_config)
                 st.session_state["tl_data_bytes"] = _raw_bytes
                 st.session_state["tl_sync_time"] = _ts
+                st.session_state["tl_last_sync_epoch"] = time.time()
                 st.sidebar.success(f"✅ Synced at {_ts}")
                 process_dataframe.clear()
                 st.rerun()
@@ -955,7 +979,12 @@ if _downloader_available:
                     st.sidebar.info("💡 If your session expired or captcha is required, click '🔑 Login / Connect' above.")
 
     if "tl_sync_time" in st.session_state:
-        st.sidebar.caption(f"Last synced: **{st.session_state['tl_sync_time']}**")
+        st.sidebar.caption(f"🕒 Last synced: **{st.session_state['tl_sync_time']}**")
+        if auto_sync_on and in_window:
+            remaining_mins = max(0, int((sync_interval_sec - (time.time() - last_sync_epoch)) // 60))
+            st.sidebar.caption(f"⏳ Next auto-sync in **~{remaining_mins} min**")
+        elif not in_window:
+            st.sidebar.caption("🌙 *Auto-sync paused (outside 6 AM – 11 PM IST)*")
 else:
     if _tl_reason:
         st.sidebar.info(f"ℹ️ Auto-download not configured:\n{_tl_reason}")
