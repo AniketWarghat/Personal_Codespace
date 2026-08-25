@@ -641,8 +641,6 @@ def process_dataframe(raw_bytes: bytes) -> pd.DataFrame:
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     st.sidebar.header("🔎 Global Filters")
 
-    filtered = df.copy()
-
     valid_dates = df[COL_DATE].dropna()
 
     if not valid_dates.empty:
@@ -665,22 +663,13 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                 start_date = end_date = min_date
         else:
             start_date = end_date = selected_dates
-
-        filtered = filtered[
-            (filtered[COL_DATE].dt.date >= start_date)
-            & (filtered[COL_DATE].dt.date <= end_date)
-        ]
+    else:
+        start_date = end_date = datetime.today().date()
 
     time_from = st.sidebar.time_input("Survey Start Time From", value=time(0, 0))
     time_to = st.sidebar.time_input("Survey Start Time To", value=time(23, 59))
 
-    filtered = filtered[
-        filtered[COL_START].apply(
-            lambda x: x is not None and pd.notna(x) and time_from <= x <= time_to
-        )
-    ]
-
-    survey_types = safe_unique(filtered["survey_type"])
+    survey_types = safe_unique(df["survey_type"])
     all_types = st.sidebar.checkbox("Select All Survey Types", value=True)
     selected_types = st.sidebar.multiselect(
         "Survey Type",
@@ -688,12 +677,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         default=survey_types if all_types else [],
     )
 
-    if selected_types:
-        filtered = filtered[filtered["survey_type"].astype(str).isin(selected_types)]
-    else:
-        filtered = filtered.iloc[0:0]
-
-    directions = safe_unique(filtered["direction"])
+    directions = safe_unique(df["direction"])
     all_directions = st.sidebar.checkbox("Select All Directions / Arms", value=True)
     selected_directions = st.sidebar.multiselect(
         "Direction / Arm",
@@ -701,12 +685,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         default=directions if all_directions else [],
     )
 
-    if selected_directions:
-        filtered = filtered[filtered["direction"].astype(str).isin(selected_directions)]
-    else:
-        filtered = filtered.iloc[0:0]
-
-    vehicles = safe_unique(filtered["vehicle_type"])
+    vehicles = safe_unique(df["vehicle_type"])
     all_vehicles = st.sidebar.checkbox("Select All Vehicle Types", value=True)
     selected_vehicles = st.sidebar.multiselect(
         "Vehicle Type",
@@ -714,12 +693,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         default=vehicles if all_vehicles else [],
     )
 
-    if selected_vehicles:
-        filtered = filtered[filtered["vehicle_type"].astype(str).isin(selected_vehicles)]
-    else:
-        filtered = filtered.iloc[0:0]
-
-    surveyors = safe_unique(filtered["surveyor"])
+    surveyors = safe_unique(df["surveyor"])
     all_surveyors = st.sidebar.checkbox("Select All Surveyors", value=True)
     selected_surveyors = st.sidebar.multiselect(
         "Surveyor",
@@ -727,13 +701,42 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         default=surveyors if all_surveyors else [],
     )
 
+    # ── Apply all filters together ──────────────────────────────────────────
+    filtered = df[
+        (df[COL_DATE].dt.date >= start_date)
+        & (df[COL_DATE].dt.date <= end_date)
+    ].copy()
+
+    time_to_cmp = time(time_to.hour, time_to.minute, 59)
+    is_full_day = (time_from == time(0, 0)) and (time_to.hour == 23 and time_to.minute >= 59)
+    if not is_full_day:
+        filtered = filtered[
+            filtered[COL_START].apply(
+                lambda x: x is not None and pd.notna(x) and time_from <= x <= time_to_cmp
+            )
+        ]
+
+    if selected_types:
+        filtered = filtered[filtered["survey_type"].astype(str).isin(selected_types)]
+    else:
+        filtered = filtered.iloc[0:0]
+
+    if selected_directions:
+        filtered = filtered[filtered["direction"].astype(str).isin(selected_directions)]
+    else:
+        filtered = filtered.iloc[0:0]
+
+    if selected_vehicles:
+        filtered = filtered[filtered["vehicle_type"].astype(str).isin(selected_vehicles)]
+    else:
+        filtered = filtered.iloc[0:0]
+
     if selected_surveyors:
         filtered = filtered[filtered["surveyor"].astype(str).isin(selected_surveyors)]
     else:
         filtered = filtered.iloc[0:0]
 
     st.sidebar.metric("Filtered Records", len(filtered))
-
     return filtered
 
 
