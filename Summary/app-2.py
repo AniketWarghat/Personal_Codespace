@@ -1007,14 +1007,25 @@ st.caption(
 )
 
 if COL_LOCATION in df.columns and df[COL_LOCATION].notna().any():
-    sample_loc = df[COL_LOCATION].dropna().astype(str).iloc[0]
+    valid_locs = df[COL_LOCATION].dropna().astype(str).tolist()
+    sample_loc = None
+    for loc_str in reversed(valid_locs):
+        loc_str = loc_str.strip()
+        if "," in loc_str and loc_str.lower() not in INVALID_TEXT:
+            try:
+                lat, lon = map(float, loc_str.split(","))
+                sample_loc = loc_str
+                break
+            except Exception:
+                continue
 
-    try:
-        lat, lon = map(float, sample_loc.split(","))
-        with st.expander("Show Survey Site Map"):
-            st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
-    except Exception:
-        pass
+    if sample_loc:
+        try:
+            lat, lon = map(float, sample_loc.split(","))
+            with st.expander(f"📍 Show Survey Site Map ({lat:.4f}, {lon:.4f})"):
+                st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+        except Exception:
+            pass
 
 
 # ─────────────────────────────────────────────────────────────────────────────
