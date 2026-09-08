@@ -23,6 +23,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Tuple
+import json
+import re
+import urllib.request
+import urllib.parse
 
 try:
     from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
@@ -204,13 +208,90 @@ def download_excel_bytes(config: TrafficLenzConfig) -> Tuple[bytes, str]:
     Returns:
         (file_bytes, timestamp_str)
     """
-    if not PLAYWRIGHT_AVAILABLE:
-        raise ImportError("Playwright is not installed. Run: pip install playwright && playwright install chromium")
-
     Path(config.save_dir).mkdir(parents=True, exist_ok=True)
     _ensure_cloud_session(config)
-    _ensure_chromium_installed()
 
+    # ── Attempt 1: Direct Fast HTTP Session Download (Instant, 0 RAM, 0 browser dependencies) ──
+    try:
+        if config.session_path.exists():
+            with open(config.session_path, "r", encoding="utf-8") as sf:
+                s_data = json.load(sf)
+            cookies_dict = {c["name"]: c["value"] for c in s_data.get("cookies", [])}
+            cookie_hdr = "; ".join(f"{k}={v}" for k, v in cookies_dict.items())
+            csrf = cookies_dict.get("csrftoken", "")
+            survey_code = config.survey_id or "DC513MH06"
+
+            # 1. Check dashboard to get job_id
+            dash_req = urllib.request.Request(
+                "https://www.trafficlenz.com/Home/myDashboardView",
+                headers={
+                    "Cookie": cookie_hdr,
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                }
+            )
+            dash_html = urllib.request.urlopen(dash_req, timeout=20).read().decode("utf-8", errors="ignore")
+            
+            # Find job_id for survey_code
+            m_job = re.search(rf"submitThisJob\('([A-Za-z0-9]+)'\)[^<]*{survey_code}", dash_html) or \
+                    re.search(rf"{survey_code}[^<]*</a></td>\s*<td><a onclick=\"submitThisJob\('([A-Za-z0-9]+)'\)", dash_html) or \
+                    re.search(rf"submitThisJob\('([A-Za-z0-9]+)'\)", dash_html)
+            
+            if m_job:
+                internal_job_id = m_job.group(1)
+                # 2. Viewgraph
+                vg_post = urllib.parse.urlencode({
+                    "job_id": internal_job_id,
+                    "nature_my_dashboard": "",
+                    "csrfmiddlewaretoken": csrf,
+                }).encode("utf-8")
+                vg_req = urllib.request.Request(
+                    "https://www.trafficlenz.com/Home/viewgraph",
+                    data=vg_post,
+                    headers={
+                        "Cookie": cookie_hdr,
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                        "Referer": "https://www.trafficlenz.com/Home/myDashboardView",
+                        "X-CSRFToken": csrf,
+                    }
+                )
+                vg_html = urllib.request.urlopen(vg_req, timeout=25).read().decode("utf-8", errors="ignore")
+
+                # 3. Extract site_id and task_id
+                m_dl = re.search(r"downloadQuestionnaireReport\(\s*'([^']+)'\s*,\s*'([^']+)'\s*\)", vg_html) or \
+                       re.search(r"downloadQuestionnaireReport\(\s*\"([^\"]+)\"\s*,\s*\"([^\"]+)\"\s*\)", vg_html)
+                if m_dl:
+                    site_id, task_id = m_dl.group(1), m_dl.group(2)
+                    dl_post = urllib.parse.urlencode({
+                        "site_id": site_id,
+                        "task_id": task_id,
+                        "csrfmiddlewaretoken": csrf,
+                    }).encode("utf-8")
+                    dl_req = urllib.request.Request(
+                        "https://www.trafficlenz.com/Home/downloadQuestionnaireReport",
+                        data=dl_post,
+                        headers={
+                            "Cookie": cookie_hdr,
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                            "Referer": "https://www.trafficlenz.com/Home/viewgraph",
+                            "X-CSRFToken": csrf,
+                            "X-Requested-With": "XMLHttpRequest",
+                        }
+                    )
+                    dl_bytes = urllib.request.urlopen(dl_req, timeout=60).read()
+                    if dl_bytes.startswith(b"PK") and len(dl_bytes) > 2000:
+                        logger.info("Direct HTTP download succeeded: %d bytes", len(dl_bytes))
+                        from datetime import timezone, timedelta
+                        ist = timezone(timedelta(hours=5, minutes=30))
+                        timestamp = datetime.now(ist).strftime("%d-%m-%Y %I:%M:%S %p")
+                        return dl_bytes, timestamp
+    except Exception as http_err:
+        logger.warning("Direct HTTP session download failed, falling back to Playwright: %s", http_err)
+
+    # ── Attempt 2: Full Headless Playwright Browser ────────────────────────────
+    if not PLAYWRIGHT_AVAILABLE:
+        raise RuntimeError("Direct HTTP sync failed and Playwright is not available.")
+
+    _ensure_chromium_installed()
     temp_file = Path(config.save_dir) / f"temp_{int(time.time())}.xlsx"
 
     with sync_playwright() as p:
@@ -291,7 +372,6 @@ def download_excel_bytes(config: TrafficLenzConfig) -> Tuple[bytes, str]:
             rec_btn_id = None
             if flow_file.exists():
                 try:
-                    import json
                     with open(flow_file, "r", encoding="utf-8") as ff:
                         f_data = json.load(ff)
                         for c in f_data.get("clicks", []):
@@ -412,8 +492,8 @@ def config_is_valid(config: TrafficLenzConfig) -> Tuple[bool, str]:
         return False, "TL_USERNAME is not set in secrets.toml"
     if not config.password:
         return False, "TL_PASSWORD is not set in secrets.toml"
-    if not PLAYWRIGHT_AVAILABLE:
-        return False, "Playwright not installed. Run: pip install playwright && playwright install chromium"
+    if not PLAYWRIGHT_AVAILABLE and not config.session_path.exists():
+        return False, "Playwright not installed and no session cookies found. Please provide TL_SESSION_JSON in secrets or install playwright."
     return True, ""
 
 
