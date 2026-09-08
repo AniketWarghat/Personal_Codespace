@@ -842,13 +842,15 @@ with tabs[0]:
 
         pace_df = pd.DataFrame(pace_rows).sort_values("Samples Collected", ascending=False)
 
-        # Colour rows by activity status only
+        # Colour rows by activity status only (Dark & Light theme friendly)
         def colour_pace(row):
             status = row.get("Status", "")
             if "🔴" in str(status):
-                return ["background-color: #fee2e2"] * len(row)  # light red  — inactive
+                # Dark red background with bright readable text for dark & light mode
+                return ["background-color: rgba(239, 68, 68, 0.25); color: #fca5a5; font-weight: 500;"] * len(row)
             elif "🟠" in str(status):
-                return ["background-color: #fff7ed"] * len(row)  # light orange — idle
+                # Dark orange background with bright readable text
+                return ["background-color: rgba(249, 115, 22, 0.25); color: #fdba74; font-weight: 500;"] * len(row)
             return [""] * len(row)
 
 
