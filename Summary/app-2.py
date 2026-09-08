@@ -14,15 +14,23 @@ Run:
 from __future__ import annotations
 
 import io
+import json
 import os
 import re
+import urllib.parse
 from datetime import datetime, time, timezone, timedelta
 from typing import Any
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
+import difflib
+import functools
+from rapidfuzz import fuzz, process
+import requests
 import pandas as pd
 import plotly.express as px
+import pydeck as pdk
+import xml.etree.ElementTree as ET
 import streamlit as st
 from streamlit.errors import StreamlitSecretNotFoundError
 
@@ -876,6 +884,1052 @@ def prepare_display(df_in: pd.DataFrame) -> pd.DataFrame:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# DELHI ZONING KML LOADER
+# ─────────────────────────────────────────────────────────────────────────────
+DELHI_ZONING_KML = os.path.join(os.path.dirname(__file__), "Final_zoning_delhi.kml")
+
+@st.cache_data(show_spinner=False)
+def load_delhi_zoning_data(kml_file_path: str):
+    if not os.path.exists(kml_file_path):
+        return None, [], pd.DataFrame()
+
+    try:
+        tree = ET.parse(kml_file_path)
+        root = tree.getroot()
+        ns = {"kml": "http://www.opengis.net/kml/2.2"}
+
+        features = []
+        centroids = []
+        table_rows = []
+        placemarks = root.findall(".//kml:Placemark", ns)
+
+        for pm in placemarks:
+            props = {}
+            for sd in pm.findall(".//kml:SimpleData", ns):
+                name = sd.attrib.get("name")
+                val = sd.text
+                if name:
+                    props[name] = val
+                    props[f"Final_zoning_delhi:{name}"] = val
+
+            zone_no = props.get("Zone_no", "")
+            ward_name = props.get("Ward_Name", "")
+            ward_no = props.get("Ward_No", "")
+            props["zone_no"] = str(zone_no)
+            props["ward_name"] = str(ward_name)
+            props["ward_no"] = str(ward_no)
+
+            coords_elem = pm.find(".//kml:coordinates", ns)
+            if coords_elem is not None and coords_elem.text:
+                raw_coords = coords_elem.text.strip().split()
+                ring = []
+                sum_lng, sum_lat = 0.0, 0.0
+                for pt in raw_coords:
+                    parts = pt.split(",")
+                    if len(parts) >= 2:
+                        lng, lat = float(parts[0]), float(parts[1])
+                        ring.append([lng, lat])
+                        sum_lng += lng
+                        sum_lat += lat
+
+                if ring:
+                    n_pts = len(ring)
+                    c_lng = sum_lng / n_pts
+                    c_lat = sum_lat / n_pts
+
+                    features.append({
+                        "type": "Feature",
+                        "properties": props,
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [ring],
+                        },
+                    })
+                    centroids.append({
+                        "zone_no": str(zone_no),
+                        "label": f"Zone {zone_no}",
+                        "ward": str(ward_name),
+                        "coordinates": [c_lng, c_lat],
+                    })
+                    table_rows.append({
+                        "Zone No": zone_no,
+                        "Ward Name": ward_name,
+                        "Ward No": ward_no,
+                        "Center Longitude": round(c_lng, 4),
+                        "Center Latitude": round(c_lat, 4),
+                    })
+
+        geojson_obj = {
+            "type": "FeatureCollection",
+            "features": features,
+        }
+        df_zones = pd.DataFrame(table_rows)
+        return geojson_obj, centroids, df_zones
+    except Exception as err:
+        return None, [], pd.DataFrame()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DELHI OD CORRECTION & AI SPATIAL GEOCODING ENGINE
+# ─────────────────────────────────────────────────────────────────────────────
+OUTSIDE_DELHI_KEYWORDS = [
+    "noida", "greater noida", "gr noida", "gurgaon", "gurugram", "grugram", "cyber city",
+    "iffco chowk", "manesar", "faridabad", "ghaziabad", "vaishali", "indirapuram",
+    "sahibabad", "sonipat", "sonepat", "bahadurgarh", "ballabhgarh", "palwal",
+    "rewari", "rohtak", "meerut", "panipat", "kundli", "haryana", "hariyana", "hriyana",
+    "uttar pradesh", "up", "rajasthan", "alwar", "dharuhera", "bhiwadi", "modinagar", "hapur",
+    "loni", "bhondsi", "mathura", "agra", "jaipur", "kundli border", "karnal", "ambala",
+    "punjab", "bihar", "vrindavan", "bulandshahr", "ncr", "maruti kunj", "sarhol",
+    "sikandarpur", "huda city", "khekra", "baghpat", "shamli", "muzaffarnagar", "murthal",
+    "samalkha", "badli haryana", "jhajjar", "panchgaon", "bilaspur", "bhiwani",
+]
+
+STOP_SUFFIXES = [
+    "metro station", "metro stn", "metro", "railway station", "rly station", "station", "stn",
+    "firni road", "firni", "road", "marg", "terminal", "bus stand", "bus stop", "stand", "stop",
+    "market", "bazar", "bajar", "hospital", "hosptal", "mandir", "temple", "village", "vill",
+    "chowk", "border", "depot", "extension", "extn", "ext", "pocket", "block", "phase", "sec",
+    "sector", "gate", "nagar", "vihar", "enclave", "colony"
+]
+
+DELHI_LANDMARK_MAPPINGS: dict[str, tuple[str, str]] = {
+    # Moolchand, Lajpat Nagar & South-Central
+    "moolchand": ("Moolchand", "3"),
+    "mulchand": ("Moolchand", "3"),
+    "mool chand": ("Moolchand", "3"),
+    "moolchand delhi": ("Moolchand", "3"),
+    "mulchand metro station": ("Moolchand", "3"),
+    "mulchandar": ("Moolchand", "3"),
+    "central market": ("Lajpat Nagar Central Market", "6"),
+    "gupta market": ("Lajpat Nagar (Gupta Market)", "6"),
+    "lajpat nagar": ("Lajpat Nagar", "6"),
+    "lajpat": ("Lajpat Nagar", "6"),
+    "lajpat nagar 1": ("Lajpat Nagar I", "3"),
+    "lajpat nagar 2": ("Lajpat Nagar II", "3"),
+    "lajpat nagar 3": ("Lajpat Nagar III", "6"),
+    "lajpat nagar 4": ("Lajpat Nagar IV", "6"),
+    "lajpat nagar ring road": ("Lajpat Nagar", "6"),
+    "amar colony": ("Amar Colony", "6"),
+    "dayanand colony": ("Dayanand Colony", "6"),
+    "national park": ("National Park (Lajpat Nagar)", "6"),
+    "vikram vihar": ("Vikram Vihar (Lajpat Nagar)", "6"),
+    "vinobapuri": ("Vinobapuri", "3"),
+    "vinob puri": ("Vinobapuri", "3"),
+    "vinoba puri": ("Vinobapuri", "3"),
+    "sriniwaspuri": ("Sriniwaspuri", "3"),
+    "shiniwas puri": ("Sriniwaspuri", "3"),
+    "shiniwaspuri": ("Sriniwaspuri", "3"),
+    "defence colony": ("Defence Colony", "14"),
+    "south extension": ("South Extension", "12"),
+    "south ext": ("South Extension", "12"),
+    "south ext 1": ("South Extension I", "12"),
+    "south ext 2": ("South Extension II", "12"),
+    "south ex": ("South Extension", "12"),
+    "kotla mubarakpur": ("Kotla Mubarakpur", "12"),
+    "kotla": ("Kotla Mubarakpur", "12"),
+    "andrews ganj": ("Andrews Ganj", "12"),
+
+    # Kalkaji, GK, Nehru Place, CR Park
+    "kalkaji": ("Kalkaji", "13"),
+    "kalka ji": ("Kalkaji", "13"),
+    "kalka ji delhi": ("Kalkaji", "13"),
+    "kalka ji mandir": ("Kalkaji", "13"),
+    "kalika ji": ("Kalkaji", "13"),
+    "kalika ji mandir": ("Kalkaji", "13"),
+    "kalika devi mandir": ("Kalkaji", "13"),
+    "kalak": ("Kalkaji", "13"),
+    "kalkaji extension": ("Kalkaji Extension", "15"),
+    "govindpuri": ("Govindpuri", "13"),
+    "govindpuri delhi": ("Govindpuri", "13"),
+    "govind puri": ("Govindpuri", "13"),
+    "cr park": ("Chitranjan Park", "15"),
+    "c.r. park": ("Chitranjan Park", "15"),
+    "chitranjan park": ("Chitranjan Park", "15"),
+    "alakananda": ("Alaknanda", "15"),
+    "alaknanda": ("Alaknanda", "15"),
+    "nehru place": ("Nehru Place", "13"),
+    "nehru enclave": ("Nehru Enclave", "15"),
+    "nehru enclave east": ("Nehru Enclave East", "15"),
+    "nehru enclave west": ("Nehru Enclave West", "15"),
+    "nehru nagar": ("Nehru Nagar", "3"),
+    "greater kailash": ("Greater Kailash", "9"),
+    "greater kailash 1": ("Greater Kailash I", "9"),
+    "greater kailash 2": ("Greater Kailash II", "15"),
+    "gk": ("Greater Kailash", "9"),
+    "gk 1": ("Greater Kailash I", "9"),
+    "gk 2": ("Greater Kailash II", "15"),
+    "gk1": ("Greater Kailash I", "9"),
+    "gk2": ("Greater Kailash II", "15"),
+    "kailash colony": ("Kailash Colony", "9"),
+    "kailash hills": ("Kailash Hills", "10"),
+    "east of kailash": ("East of Kailash", "10"),
+    "garhi": ("Garhi (East of Kailash)", "10"),
+    "sant nagar": ("Sant Nagar (East of Kailash)", "10"),
+    "jamrudpur": ("Zamrudpur", "9"),
+    "zamrudpur": ("Zamrudpur", "9"),
+
+    # Madangir, Dakshinpuri, Khanpur, Sangam Vihar
+    "madangir": ("Madangir", "18"),
+    "madan giri": ("Madangir", "18"),
+    "madan gir": ("Madangir", "18"),
+    "madangiri": ("Madangir", "18"),
+    "madangate": ("Madan Gate (Karol Bagh)", "172"),
+    "madan gate": ("Madan Gate (Karol Bagh)", "172"),
+    "madhan gate": ("Madan Gate (Karol Bagh)", "172"),
+    "dakshinpuri": ("Dakshinpuri", "18"),
+    "dhachanpuri": ("Dakshinpuri", "18"),
+    "dhachan puri": ("Dakshinpuri", "18"),
+    "ambedkar nagar": ("Ambedkar Nagar", "18"),
+    "ambedkar": ("Ambedkar Nagar", "18"),
+    "khanpur": ("Khanpur", "26"),
+    "kanpur": ("Khanpur", "26"),
+    "khanpur village": ("Khanpur", "26"),
+    "devli": ("Deoli", "26"),
+    "deoli": ("Deoli", "26"),
+    "tigri": ("Tigri", "26"),
+    "sangam vihar": ("Sangam Vihar", "292"),
+    "sangham vihar": ("Sangam Vihar", "292"),
+    "sangam vihar central": ("Sangam Vihar Central", "291"),
+    "talimabad": ("Talimabad", "292"),
+    "durga vihar": ("Durga Vihar", "26"),
+    "hamdard": ("Hamdard Nagar", "26"),
+    "humdard": ("Hamdard Nagar", "26"),
+    "hamdard nagar": ("Hamdard Nagar", "26"),
+    "humdard nagar": ("Hamdard Nagar", "26"),
+    "batra hospital": ("Batra Hospital (Sangam Vihar)", "292"),
+
+    # Sarai Kale Khan, Nizamuddin, Ashram
+    "sarai kale khan": ("Sarai Kale Khan", "14"),
+    "sarai kale ka": ("Sarai Kale Khan", "14"),
+    "sarai kale kha": ("Sarai Kale Khan", "14"),
+    "saray kale kha": ("Sarai Kale Khan", "14"),
+    "saraikalekhan": ("Sarai Kale Khan", "14"),
+    "hazrat nizamuddin": ("Hazrat Nizamuddin", "14"),
+    "nizamuddin": ("Hazrat Nizamuddin", "14"),
+    "nizamuddin station": ("Hazrat Nizamuddin Railway Station", "14"),
+    "nizamuddin railway station": ("Hazrat Nizamuddin Railway Station", "14"),
+    "nizamuddin east": ("Nizamuddin East", "14"),
+    "nizamuddin west": ("Nizamuddin West", "14"),
+    "jungpura": ("Jungpura", "14"),
+    "jangpura": ("Jungpura", "14"),
+    "jungpura a": ("Jungpura A", "14"),
+    "jungpura b": ("Jungpura B", "14"),
+    "bhogal": ("Bhogal", "14"),
+    "pant nagar": ("Pant Nagar", "14"),
+    "ashram": ("Ashram Chowk", "14"),
+    "aashram": ("Ashram Chowk", "14"),
+    "ashram chowk": ("Ashram Chowk", "14"),
+    "hari nagar ashram": ("Hari Nagar Ashram", "14"),
+    "kilokri": ("Kilokri (Ashram)", "14"),
+    "maharani bagh": ("Maharani Bagh", "14"),
+    "friends colony": ("New Friends Colony", "14"),
+    "new friends colony": ("New Friends Colony", "14"),
+    "nfc": ("New Friends Colony", "14"),
+    "friends colony east": ("Friends Colony East", "14"),
+    "friends colony west": ("Friends Colony West", "14"),
+    "sukhdev vihar": ("Sukhdev Vihar", "14"),
+    "sidharth enclave": ("Siddharth Enclave", "14"),
+    "sunlight colony": ("Sunlight Colony", "14"),
+
+    # Lado Sarai, Mehrauli, Chhatarpur & South Villages
+    "lado sarai": ("Lado Sarai", "280"),
+    "ladosarai": ("Lado Sarai", "280"),
+    "lado sarai firni road": ("Lado Sarai", "280"),
+    "lado sarai firni": ("Lado Sarai", "280"),
+    "firni road": ("Lado Sarai (Firni Road)", "280"),
+    "firani road": ("Lado Sarai (Firni Road)", "280"),
+    "mehrauli": ("Mehrauli", "278"),
+    "mahrauli": ("Mehrauli", "278"),
+    "mahroli": ("Mehrauli", "278"),
+    "mahrawli": ("Mehrauli", "278"),
+    "mahorli": ("Mehrauli", "278"),
+    "mehrauli terminal": ("Mehrauli", "278"),
+    "mahrauli terminal": ("Mehrauli", "278"),
+    "qutub minar": ("Mehrauli (Qutub Minar)", "278"),
+    "chhatarpur": ("Chhatarpur", "282"),
+    "chattarpur": ("Chhatarpur", "282"),
+    "chhatarpur enclave": ("Chhatarpur Enclave", "282"),
+    "sultanpur": ("Sultanpur (Mehrauli)", "282"),
+    "ghitorni": ("Ghitorni", "282"),
+    "aya nagar": ("Aya Nagar", "282"),
+    "fatehpur beri": ("Fatehpur Beri", "282"),
+    "fatehpur": ("Fatehpur Beri", "282"),
+    "mandi gaon": ("Mandi Village", "282"),
+    "mandi village": ("Mandi Village", "282"),
+    "sainik farm": ("Sainik Farm", "282"),
+    "saini farm": ("Sainik Farm", "282"),
+    "neb sarai": ("Neb Sarai", "282"),
+    "meb sarai": ("Neb Sarai", "282"),
+    "neb sarai village": ("Neb Sarai", "282"),
+    "meb sarai village": ("Neb Sarai", "282"),
+    "adhchini": ("Adhchini", "8"),
+    "adhchini village": ("Adhchini", "8"),
+    "adchini": ("Adhchini", "8"),
+    "rajokri": ("Rajokri", "275"),
+    "rajokari": ("Rajokri", "275"),
+    "rajokri village": ("Rajokri", "275"),
+    "masudpur": ("Masoodpur (Vasant Kunj)", "274"),
+    "masoodpur": ("Masoodpur (Vasant Kunj)", "274"),
+    "masudpur village": ("Masoodpur (Vasant Kunj)", "274"),
+    "masoodpur village": ("Masoodpur (Vasant Kunj)", "274"),
+    "city forest": ("City Forest (Tajpur)", "283"),
+
+    # Saket, Malviya Nagar, Hauz Khas, IIT
+    "saket": ("Saket", "16"),
+    "select citywalk": ("Saket (Select Citywalk)", "16"),
+    "saket select city": ("Saket (Select Citywalk)", "16"),
+    "pushp vihar": ("Pushp Vihar", "16"),
+    "pushpa bhavan": ("Pushp Vihar (Pushpa Bhawan)", "16"),
+    "pushpa bhawan": ("Pushp Vihar (Pushpa Bhawan)", "16"),
+    "pushp bhavan": ("Pushp Vihar (Pushpa Bhawan)", "16"),
+    "malviya nagar": ("Malviya Nagar", "11"),
+    "chirag delhi": ("Chirag Delhi", "11"),
+    "delhi chirag": ("Chirag Delhi", "11"),
+    "chirag": ("Chirag Delhi", "11"),
+    "sheikh sarai": ("Sheikh Sarai", "11"),
+    "sheikh sarai phase 1": ("Sheikh Sarai Phase I", "11"),
+    "sheikh sarai phase 2": ("Sheikh Sarai Phase II", "11"),
+    "panchsheel park": ("Panchsheel Park", "11"),
+    "panchsheel enclave": ("Panchsheel Enclave", "15"),
+    "panchsheel": ("Panchsheel Park", "11"),
+    "panchil": ("Panchsheel Park", "11"),
+    "sarvodaya enclave": ("Sarvodaya Enclave", "11"),
+    "khirki extension": ("Khirki Extension", "11"),
+    "khirki ext": ("Khirki Extension", "11"),
+    "siri fort": ("Siri Fort", "8"),
+    "neeti bagh": ("Niti Bagh", "8"),
+    "niti bagh": ("Niti Bagh", "8"),
+    "shahpur jat": ("Shahpur Jat", "8"),
+    "hauz khas": ("Hauz Khas", "8"),
+    "hauz khas village": ("Hauz Khas Village", "8"),
+    "hauz rani": ("Hauz Rani", "16"),
+    "green park": ("Green Park", "8"),
+    "green park main": ("Green Park Main", "8"),
+    "green park extension": ("Green Park Extension", "8"),
+    "green park ext": ("Green Park Extension", "8"),
+    "safdarjung enclave": ("Safdarjung Enclave", "7"),
+    "safdarjung": ("Safdarjung Hospital / Enclave", "218"),
+    "safdarganj": ("Safdarjung Hospital", "218"),
+    "sabdarjan": ("Safdarjung Hospital", "218"),
+    "safdarjung development area": ("SDA (Safdarjung Dev Area)", "8"),
+    "sda": ("SDA (Safdarjung Dev Area)", "8"),
+    "iit": ("IIT Delhi", "8"),
+    "iit delhi": ("IIT Delhi", "8"),
+    "iit gate": ("IIT Gate Junction", "8"),
+    "iit gate junction": ("IIT Gate Junction", "8"),
+    "aiims": ("AIIMS (Ansari Nagar)", "218"),
+    "aiims hospital": ("AIIMS (Ansari Nagar)", "218"),
+    "safdarjung hospital": ("Safdarjung Hospital", "218"),
+    "sarojini nagar": ("Sarojini Nagar", "213"),
+    "sarojni": ("Sarojini Nagar", "213"),
+    "sarojani market": ("Sarojini Nagar Market", "213"),
+    "sarojni market": ("Sarojini Nagar Market", "213"),
+    "nauroji nagar": ("Nauroji Nagar", "213"),
+    "laxmibai nagar": ("Laxmibai Nagar", "213"),
+    "kidwai nagar": ("Kidwai Nagar", "213"),
+    "ina": ("INA Colony / Market", "213"),
+    "ina colony": ("INA Colony", "213"),
+    "dilli haat": ("Dilli Haat (INA)", "213"),
+    "lodhi colony": ("Lodhi Colony", "212"),
+    "lodhi road": ("Lodhi Road", "212"),
+    "lodhi garden": ("Lodhi Garden", "212"),
+    "jln stadium": ("JLN Stadium", "212"),
+    "jawaharlal nehru stadium": ("JLN Stadium", "212"),
+    "chidiyaghar": ("National Zoological Park", "212"),
+    "chidiya ghar": ("National Zoological Park", "212"),
+    "delhi zoo": ("National Zoological Park", "212"),
+    "khan market": ("Khan Market", "212"),
+    "jor bagh": ("Jor Bagh", "212"),
+    "golf links": ("Golf Links", "212"),
+    "sunder nagar": ("Sunder Nagar", "212"),
+    "india gate": ("India Gate", "212"),
+    "high court": ("Delhi High Court (Tilak Marg)", "211"),
+    "supreme court": ("Supreme Court (Pragati Maidan)", "211"),
+    "pragati maidan": ("Pragati Maidan", "211"),
+    "mandi house": ("Mandi House", "211"),
+    "patel chowk": ("Patel Chowk", "211"),
+    "kendriya terminal": ("Kendriya Terminal (Central Secretariat)", "211"),
+    "central secretariat": ("Central Secretariat", "211"),
+    # Additional Colloquial & Landmarks
+    "gaziyabad": ("Ghaziabad", "Outside"),
+    "faribad": ("Faridabad", "Outside"),
+    "gudgaon": ("Gurugram", "Outside"),
+    "dehradun": ("Dehradun", "Outside"),
+    "bisrakh jalalpur": ("Greater Noida (Bisrakh)", "Outside"),
+    "badkhal mod": ("Faridabad (Badkhal)", "Outside"),
+    "rajghat": ("Rajghat", "167"),
+    "rajeev gandi": ("Rajiv Gandhi Hospital (Tahirpur)", "236"),
+    "karkardooma court": ("Karkardooma", "227"),
+    "karkardooma": ("Karkardooma", "227"),
+    "nagloi": ("Nangloi", "164"),
+    "nangloi": ("Nangloi", "164"),
+    "shivaji": ("Shivaji Stadium (CP)", "211"),
+    "shivaji stadium": ("Shivaji Stadium (CP)", "211"),
+    "okhala mandi": ("Okhla Mandi", "287"),
+    "bhikaji cama": ("Bhikaji Cama Place", "213"),
+    "bhikaji cama place": ("Bhikaji Cama Place", "213"),
+    "janpath": ("Janpath", "211"),
+    "ip state": ("IP Estate", "192"),
+    "ip estate": ("IP Estate", "192"),
+    "cgo complex": ("CGO Complex (Lodhi Road)", "212"),
+    "palika kendra": ("Palika Kendra (CP)", "211"),
+    "karni singh shooting range": ("Dr. Karni Singh Range (Asola)", "287"),
+    "dr karni singh shooting range": ("Dr. Karni Singh Range (Asola)", "287"),
+    "hoskhas": ("Hauz Khas", "8"),
+    "basant lok": ("Vasant Lok (Vasant Vihar)", "269"),
+    "basant gaon": ("Vasant Gaon", "269"),
+    "bhawani kunj": ("Bhawani Kunj (Vasant Kunj)", "274"),
+    "arsd college": ("ARSD College (Dhaula Kuan)", "215"),
+    "indra inclave": ("Indra Enclave (Neb Sarai)", "282"),
+    "ghadi": ("Garhi (East of Kailash)", "10"),
+    "kushak nallah depo": ("Kushak Nallah Depot", "212"),
+    "kushak nallah": ("Kushak Nallah", "212"),
+    "archani": ("Archna Cinema (GK I)", "9"),
+    "archana": ("Archna Cinema (GK I)", "9"),
+    "bas stand": ("Nill", "-"),
+
+    # Central Delhi & NDMC
+    "cp": ("Connaught Place", "211"),
+    "c.p.": ("Connaught Place", "211"),
+    "c p": ("Connaught Place", "211"),
+    "connaught place": ("Connaught Place", "211"),
+    "connaught circus": ("Connaught Place", "211"),
+    "rajiv chowk": ("Connaught Place (Rajiv Chowk)", "211"),
+    "minto road": ("Minto Road", "192"),
+    "ito": ("ITO", "192"),
+    "indraprastha": ("Indraprastha", "192"),
+    "daryaganj": ("Daryaganj", "167"),
+    "chandni chowk": ("Chandni Chowk", "153"),
+    "lal kila": ("Red Fort (Lal Qila)", "153"),
+    "red fort": ("Red Fort (Lal Qila)", "153"),
+    "jama masjid": ("Jama Masjid", "177"),
+    "chawri bazar": ("Chawri Bazar", "177"),
+    "sadar bazar": ("Sadar Bazar", "177"),
+    "sadar bajar": ("Sadar Bazar", "177"),
+    "kashmere gate": ("ISBT Kashmere Gate", "153"),
+    "kashmiri gate": ("ISBT Kashmere Gate", "153"),
+    "isbt": ("ISBT Kashmere Gate", "153"),
+    "isbt kashmere gate": ("ISBT Kashmere Gate", "153"),
+    "kashmiri gate terminal": ("ISBT Kashmere Gate", "153"),
+    "mori gate": ("Mori Gate", "153"),
+    "new delhi railway station": ("New Delhi Railway Station", "182"),
+    "ndls": ("New Delhi Railway Station", "182"),
+    "old delhi railway station": ("Old Delhi Railway Station", "153"),
+    "pahar ganj": ("Paharganj", "182"),
+    "paharganj": ("Paharganj", "182"),
+    "karol bagh": ("Karol Bagh", "172"),
+    "jhandewalan": ("Jhandewalan", "172"),
+    "patel nagar": ("Patel Nagar", "182"),
+    "rajendra nagar": ("Rajendra Nagar", "179"),
+    "pusa road": ("Pusa Road", "179"),
+    "indralok": ("Inderlok", "73"),
+    "inderlok": ("Inderlok", "73"),
+    "inderpuri": ("Inderpuri", "178"),
+    "indrapuri": ("Inderpuri", "178"),
+    "inderpuri krishi": ("Inderpuri (Krishi Kunj)", "178"),
+    "inderpuri krishi kunj": ("Inderpuri (Krishi Kunj)", "178"),
+    "indrapuri krishi kunj": ("Inderpuri (Krishi Kunj)", "178"),
+    "krishi kunj": ("Inderpuri (Krishi Kunj)", "178"),
+
+    # Airport, Cantt, Vasant Kunj, West Delhi
+    "airport": ("IGI Airport", "258"),
+    "airport delhi": ("IGI Airport", "258"),
+    "igi airport": ("IGI Airport", "258"),
+    "indira gandhi airport": ("IGI Airport", "258"),
+    "igi airport terminal 2": ("IGI Airport Terminal 2", "258"),
+    "t3 airport": ("IGI Airport Terminal 3", "258"),
+    "t1 airport": ("IGI Airport Terminal 1", "258"),
+    "delhi cantt": ("Delhi Cantonment", "215"),
+    "cantt": ("Delhi Cantonment", "215"),
+    "dhaula kuan": ("Dhaula Kuan", "215"),
+    "rk puram": ("R.K. Puram", "216"),
+    "r k puram": ("R.K. Puram", "216"),
+    "rk puram sector 1": ("R.K. Puram Sector 1", "216"),
+    "motibagh": ("Moti Bagh", "217"),
+    "moti bagh": ("Moti Bagh", "217"),
+    "chanakyapuri": ("Chanakyapuri", "217"),
+    "anand niketan": ("Anand Niketan", "269"),
+    "vasant vihar": ("Vasant Vihar", "269"),
+    "munirka": ("Munirka", "269"),
+    "ber sarai": ("Ber Sarai", "269"),
+    "katwaria sarai": ("Katwaria Sarai", "269"),
+    "jnu": ("JNU (Jawaharlal Nehru University)", "269"),
+    "vasant kunj": ("Vasant Kunj", "274"),
+    "vasant kunj sector a": ("Vasant Kunj Sector A", "274"),
+    "vasant kunj sector b": ("Vasant Kunj Sector B", "274"),
+    "vasant kunj sector c": ("Vasant Kunj Sector C", "274"),
+    "vasant kunj sector d": ("Vasant Kunj Sector D", "274"),
+    "mahipalpur": ("Mahipalpur", "277"),
+    "kapashera": ("Kapashera", "275"),
+    "kapashera border": ("Kapashera Border", "275"),
+    "janakpuri": ("Janakpuri", "205"),
+    "vikaspuri": ("Vikaspuri", "210"),
+    "tilak nagar": ("Tilak Nagar", "203"),
+    "subhash nagar": ("Subhash Nagar", "197"),
+    "tagore garden": ("Tagore Garden", "198"),
+    "raja garden": ("Raja Garden", "198"),
+    "punjabi bagh": ("Punjabi Bagh", "164"),
+    "paschim vihar": ("Paschim Vihar", "154"),
+    "mayapuri": ("Mayapuri", "199"),
+    "mayapur": ("Mayapuri", "199"),
+    "dwarka": ("Dwarka", "246"),
+    "dwarka sec 1": ("Dwarka Sector 1", "246"),
+    "dwarka sec 6": ("Dwarka Sector 6", "246"),
+    "dwarka sec 10": ("Dwarka Sector 10", "246"),
+    "dwarka sec 12": ("Dwarka Sector 12", "246"),
+    "dwarka sec 21": ("Dwarka Sector 21", "258"),
+    "dwarka mor": ("Dwarka Mor", "246"),
+    "shahbad mohammad": ("Shahbad Mohammadpur", "246"),
+    "uttam nagar": ("Uttam Nagar", "225"),
+    "najafgarh": ("Najafgarh", "252"),
+    "qamruddin nagar": ("Qamruddin Nagar", "154"),
+    "qamruddin nagar terminal": ("Qamruddin Nagar", "154"),
+
+    # North Delhi
+    "rohini": ("Rohini", "44"),
+    "rohini sec 3": ("Rohini Sector 3", "44"),
+    "rohini sec 7": ("Rohini Sector 7", "44"),
+    "rohini sec 8": ("Rohini Sector 8", "44"),
+    "pitampura": ("Pitampura", "66"),
+    "shalimar bagh": ("Shalimar Bagh", "57"),
+    "ashok vihar": ("Ashok Vihar", "74"),
+    "model town": ("Model Town", "63"),
+    "mukherjee nagar": ("Mukherjee Nagar", "62"),
+    "gtb nagar": ("GTB Nagar", "62"),
+    "vishwavidyalay": ("Vishwa Vidyalaya (DU)", "62"),
+    "vishwa vidyalaya": ("Vishwa Vidyalaya (DU)", "62"),
+    "civil lines": ("Civil Lines", "71"),
+    "timarpur": ("Timarpur", "71"),
+    "azadpur": ("Azadpur", "59"),
+    "azadpur mandi": ("Azadpur Mandi", "59"),
+    "azadpur metro station": ("Azadpur", "59"),
+    "burari": ("Burari", "26"),
+    "narela": ("Narela", "17"),
+    "bawana": ("Bawana", "20"),
+    "badli": ("Badli", "32"),
+    "badli industrial area": ("Badli Industrial Area", "32"),
+    "samaypur badli": ("Samaypur Badli", "32"),
+    "samaypur": ("Samaypur Badli", "32"),
+
+    # East Delhi
+    "anand vihar": ("Anand Vihar", "151"),
+    "aandh vihar": ("Anand Vihar", "151"),
+    "anand vihar isbt": ("Anand Vihar ISBT", "151"),
+    "mayur vihar": ("Mayur Vihar", "234"),
+    "mayur vihar phase 1": ("Mayur Vihar Phase I", "234"),
+    "mayur vihar phase 2": ("Mayur Vihar Phase II", "214"),
+    "mayur vihar phase 3": ("Mayur Vihar Phase III", "223"),
+    "trilokpuri": ("Trilokpuri", "223"),
+    "ghazipur": ("Ghazipur", "223"),
+    "gazipur": ("Ghazipur", "223"),
+    "gazipur mandi": ("Ghazipur Mandi", "223"),
+    "patparganj": ("Patparganj", "234"),
+    "ip extension": ("IP Extension", "234"),
+    "laxmi nagar": ("Laxmi Nagar", "228"),
+    "preet vihar": ("Preet Vihar", "227"),
+    "nirman vihar": ("Nirman Vihar", "227"),
+    "shakarpur": ("Shakarpur", "228"),
+    "shahdara": ("Shahdara", "232"),
+    "dilshad garden": ("Dilshad Garden", "236"),
+    "seelampur": ("Seelampur", "240"),
+
+    # South-East Delhi
+    "sarita vihar": ("Sarita Vihar", "273"),
+    "jasola": ("Jasola Vihar", "273"),
+    "jasola vihar": ("Jasola Vihar", "273"),
+    "jamia": ("Jamia Nagar", "273"),
+    "jamia nagar": ("Jamia Nagar", "273"),
+    "batla house": ("Batla House", "273"),
+    "zakir nagar": ("Zakir Nagar", "273"),
+    "abul fazal enclave": ("Abul Fazal Enclave", "273"),
+    "shaheen bagh": ("Shaheen Bagh", "273"),
+    "kalindi kunj": ("Kalindi Kunj", "273"),
+    "okhla": ("Okhla", "287"),
+    "okhla phase 1": ("Okhla Industrial Area Phase I", "287"),
+    "okhla phase 2": ("Okhla Industrial Area Phase II", "287"),
+    "okhla phase 3": ("Okhla Industrial Area Phase III", "287"),
+    "okhla industrial area": ("Okhla Industrial Area", "287"),
+    "okhla vihar": ("Okhla Vihar", "273"),
+    "badarpur": ("Badarpur", "283"),
+    "badarpur border": ("Badarpur Border", "283"),
+    "mohan estate": ("Mohan Estate (Badarpur)", "283"),
+    "meethapur": ("Meethapur", "283"),
+    "jaitpur": ("Jaitpur", "283"),
+    "molarband": ("Molarband", "283"),
+    "ali village": ("Ali Village", "283"),
+    "tajpur": ("Tajpur Pahadi", "283"),
+    "pul pehlad": ("Pul Pehladpur", "287"),
+    "pul pehladpur": ("Pul Pehladpur", "287"),
+}
+
+@functools.lru_cache(maxsize=1)
+def get_clean_wards_dict() -> dict[str, tuple[str, str]]:
+    if not os.path.exists(DELHI_ZONING_KML):
+        return {}
+    try:
+        tree = ET.parse(DELHI_ZONING_KML)
+        root = tree.getroot()
+        ns = {"kml": "http://www.opengis.net/kml/2.2"}
+        wards = {}
+        for pm in root.findall(".//kml:Placemark", ns):
+            z_no = ""
+            w_name = ""
+            for sd in pm.findall(".//kml:SimpleData", ns):
+                attr = sd.attrib.get("name")
+                if attr == "Zone_no":
+                    z_no = sd.text or ""
+                elif attr == "Ward_Name":
+                    w_name = sd.text or ""
+            if w_name and z_no:
+                cw = re.sub(r"[^a-zA-Z0-9\s]", " ", w_name).strip().lower()
+                cw = re.sub(r"\s+", " ", cw)
+                if cw:
+                    wards[cw] = (w_name.title(), str(z_no))
+        return wards
+    except Exception:
+        return {}
+
+@functools.lru_cache(maxsize=1)
+def get_delhi_polygons_cached() -> list[tuple[str, str, list[tuple[float, float]]]]:
+    """Loads polygon rings for 295 Delhi zones from KML for Point-in-Polygon checks."""
+    if not os.path.exists(DELHI_ZONING_KML):
+        return []
+    try:
+        tree = ET.parse(DELHI_ZONING_KML)
+        root = tree.getroot()
+        ns = {"kml": "http://www.opengis.net/kml/2.2"}
+        polys = []
+        for pm in root.findall(".//kml:Placemark", ns):
+            props = {}
+            for sd in pm.findall(".//kml:SimpleData", ns):
+                if sd.attrib.get("name"):
+                    props[sd.attrib.get("name")] = sd.text
+            z_no = str(props.get("Zone_no", ""))
+            w_name = str(props.get("Ward_Name", "")).title()
+            coords_elem = pm.find(".//kml:coordinates", ns)
+            if coords_elem is not None and coords_elem.text:
+                raw = coords_elem.text.strip().split()
+                ring = []
+                for pt in raw:
+                    parts = pt.split(",")
+                    if len(parts) >= 2:
+                        ring.append((float(parts[0]), float(parts[1])))
+                if ring:
+                    polys.append((z_no, w_name, ring))
+        return polys
+    except Exception:
+        return []
+
+def point_in_polygon(x: float, y: float, poly: list[tuple[float, float]]) -> bool:
+    """Ray casting point-in-polygon algorithm."""
+    n = len(poly)
+    inside = False
+    p1x, p1y = poly[0]
+    for i in range(n + 1):
+        p2x, p2y = poly[i % n]
+        if y > min(p1y, p2y):
+            if y <= max(p1y, p2y):
+                if x <= max(p1x, p2x):
+                    if p1y != p2y:
+                        xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                    if p1x == p2x or x <= xinters:
+                        inside = not inside
+        p1x, p1y = p2x, p2y
+    return inside
+
+def find_delhi_zone_by_lat_lng(lng: float, lat: float) -> tuple[str, str]:
+    """Finds exact Delhi Zone No for coordinates using KML polygons."""
+    polys = get_delhi_polygons_cached()
+    for z_no, w_name, poly in polys:
+        if point_in_polygon(lng, lat, poly):
+            return z_no, w_name
+    return "Outside", "Outside Delhi"
+
+@functools.lru_cache(maxsize=1024)
+def geocode_location_spatial(
+    location_query: str,
+    provider: str = "LocationIQ",
+    api_key: str | None = None
+) -> tuple[str, str, str]:
+    """Geocodes location name via LocationIQ / Geoapify / OSM / Google and matches into Delhi zoning polygons."""
+    import urllib.parse
+    q = clean_location_str(location_query)
+    if not q or len(q) < 2:
+        return "Nill", "-", "Invalid"
+
+    q_encoded = urllib.parse.quote_plus(f"{q} Delhi NCR India")
+
+    # 1. LocationIQ (5,000 free requests/day)
+    if (provider.startswith("LocationIQ") or provider == "LocationIQ") and api_key and len(api_key.strip()) >= 10:
+        try:
+            url = f"https://us1.locationiq.com/v1/search.php?key={api_key.strip()}&q={q_encoded}&format=json&limit=1"
+            headers = {"User-Agent": "DelhiODSurveyDashboard/2.0"}
+            resp = requests.get(url, headers=headers, timeout=4)
+            if resp.status_code == 200:
+                data = resp.json()
+                if data and isinstance(data, list) and len(data) > 0:
+                    lat = float(data[0]["lat"])
+                    lng = float(data[0]["lon"])
+                    z_no, w_name = find_delhi_zone_by_lat_lng(lng, lat)
+                    disp_name = data[0].get("display_name", q.title()).split(",")[0].strip()
+                    return disp_name, z_no, "LocationIQ Spatial"
+        except Exception:
+            pass
+
+    # 2. Geoapify (3,000 free credits/day)
+    if (provider.startswith("Geoapify") or provider == "Geoapify") and api_key and len(api_key.strip()) >= 10:
+        try:
+            url = f"https://api.geoapify.com/v1/geocode/search?text={q_encoded}&apiKey={api_key.strip()}&limit=1"
+            headers = {"User-Agent": "DelhiODSurveyDashboard/2.0"}
+            resp = requests.get(url, headers=headers, timeout=4)
+            if resp.status_code == 200:
+                data = resp.json()
+                features = data.get("features", [])
+                if features:
+                    props = features[0].get("properties", {})
+                    lat = float(props.get("lat"))
+                    lng = float(props.get("lon"))
+                    z_no, w_name = find_delhi_zone_by_lat_lng(lng, lat)
+                    disp_name = props.get("name") or props.get("formatted", q.title()).split(",")[0].strip()
+                    return disp_name, z_no, "Geoapify Spatial"
+        except Exception:
+            pass
+
+    # 3. Google Maps Geocoding
+    if (provider.startswith("Google") or provider == "Google Maps") and api_key and len(api_key.strip()) >= 10:
+        try:
+            url = f"https://maps.googleapis.com/maps/api/geocode/json?address={q_encoded}&key={api_key.strip()}"
+            resp = requests.get(url, timeout=4)
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get("results"):
+                    loc = data["results"][0]["geometry"]["location"]
+                    lat, lng = loc["lat"], loc["lng"]
+                    z_no, w_name = find_delhi_zone_by_lat_lng(lng, lat)
+                    disp_name = data["results"][0].get("formatted_address", q.title()).split(",")[0].strip()
+                    return disp_name, z_no, "Google Maps Spatial"
+        except Exception:
+            pass
+
+    # 4. OpenStreetMap Nominatim (Free, No Key required)
+    try:
+        url = f"https://nominatim.openstreetmap.org/search?q={q_encoded}&format=json&limit=1"
+        headers = {"User-Agent": "DelhiODSurveyDashboard/2.0 (systragroup-survey-research)"}
+        resp = requests.get(url, headers=headers, timeout=3)
+        if resp.status_code == 200:
+            results = resp.json()
+            if results:
+                lat = float(results[0]["lat"])
+                lng = float(results[0]["lon"])
+                z_no, w_name = find_delhi_zone_by_lat_lng(lng, lat)
+                disp_name = results[0].get("display_name", q.title()).split(",")[0].strip()
+                return disp_name, z_no, "OSM Spatial Match"
+    except Exception:
+        pass
+
+    return "Nill", "-", "Unmatched"
+
+def resolve_od_batch_with_llm(
+    raw_locations: list[str],
+    provider: str = "Google Gemini",
+    api_key: str = "",
+    endpoint_url: str = "http://localhost:11434",
+    model_name: str = "gemini-1.5-flash",
+) -> dict[str, tuple[str, str, str]]:
+    """Resolves noisy survey OD locations using semantic LLMs (Gemini / Ollama / OpenAI) with context-grounded Delhi zoning."""
+    if not raw_locations:
+        return {}
+
+    wards = get_clean_wards_dict()
+    # List of official Delhi administrative wards & zones
+    ward_names = [f"{name} (Zone {z})" for name, z in list(wards.values())]
+    ward_context_str = ", ".join(ward_names)
+
+    prompt = f"""ROLE:
+You are an expert Delhi-NCR Urban Geography and Transport Survey Data Cleaner.
+You specialize in matching noisy, hand-typed field-survey location names to
+official Delhi administrative ward/zone records.
+
+REFERENCE DATA:
+You are given the official list of 295 Delhi wards with their Zone Numbers,
+extracted from Final_zoning_delhi.kml:
+{ward_context_str}
+
+TASK:
+For each raw input location string, find the single best-matching official
+ward name and return its zone number — using human-level judgment, not just
+exact or near-exact string matching.
+
+MATCHING METHODOLOGY (apply in order):
+1. Normalize the raw string: lowercase, strip extra spaces, expand common
+   survey abbreviations (Vill./Vilage -> Village, Ind. -> Industrial,
+   Sec -> Sector, Jn./Junc -> Junction, Nr -> Near, Rd -> Road).
+2. Check for phonetic/spelling variants of an official ward name (e.g.
+   transposed letters, dropped/doubled letters, colloquial Hindi-English
+   transliteration spellings like "Devoli"/"Devolli" for "Deoli").
+3. Check for partial or landmark-based matches — a survey point may name a
+   junction, market, metro station, or road that sits inside/adjacent to an
+   official ward (e.g. "IIT Gate Junc" -> falls within Hauz Khas ward). Use
+   the nearest containing ward, not a literal name match.
+4. If the location clearly belongs to another NCR city/district (Noida,
+   Gurgaon/Gurugram, Faridabad, Ghaziabad, Sonipat, Bahadurgarh, Greater
+   Noida, etc.) — including sector/village names typical of those cities —
+   mark it Outside Delhi, even if no exact match is found in the reference list.
+5. If two or more official wards are plausible matches and the raw string
+   gives no way to disambiguate, choose the closer/more common match but
+   flag it with "confidence": "low".
+6. Only mark a location "Nill" / zone "-" if it is truly unintelligible
+   gibberish, blank, or contains no locational signal at all (e.g. "asdfgh",
+   "xxx", "123", a single stray character).
+
+DO NOT:
+- Force-fit an unrelated ward just to avoid "Outside" or "Nill".
+- Invent a ward name that isn't in the reference list.
+- Treat every unfamiliar string as gibberish — try steps 1–4 first.
+
+OUTPUT FORMAT:
+Respond ONLY with a valid JSON array, no markdown, no commentary, in this schema:
+[
+  {{
+    "raw": "<original input string>",
+    "corrected_od": "<official ward name, or 'Nill'>",
+    "zone_no": "<zone number as string, 'Outside', or '-'>",
+    "confidence": "<'high' | 'medium' | 'low'>"
+  }}
+]
+
+FEW-SHOT EXAMPLES:
+"Great Kailash" -> {{"raw": "Great Kailash", "corrected_od": "Greater Kailash", "zone_no": "9", "confidence": "high"}}
+"Devolli Village" -> {{"raw": "Devolli Village", "corrected_od": "Deoli", "zone_no": "26", "confidence": "high"}}
+"Badli Ind Area" -> {{"raw": "Badli Ind Area", "corrected_od": "Badli Industrial Area", "zone_no": "32", "confidence": "high"}}
+"Hauz Khas Vilage" -> {{"raw": "Hauz Khas Vilage", "corrected_od": "Hauz Khas", "zone_no": "8", "confidence": "high"}}
+"IIT Gate Junc" -> {{"raw": "IIT Gate Junc", "corrected_od": "Hauz Khas", "zone_no": "8", "confidence": "medium"}}
+"Noida Sec 62" -> {{"raw": "Noida Sec 62", "corrected_od": "Noida Sector 62", "zone_no": "Outside", "confidence": "high"}}
+"asdfghjk" -> {{"raw": "asdfghjk", "corrected_od": "Nill", "zone_no": "-", "confidence": "high"}}
+
+INPUT LOCATION NAMES:
+{json.dumps(raw_locations)}
+"""
+
+    response_text = ""
+    # 1. Google Gemini API
+    if "Gemini" in provider and api_key and len(api_key.strip()) >= 10:
+        key_clean = api_key.strip()
+        m_req = model_name.split(" ")[0].strip().lower()
+        if not m_req:
+            m_req = "gemini-3.7-flash"
+
+        candidate_models = [
+            m_req,
+            "gemini-3.7-flash",
+            "gemini-3.5-flash-lite",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
+            "gemini-3.1-pro",
+            "gemini-1.5-pro",
+        ]
+        candidate_models = list(dict.fromkeys(candidate_models))
+
+        # Try modern google-genai Client first (Official Google GenAI SDK)
+        try:
+            from google import genai
+            client = genai.Client(api_key=key_clean)
+            for c_model in candidate_models:
+                try:
+                    res = client.models.generate_content(
+                        model=c_model,
+                        contents=prompt,
+                    )
+                    if res and hasattr(res, "text") and res.text:
+                        response_text = res.text
+                        break
+                except Exception as sdk_err:
+                    st.session_state["llm_api_last_error"] = f"GenAI SDK ({c_model}): {str(sdk_err)[:200]}"
+                    continue
+        except Exception:
+            pass
+
+        # Try legacy google.generativeai SDK
+        if not response_text:
+            try:
+                import google.generativeai as legacy_genai
+                legacy_genai.configure(api_key=key_clean)
+                for c_model in candidate_models:
+                    try:
+                        m_obj = legacy_genai.GenerativeModel(c_model)
+                        res = m_obj.generate_content(
+                            prompt,
+                            generation_config={"temperature": 0.1, "response_mime_type": "application/json"}
+                        )
+                        if res and res.text:
+                            response_text = res.text
+                            break
+                    except Exception:
+                        continue
+            except Exception:
+                pass
+
+        # Fallback to multi-version REST API
+        if not response_text:
+            for c_model in candidate_models:
+                for api_ver in ["v1beta", "v1"]:
+                    try:
+                        url = f"https://generativelanguage.googleapis.com/{api_ver}/models/{c_model}:generateContent?key={key_clean}"
+                        payload = {
+                            "contents": [{"parts": [{"text": prompt}]}],
+                            "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"}
+                        }
+                        resp = requests.post(url, json=payload, timeout=25)
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            if data.get("candidates") and data["candidates"][0].get("content"):
+                                response_text = data["candidates"][0]["content"]["parts"][0]["text"]
+                                break
+                        elif resp.status_code in [400, 403, 404]:
+                            st.session_state["llm_api_last_error"] = f"Google API ({c_model}/{api_ver}): HTTP {resp.status_code} - {resp.text[:200]}"
+                    except Exception as ex:
+                        st.session_state["llm_api_last_error"] = f"Network Error: {str(ex)[:200]}"
+                if response_text:
+                    break
+
+    # 2. Ollama Local / Offline
+    elif "Ollama" in provider:
+        try:
+            base_url = endpoint_url.strip().rstrip("/") if endpoint_url and len(endpoint_url.strip()) > 5 else "http://localhost:11434"
+            m = model_name.strip() if model_name and len(model_name.strip()) > 1 else "llama3.2"
+            url = f"{base_url}/api/chat"
+            payload = {
+                "model": m,
+                "messages": [{"role": "user", "content": prompt}],
+                "stream": False,
+                "format": "json"
+            }
+            resp = requests.post(url, json=payload, timeout=45)
+            if resp.status_code == 200:
+                response_text = resp.json().get("message", {}).get("content", "")
+        except Exception:
+            pass
+
+    # 3. OpenAI / Custom Endpoint
+    elif "OpenAI" in provider and api_key and len(api_key.strip()) >= 10:
+        try:
+            m = model_name.strip() if model_name and len(model_name.strip()) > 3 else "gpt-4o-mini"
+            url = "https://api.openai.com/v1/chat/completions"
+            headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+            payload = {
+                "model": m,
+                "messages": [{"role": "user", "content": prompt}],
+                "response_format": {"type": "json_object"},
+                "temperature": 0.1
+            }
+            resp = requests.post(url, headers=headers, json=payload, timeout=25)
+            if resp.status_code == 200:
+                response_text = resp.json()["choices"][0]["message"]["content"]
+        except Exception:
+            pass
+
+    # Parse JSON
+    result_map = {}
+    if response_text:
+        try:
+            clean_json = re.sub(r"^```json\s*|\s*```$", "", response_text.strip(), flags=re.MULTILINE)
+            parsed = json.loads(clean_json)
+            if isinstance(parsed, dict):
+                for val in parsed.values():
+                    if isinstance(val, list):
+                        parsed = val
+                        break
+            if isinstance(parsed, list):
+                for item in parsed:
+                    if isinstance(item, dict):
+                        r = item.get("raw", "").strip()
+                        c = item.get("corrected_od", "Nill").strip()
+                        z = str(item.get("zone_no", "-")).strip()
+                        conf = str(item.get("confidence", "high")).strip()
+                        if r and c != "Nill" and z != "-":
+                            result_map[r] = (c, z, f"AI Semantic ({conf})")
+        except Exception:
+            pass
+
+    return result_map
+
+def clean_location_str(text: str) -> str:
+    if not text:
+        return ""
+    t = re.sub(r"[^a-zA-Z0-9\s]", " ", str(text)).strip().lower()
+    return re.sub(r"\s+", " ", t)
+
+GENERIC_STOPWORDS = {
+    "village", "vill", "gaon", "nagar", "vihar", "enclave", "colony", "park",
+    "road", "rd", "marg", "block", "sector", "sec", "phase", "pocket", "pkt",
+    "market", "mkt", "mandir", "temple", "station", "stn", "stand", "terminal", "gate",
+    "dehli", "delhi", "east", "west", "north", "south", "central", "old", "new",
+    "puri", "mor", "chowk", "extn", "extension", "ext", "area", "ind",
+    "industrial", "near", "opp", "opposite",
+}
+
+def clean_core_proper_noun(text: str) -> str:
+    clean = re.sub(r"[^a-zA-Z0-9\s]", " ", str(text)).lower()
+    words = [w for w in clean.split() if w not in GENERIC_STOPWORDS and len(w) > 1]
+    return " ".join(words)
+
+@functools.lru_cache(maxsize=1)
+def get_all_target_cores_dict() -> dict[str, tuple[str, str, str]]:
+    all_targets = {**DELHI_LANDMARK_MAPPINGS, **(get_clean_wards_dict() or {})}
+    core_map = {}
+    for k, (name, z) in all_targets.items():
+        c = clean_core_proper_noun(k)
+        if c and c not in core_map:
+            core_map[c] = (name, str(z), k)
+    return core_map
+
+@functools.lru_cache(maxsize=8192)
+def suggest_corrected_od_and_zone(raw_text: str) -> tuple[str, str, str]:
+    raw_str = str(raw_text).strip()
+    if not raw_str or raw_str.lower() in INVALID_TEXT:
+        return "Nill", "-", "Invalid"
+
+    cleaned = clean_location_str(raw_str)
+    if not cleaned or len(cleaned) < 2 or cleaned in ["test", "bus stand", "bus stop"]:
+        return "Nill", "-", "Invalid"
+
+    # 1. Check Outside Delhi keywords
+    for out_key in OUTSIDE_DELHI_KEYWORDS:
+        if cleaned == out_key or cleaned.startswith(out_key + " ") or cleaned.endswith(" " + out_key) or f" {out_key} " in f" {cleaned} ":
+            clean_title = " ".join([w.capitalize() for w in cleaned.split()])
+            return clean_title, "Outside", "Outside Delhi"
+
+    clean_wards = get_clean_wards_dict()
+    all_targets = {**DELHI_LANDMARK_MAPPINGS, **(clean_wards or {})}
+
+    # 2. Strict Exact match in landmark / ward dictionary
+    if cleaned in all_targets:
+        corr, z_no = all_targets[cleaned]
+        return corr, str(z_no), "Exact Match"
+
+    # 3. Compressed spaces match (e.g. "kalka ji" -> "kalkaji", "madan giri" -> "madangir")
+    compressed = cleaned.replace(" ", "")
+    for k, (corr, z_no) in all_targets.items():
+        if k.replace(" ", "") == compressed:
+            return corr, str(z_no), "Exact Match"
+
+    # 4. Strip noise suffixes and re-test against landmarks & wards
+    q_stripped = cleaned
+    for suf in STOP_SUFFIXES:
+        if q_stripped.endswith(" " + suf):
+            q_stripped = q_stripped[:-len(suf)-1].strip()
+            break
+
+    if q_stripped in all_targets:
+        corr, z_no = all_targets[q_stripped]
+        return corr, str(z_no), "Exact Match"
+
+    # If not an exact match or known alias, return Nill (NO AI FUZZY GUESSING)
+    return "Nill", "-", "Unmatched"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # FILE LOAD
 # ─────────────────────────────────────────────────────────────────────────────
 st.sidebar.title("🚦 Delhi OD Dashboard")
@@ -1035,12 +2089,11 @@ tabs = st.tabs(
     [
         "📊 Summary",
         "👷 Surveyors",
-        "⏱️ Short Entry Duration",
         "🚗 Vehicles",
-        "🗺️ OD Analysis",
         "🚩 Suspicious OD",
         "🔁 Shift / Frequency / Purpose",
         "📄 Raw Data",
+        "🗺️ Output",
     ]
 )
 
@@ -1153,196 +2206,287 @@ with tabs[0]:
 # TAB 2 — SURVEYORS
 # ─────────────────────────────────────────────────────────────────────────────
 with tabs[1]:
-    st.subheader("👷 Surveyor Performance")
+    st.subheader("👷 Surveyor Performance & Activity Monitoring")
 
     surveyor_base = filtered_df[filtered_df["surveyor"].notna()].copy()
 
     if surveyor_base.empty:
         st.info("No surveyor data available.")
     else:
-        summary = (
-            surveyor_base.groupby("surveyor")
-            .agg(
-                Total_Surveys=("surveyor", "size"),
-                Passenger_Surveys=(
-                    "survey_type",
-                    lambda x: int(x.astype(str).str.lower().eq("passenger").sum()),
-                ),
-                Goods_Surveys=(
-                    "survey_type",
-                    lambda x: int(x.astype(str).str.lower().eq("goods").sum()),
-                ),
-                Directions=(
-                    "direction",
-                    lambda x: ", ".join(sorted(set(x.dropna().astype(str)))),
-                ),
-                Vehicle_Types=(
-                    "vehicle_type",
-                    lambda x: ", ".join(sorted(set(x.dropna().astype(str)))),
-                ),
-                First_Entry=(
-                    COL_START,
-                    lambda x: min(t.strftime("%H:%M:%S") for t in x.dropna())
-                    if len(x.dropna())
-                    else "-",
-                ),
-                Last_Entry=(
-                    COL_END,
-                    lambda x: max(t.strftime("%H:%M:%S") for t in x.dropna())
-                    if len(x.dropna())
-                    else "-",
-                ),
-                Avg_Duration_Mins=("survey_duration_mins", "mean"),
-                Suspicious_OD=("sample_quality_suspicious", "sum"),
-            )
-            .reset_index()
-            .rename(
-                columns={
-                    "surveyor": "Surveyor",
-                    "Total_Surveys": "Total Surveys",
-                    "Passenger_Surveys": "Passenger Surveys",
-                    "Goods_Surveys": "Goods Surveys",
-                    "Vehicle_Types": "Vehicle Types",
-                    "Avg_Duration_Mins": "Avg Duration (mins)",
-                    "Suspicious_OD": "Suspicious OD",
-                }
-            )
-            .sort_values("Total Surveys", ascending=False)
+        subtab_s1, subtab_s2, subtab_s3 = st.tabs(
+            [
+                "📊 Overview & Performance",
+                "👤 Individual Surveyor Activity",
+                "⏱️ Short Entry Duration",
+            ]
         )
 
-        summary["Avg Duration (mins)"] = summary["Avg Duration (mins)"].round(2)
-        summary["Suspicious OD"] = summary["Suspicious OD"].astype(int)
+        # ── SUBTAB S1: Overview & Performance ────────────────────────────────
+        with subtab_s1:
+            summary = (
+                surveyor_base.groupby("surveyor")
+                .agg(
+                    Total_Surveys=("surveyor", "size"),
+                    Passenger_Surveys=(
+                        "survey_type",
+                        lambda x: int(x.astype(str).str.lower().eq("passenger").sum()),
+                    ),
+                    Goods_Surveys=(
+                        "survey_type",
+                        lambda x: int(x.astype(str).str.lower().eq("goods").sum()),
+                    ),
+                    Directions=(
+                        "direction",
+                        lambda x: ", ".join(sorted(set(x.dropna().astype(str)))),
+                    ),
+                    Vehicle_Types=(
+                        "vehicle_type",
+                        lambda x: ", ".join(sorted(set(x.dropna().astype(str)))),
+                    ),
+                    First_Entry=(
+                        COL_START,
+                        lambda x: min(t.strftime("%H:%M:%S") for t in x.dropna())
+                        if len(x.dropna())
+                        else "-",
+                    ),
+                    Last_Entry=(
+                        COL_END,
+                        lambda x: max(t.strftime("%H:%M:%S") for t in x.dropna())
+                        if len(x.dropna())
+                        else "-",
+                    ),
+                    Avg_Duration_Mins=("survey_duration_mins", "mean"),
+                    Suspicious_OD=("sample_quality_suspicious", "sum"),
+                )
+                .reset_index()
+                .rename(
+                    columns={
+                        "surveyor": "Surveyor",
+                        "Total_Surveys": "Total Surveys",
+                        "Passenger_Surveys": "Passenger Surveys",
+                        "Goods_Surveys": "Goods Surveys",
+                        "Vehicle_Types": "Vehicle Types",
+                        "Avg_Duration_Mins": "Avg Duration (mins)",
+                        "Suspicious_OD": "Suspicious OD",
+                    }
+                )
+                .sort_values("Total Surveys", ascending=False)
+            )
 
-        st.dataframe(summary, use_container_width=True)
+            summary["Avg Duration (mins)"] = summary["Avg Duration (mins)"].round(2)
+            summary["Suspicious OD"] = summary["Suspicious OD"].astype(int)
 
-        fig = px.bar(
-            summary.sort_values("Total Surveys", ascending=True),
-            x="Total Surveys",
-            y="Surveyor",
-            orientation="h",
-            title="Surveys per Surveyor",
-            color_discrete_sequence=[PRIMARY_COLOR],
-        )
-        st.plotly_chart(fig, use_container_width=True)
+            st.dataframe(summary, use_container_width=True)
+
+            fig = px.bar(
+                summary.sort_values("Total Surveys", ascending=True),
+                x="Total Surveys",
+                y="Surveyor",
+                orientation="h",
+                title="Surveys per Surveyor",
+                color_discrete_sequence=[PRIMARY_COLOR],
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+        # ── SUBTAB S2: Individual Surveyor Activity ──────────────────────────
+        with subtab_s2:
+            st.markdown("### 👤 Individual Surveyor Activity Monitoring")
+            surveyor_names = sorted(surveyor_base["surveyor"].dropna().unique().tolist())
+
+            sel_surveyor = st.selectbox(
+                "Select Surveyor to Inspect",
+                options=surveyor_names,
+                key="surveyor_activity_select",
+            )
+
+            if sel_surveyor:
+                s_df = surveyor_base[surveyor_base["surveyor"] == sel_surveyor].copy()
+                s_total = len(s_df)
+                s_pass = int(s_df["survey_type"].astype(str).str.lower().eq("passenger").sum())
+                s_goods = int(s_df["survey_type"].astype(str).str.lower().eq("goods").sum())
+                s_susp = int(s_df["sample_quality_suspicious"].sum())
+                s_avg_dur = round(s_df["survey_duration_mins"].mean(), 2) if s_df["survey_duration_mins"].notna().any() else 0.0
+                s_min_dur = round(s_df["entry_duration_sec"].min(), 0) if s_df["entry_duration_sec"].notna().any() else 0
+                s_max_dur = round(s_df["entry_duration_sec"].max(), 0) if s_df["entry_duration_sec"].notna().any() else 0
+
+                # Metric cards
+                m1, m2, m3, m4, m5, m6 = st.columns(6)
+                m1.metric("Total Surveys", s_total)
+                m2.metric("Passenger", s_pass)
+                m3.metric("Goods", s_goods)
+                m4.metric("Avg Entry Time", f"{s_avg_dur} min")
+                m5.metric("Fastest Entry", format_seconds(s_min_dur))
+                m6.metric("Suspicious ODs", s_susp)
+
+                st.markdown("---")
+
+                # Activity Charts
+                col_c1, col_c2 = st.columns(2)
+
+                with col_c1:
+                    # Hourly Timeline
+                    if "start_hour" in s_df.columns and s_df["start_hour"].notna().any():
+                        s_hourly = (
+                            s_df.groupby("start_hour")
+                            .size()
+                            .reset_index(name="Count")
+                            .sort_values("start_hour")
+                        )
+                        fig_sh = px.bar(
+                            s_hourly,
+                            x="start_hour",
+                            y="Count",
+                            title=f"Hourly Activity ({sel_surveyor})",
+                            labels={"start_hour": "Hour of Day", "Count": "Surveys"},
+                            color_discrete_sequence=[PRIMARY_COLOR],
+                        )
+                        st.plotly_chart(fig_sh, use_container_width=True)
+                    else:
+                        st.info("No hourly start time data.")
+
+                with col_c2:
+                    # Vehicle Types Breakdown
+                    s_vtype = s_df["vehicle_type"].value_counts().reset_index()
+                    s_vtype.columns = ["Vehicle Type", "Count"]
+                    if not s_vtype.empty:
+                        fig_sv = px.pie(
+                            s_vtype,
+                            names="Vehicle Type",
+                            values="Count",
+                            title=f"Vehicle Types Surveyed ({sel_surveyor})",
+                            color_discrete_sequence=px.colors.sequential.Blues_r,
+                        )
+                        fig_sv.update_traces(textinfo="percent+label")
+                        st.plotly_chart(fig_sv, use_container_width=True)
+                    else:
+                        st.info("No vehicle type data.")
+
+                # Detailed table of this surveyor's entries
+                st.markdown(f"### 📋 Detailed Survey Log — {sel_surveyor} ({s_total} records)")
+                s_display = prepare_display(s_df)
+                st.dataframe(s_display, use_container_width=True)
+
+                st.download_button(
+                    f"⬇️ Download {sel_surveyor} Records (CSV)",
+                    data=make_download_csv(s_display),
+                    file_name=f"{sel_surveyor.replace(' ', '_').lower()}_survey_log.csv",
+                    mime="text/csv",
+                )
+
+        # ── SUBTAB S3: Short Entry Duration ──────────────────────────────────
+        with subtab_s3:
+            st.markdown("### ⏱️ Short Entry Duration Check")
+            st.caption(
+                "Corrected logic: this uses each row's entry duration "
+                "`end_time - start_time`. It does not use previous entry gap."
+            )
+
+            t1, t2, t3 = st.columns([1, 1, 4])
+
+            with t1:
+                duration_min = st.number_input(
+                    "Threshold minutes",
+                    min_value=0,
+                    max_value=60,
+                    value=4,
+                    step=1,
+                    key="duration_threshold_min",
+                )
+
+            with t2:
+                duration_sec = st.number_input(
+                    "Threshold seconds",
+                    min_value=0,
+                    max_value=59,
+                    value=0,
+                    step=5,
+                    key="duration_threshold_sec",
+                )
+
+            threshold_sec = duration_min * 60 + duration_sec
+
+            with t3:
+                st.markdown(
+                    f"<div style='padding-top:28px;color:#666;'>"
+                    f"Flagging entries with duration below "
+                    f"<b>{duration_min}m {duration_sec:02d}s</b> "
+                    f"({threshold_sec} seconds)"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+
+            duration_df = filtered_df[
+                filtered_df["entry_duration_sec"].notna()
+                & (filtered_df["entry_duration_sec"] >= 0)
+                & (filtered_df["entry_duration_sec"] < threshold_sec)
+            ].copy()
+
+            if duration_df.empty:
+                st.success("No short-duration entries found for selected threshold.")
+            else:
+                k1, k2, k3, k4 = st.columns(4)
+
+                k1.metric("Short Entries", len(duration_df))
+                k2.metric("Surveyors Flagged", duration_df["surveyor"].nunique())
+                k3.metric(
+                    "Shortest Entry",
+                    format_seconds(duration_df["entry_duration_sec"].min()),
+                )
+                k4.metric(
+                    "Most Flagged Surveyor",
+                    duration_df["surveyor"].value_counts().idxmax(),
+                )
+
+                st.markdown("### Summary by Surveyor")
+
+                duration_summary = (
+                    duration_df.groupby("surveyor")
+                    .agg(
+                        Short_Entries=("surveyor", "size"),
+                        Shortest_Duration_Sec=("entry_duration_sec", "min"),
+                        Avg_Duration_Sec=("entry_duration_sec", "mean"),
+                    )
+                    .reset_index()
+                    .rename(columns={"surveyor": "Surveyor"})
+                    .sort_values("Short_Entries", ascending=False)
+                )
+
+                duration_summary["Shortest Duration"] = duration_summary[
+                    "Shortest_Duration_Sec"
+                ].apply(format_seconds)
+
+                duration_summary["Avg Duration"] = duration_summary[
+                    "Avg_Duration_Sec"
+                ].apply(format_seconds)
+
+                duration_summary = duration_summary[
+                    [
+                        "Surveyor",
+                        "Short_Entries",
+                        "Shortest Duration",
+                        "Avg Duration",
+                    ]
+                ].rename(columns={"Short_Entries": "Short Entries"})
+
+                st.dataframe(duration_summary, use_container_width=True)
+
+                st.markdown("### Flagged Entry Details")
+
+                duration_display = prepare_display(duration_df)
+                st.dataframe(duration_display, use_container_width=True)
+
+                st.download_button(
+                    "⬇️ Download Short Entry Duration Records CSV",
+                    data=make_download_csv(duration_display),
+                    file_name="short_entry_duration_records.csv",
+                    mime="text/csv",
+                )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TAB 3 — SHORT ENTRY DURATION
+# TAB 3 — VEHICLES
 # ─────────────────────────────────────────────────────────────────────────────
 with tabs[2]:
-    st.subheader("⏱️ Short Entry Duration Check")
-
-    st.caption(
-        "Corrected logic: this uses each row's entry duration "
-        "`end_time - start_time`. It does not use previous entry gap."
-    )
-
-    t1, t2, t3 = st.columns([1, 1, 4])
-
-    with t1:
-        duration_min = st.number_input(
-            "Threshold minutes",
-            min_value=0,
-            max_value=60,
-            value=4,
-            step=1,
-            key="duration_threshold_min",
-        )
-
-    with t2:
-        duration_sec = st.number_input(
-            "Threshold seconds",
-            min_value=0,
-            max_value=59,
-            value=0,
-            step=5,
-            key="duration_threshold_sec",
-        )
-
-    threshold_sec = duration_min * 60 + duration_sec
-
-    with t3:
-        st.markdown(
-            f"<div style='padding-top:28px;color:#666;'>"
-            f"Flagging entries with duration below "
-            f"<b>{duration_min}m {duration_sec:02d}s</b> "
-            f"({threshold_sec} seconds)"
-            f"</div>",
-            unsafe_allow_html=True,
-        )
-
-    duration_df = filtered_df[
-        filtered_df["entry_duration_sec"].notna()
-        & (filtered_df["entry_duration_sec"] >= 0)
-        & (filtered_df["entry_duration_sec"] < threshold_sec)
-    ].copy()
-
-    if duration_df.empty:
-        st.success("No short-duration entries found for selected threshold.")
-    else:
-        k1, k2, k3, k4 = st.columns(4)
-
-        k1.metric("Short Entries", len(duration_df))
-        k2.metric("Surveyors Flagged", duration_df["surveyor"].nunique())
-        k3.metric(
-            "Shortest Entry",
-            format_seconds(duration_df["entry_duration_sec"].min()),
-        )
-        k4.metric(
-            "Most Flagged Surveyor",
-            duration_df["surveyor"].value_counts().idxmax(),
-        )
-
-        st.markdown("### Summary by Surveyor")
-
-        duration_summary = (
-            duration_df.groupby("surveyor")
-            .agg(
-                Short_Entries=("surveyor", "size"),
-                Shortest_Duration_Sec=("entry_duration_sec", "min"),
-                Avg_Duration_Sec=("entry_duration_sec", "mean"),
-            )
-            .reset_index()
-            .rename(columns={"surveyor": "Surveyor"})
-            .sort_values("Short_Entries", ascending=False)
-        )
-
-        duration_summary["Shortest Duration"] = duration_summary[
-            "Shortest_Duration_Sec"
-        ].apply(format_seconds)
-
-        duration_summary["Avg Duration"] = duration_summary[
-            "Avg_Duration_Sec"
-        ].apply(format_seconds)
-
-        duration_summary = duration_summary[
-            [
-                "Surveyor",
-                "Short_Entries",
-                "Shortest Duration",
-                "Avg Duration",
-            ]
-        ].rename(columns={"Short_Entries": "Short Entries"})
-
-        st.dataframe(duration_summary, use_container_width=True)
-
-        st.markdown("### Flagged Entry Details")
-
-        duration_display = prepare_display(duration_df)
-        st.dataframe(duration_display, use_container_width=True)
-
-        st.download_button(
-            "⬇️ Download Short Entry Duration Records CSV",
-            data=make_download_csv(duration_display),
-            file_name="short_entry_duration_records.csv",
-            mime="text/csv",
-        )
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# TAB 4 — VEHICLES
-# ─────────────────────────────────────────────────────────────────────────────
-with tabs[3]:
     st.subheader("🚗 Vehicle Type Analysis")
 
     vehicle_summary = (
@@ -1415,100 +2559,9 @@ with tabs[3]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TAB 5 — OD ANALYSIS
+# TAB 4 — SUSPICIOUS OD
 # ─────────────────────────────────────────────────────────────────────────────
-with tabs[4]:
-    st.subheader("🗺️ Origin–Destination Analysis")
-
-    od_valid = filtered_df.dropna(subset=["origin", "destination"]).copy()
-
-    st.markdown(
-        f"**{len(od_valid):,}** records have valid Origin and Destination "
-        f"out of **{len(filtered_df):,}** filtered records."
-    )
-
-    if od_valid.empty:
-        st.info("No valid OD records.")
-    else:
-        od_pairs = (
-            od_valid.groupby(["origin", "destination"])
-            .size()
-            .reset_index(name="Trip Count")
-            .sort_values("Trip Count", ascending=False)
-        )
-
-        od_pairs["OD Pair"] = od_pairs["origin"] + " → " + od_pairs["destination"]
-
-        col1, col2 = st.columns([2, 3])
-
-        with col1:
-            st.markdown("### Top OD Pairs")
-            st.dataframe(
-                od_pairs[["OD Pair", "Trip Count"]].head(25),
-                use_container_width=True,
-            )
-
-        with col2:
-            top_od = od_pairs.head(15).sort_values("Trip Count", ascending=True)
-
-            fig = px.bar(
-                top_od,
-                x="Trip Count",
-                y="OD Pair",
-                orientation="h",
-                title="Top 15 OD Pairs",
-                color_discrete_sequence=[PRIMARY_COLOR],
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        col3, col4 = st.columns(2)
-
-        with col3:
-            top_origins = filtered_df["origin"].value_counts().head(15).reset_index()
-            top_origins.columns = ["Origin", "Count"]
-
-            fig = px.bar(
-                top_origins.sort_values("Count", ascending=True),
-                x="Count",
-                y="Origin",
-                orientation="h",
-                title="Top Origins",
-                color_discrete_sequence=[PRIMARY_COLOR],
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        with col4:
-            top_destinations = (
-                filtered_df["destination"].value_counts().head(15).reset_index()
-            )
-            top_destinations.columns = ["Destination", "Count"]
-
-            fig = px.bar(
-                top_destinations.sort_values("Count", ascending=True),
-                x="Count",
-                y="Destination",
-                orientation="h",
-                title="Top Destinations",
-                color_discrete_sequence=[SECONDARY],
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("---")
-    st.subheader("Missing OD Entries")
-
-    bad_od = filtered_df[filtered_df["bad_od_entry"] == True].copy()
-
-    if bad_od.empty:
-        st.success("No missing OD entries.")
-    else:
-        st.warning(f"{len(bad_od):,} records have missing Origin or Destination.")
-        st.dataframe(prepare_display(bad_od), use_container_width=True)
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# TAB 6 — SUSPICIOUS OD
-# ─────────────────────────────────────────────────────────────────────────────
-with tabs[5]:
+with tabs[3]:
     st.subheader("🚩 Suspicious OD Records")
 
     st.caption(
@@ -1640,9 +2693,9 @@ with tabs[5]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TAB 7 — SHIFT / FREQUENCY / PURPOSE
+# TAB 5 — SHIFT / FREQUENCY / PURPOSE
 # ─────────────────────────────────────────────────────────────────────────────
-with tabs[6]:
+with tabs[4]:
     st.subheader("🔁 Shift, Frequency, Purpose and Commodity")
 
     col1, col2 = st.columns(2)
@@ -1728,9 +2781,9 @@ with tabs[6]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TAB 8 — RAW DATA
+# TAB 6 — RAW DATA
 # ─────────────────────────────────────────────────────────────────────────────
-with tabs[7]:
+with tabs[5]:
     st.subheader("📄 Filtered Raw Data")
 
     raw = prepare_display(filtered_df)
@@ -1746,10 +2799,821 @@ with tabs[7]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# TAB 7 — OUTPUT & SPATIAL ANALYSIS
+# ─────────────────────────────────────────────────────────────────────────────
+with tabs[6]:
+    st.subheader("🗺️ Output & Spatial Analysis")
+
+    subtab_o1, subtab_o2, subtab_o3 = st.tabs(
+        [
+            "🗺️ Delhi Zoning Map",
+            "🛠️ OD Correction",
+            "📊 Origin–Destination Analysis",
+        ]
+    )
+
+    # ── SUBTAB O1: Delhi Zoning Map ──────────────────────────────────────────
+    with subtab_o1:
+        st.markdown("### 🗺️ Delhi Zoning Map Layer")
+        geojson_data, centroids_data, df_zones = load_delhi_zoning_data(DELHI_ZONING_KML)
+
+        if not geojson_data or not geojson_data.get("features"):
+            st.warning(f"⚠️ Could not load Delhi Zoning KML file from `{DELHI_ZONING_KML}`.")
+        else:
+            # Fast vectorized zone aggregation (mapping unique strings only)
+            zone_od_counts: dict[str, dict[str, int]] = {}
+
+            if "origin" in filtered_df.columns:
+                unique_origs = filtered_df["origin"].dropna().unique()
+                orig_map = {str(o): suggest_corrected_od_and_zone(str(o)) for o in unique_origs}
+                for orig_val, o_count in filtered_df["origin"].value_counts().items():
+                    c_od, z_no, _ = orig_map.get(str(orig_val), ("Nill", "-", ""))
+                    if c_od.lower() != "nill" and z_no and z_no != "-" and z_no != "Outside":
+                        z_key = str(z_no)
+                        if z_key not in zone_od_counts:
+                            zone_od_counts[z_key] = {"origins": 0, "destinations": 0, "total": 0}
+                        zone_od_counts[z_key]["origins"] += int(o_count)
+                        zone_od_counts[z_key]["total"] += int(o_count)
+
+            if "destination" in filtered_df.columns:
+                unique_dests = filtered_df["destination"].dropna().unique()
+                dest_map = {str(d): suggest_corrected_od_and_zone(str(d)) for d in unique_dests}
+                for dest_val, d_count in filtered_df["destination"].value_counts().items():
+                    c_od, z_no, _ = dest_map.get(str(dest_val), ("Nill", "-", ""))
+                    if c_od.lower() != "nill" and z_no and z_no != "-" and z_no != "Outside":
+                        z_key = str(z_no)
+                        if z_key not in zone_od_counts:
+                            zone_od_counts[z_key] = {"origins": 0, "destinations": 0, "total": 0}
+                        zone_od_counts[z_key]["destinations"] += int(d_count)
+                        zone_od_counts[z_key]["total"] += int(d_count)
+
+            # Calculate max total for true relative sizing
+            max_sample_vol = max([s["total"] for s in zone_od_counts.values()] or [1])
+
+            # Also attach sample count to GeoJSON polygon features for seamless tooltip
+            for feat in geojson_data.get("features", []):
+                z_id = str(feat.get("properties", {}).get("zone_no", feat.get("properties", {}).get("Zone_no", "")))
+                tot_z = zone_od_counts.get(z_id, {}).get("total", 0)
+                feat["properties"]["total_od_count"] = f"{tot_z} samples" if tot_z > 0 else "0 samples"
+
+            # Match pointer coordinates with centroids
+            centroid_map = {str(c["zone_no"]): c for c in centroids_data}
+            pointer_data = []
+            for z_no_str, stats in zone_od_counts.items():
+                if z_no_str in centroid_map:
+                    c_info = centroid_map[z_no_str]
+                    tot = stats["total"]
+                    w_name = str(c_info.get("ward", "")).title()
+                    # Relative sqrt scaling: from 180m up to 1000m based on sample volume
+                    scaled_radius = 180 + ((tot / max_sample_vol) ** 0.5) * 820
+                    pointer_data.append({
+                        "zone_no": z_no_str,
+                        "ward_name": w_name,
+                        "ward_no": str(z_no_str),
+                        "dot_label": f"{w_name}\n({tot} samples)",
+                        "label": f"Zone {z_no_str}: {w_name} ({tot} samples)",
+                        "total_od_count": f"{tot} samples",
+                        "origins_count": stats["origins"],
+                        "destinations_count": stats["destinations"],
+                        "coordinates": c_info["coordinates"],
+                        "radius": int(scaled_radius),
+                    })
+
+            # Controls Row
+            ctrl_col1, ctrl_col2, ctrl_col3, ctrl_col4, ctrl_col5 = st.columns([1.6, 1.4, 1.1, 1.1, 1.0])
+
+            with ctrl_col1:
+                all_zones_list = sorted(
+                    [str(z) for z in df_zones["Zone No"].dropna().unique().tolist() if z],
+                    key=lambda x: int(x) if x.isdigit() else x,
+                )
+                selected_zone_filter = st.multiselect(
+                    "Filter Specific Zones",
+                    options=all_zones_list,
+                    default=[],
+                    help="Select one or more zones to highlight on the map (leave empty to view all 295 zones)",
+                    key="zoning_multiselect_filter",
+                )
+
+            with ctrl_col2:
+                map_theme = st.selectbox(
+                    "Background Map Style",
+                    options=[
+                        "Light (Clean)",
+                        "Roads / Streets",
+                        "Dark",
+                    ],
+                    index=0,
+                    key="zoning_map_theme_select",
+                )
+
+            with ctrl_col3:
+                show_labels = st.checkbox(
+                    "🏷️ Zone Labels",
+                    value=True,
+                    help="Display Zone_no text labels on top of each shape",
+                    key="zoning_show_labels_chk",
+                )
+
+            with ctrl_col4:
+                show_od_pointers = st.checkbox(
+                    "📍 OD Pointers",
+                    value=True,
+                    help="Display small pointers for zones with corrected OD trips",
+                    key="zoning_show_od_pointers_chk",
+                )
+
+            with ctrl_col5:
+                opacity_val = st.slider(
+                    "Fill Opacity",
+                    min_value=10,
+                    max_value=200,
+                    value=65,
+                    step=5,
+                    key="zoning_opacity_slider",
+                )
+
+            # Theme style mapping
+            theme_map = {
+                "Light (Clean)": "light",
+                "Roads / Streets": "road",
+                "Dark": "dark",
+            }
+            selected_style = theme_map.get(map_theme, "light")
+
+            # Filter features/centroids/pointers if selected
+            if selected_zone_filter:
+                display_features = [
+                    f for f in geojson_data["features"]
+                    if str(f["properties"].get("Zone_no", "")) in selected_zone_filter
+                    or str(f["properties"].get("zone_no", "")) in selected_zone_filter
+                ]
+                display_centroids = [
+                    c for c in centroids_data
+                    if str(c["zone_no"]) in selected_zone_filter
+                ]
+                display_pointers = [
+                    p for p in pointer_data
+                    if str(p["zone_no"]) in selected_zone_filter
+                ]
+                display_geojson = {
+                    "type": "FeatureCollection",
+                    "features": display_features,
+                }
+            else:
+                display_geojson = geojson_data
+                display_centroids = centroids_data
+                display_pointers = pointer_data
+
+            # Build Pydeck layers
+            layers = []
+
+            # 1. GeoJSON Zoning Polygons Layer
+            zoning_layer = pdk.Layer(
+                "GeoJsonLayer",
+                data=display_geojson,
+                stroked=True,
+                filled=True,
+                get_fill_color=[33, 150, 243, opacity_val],
+                get_line_color=[15, 76, 129, 220],
+                get_line_width=20,
+                line_width_min_pixels=1,
+                pickable=True,
+                auto_highlight=True,
+                highlight_color=[255, 179, 0, 160],
+            )
+            layers.append(zoning_layer)
+
+            # 2. Text Labels Layer (Zone_no on shape)
+            if show_labels and display_centroids:
+                text_layer = pdk.Layer(
+                    "TextLayer",
+                    data=display_centroids,
+                    get_position="coordinates",
+                    get_text="zone_no",
+                    get_size=12,
+                    get_color=[10, 25, 47, 240],
+                    get_angle=0,
+                    get_text_anchor="'middle'",
+                    get_alignment_baseline="'center'",
+                    pickable=False,
+                )
+                layers.append(text_layer)
+
+            # 3. OD Density Pointer Layer (clean circular dots; details shown on hover)
+            if show_od_pointers and display_pointers:
+                od_pointer_layer = pdk.Layer(
+                    "ScatterplotLayer",
+                    data=display_pointers,
+                    get_position="coordinates",
+                    get_radius="radius",
+                    get_fill_color=[233, 30, 99, 200],
+                    get_line_color=[255, 255, 255, 255],
+                    get_line_width=2,
+                    pickable=True,
+                    auto_highlight=True,
+                    highlight_color=[255, 235, 59, 255],
+                )
+                layers.append(od_pointer_layer)
+
+            # 4. Survey Station Green Pins Layer (OD-1, OD-2... based on last sample per day >= 100 samples)
+            survey_site_pins = []
+            if COL_LOCATION in df.columns and df[COL_LOCATION].notna().any():
+                # Check for date column
+                date_col_name = COL_DATE if COL_DATE in df.columns else "date"
+                if date_col_name in df.columns:
+                    unique_dates = sorted([d for d in df[date_col_name].dropna().unique() if str(d).strip()])
+                    station_idx = 1
+                    for d_val in unique_dates:
+                        day_records = df[df[date_col_name] == d_val]
+                        day_count = len(day_records)
+                        # Skip days with very few samples (< 100)
+                        if day_count < 100:
+                            continue
+
+                        # Extract lat/long from the last sample of that day
+                        loc_series = day_records[COL_LOCATION].dropna().astype(str).tolist()
+                        day_last_loc = None
+                        for l_str in reversed(loc_series):
+                            if "," in l_str and l_str.lower() not in INVALID_TEXT:
+                                try:
+                                    s_lat, s_lon = map(float, l_str.split(","))
+                                    day_last_loc = (s_lat, s_lon)
+                                    break
+                                except Exception:
+                                    pass
+
+                        if day_last_loc:
+                            s_lat, s_lon = day_last_loc
+                            z_found, w_found = find_delhi_zone_by_lat_lng(s_lon, s_lat)
+                            
+                            station_code_str = f"OD-{station_idx}"
+                            survey_site_pins.append({
+                                "lat": s_lat,
+                                "lon": s_lon,
+                                "coordinates": [s_lon, s_lat],
+                                "name": station_code_str,
+                                "station_code": station_code_str,
+                                "ward_name": w_found if w_found and w_found != "Outside Delhi" else "-",
+                                "zone_no": z_found,
+                                "survey_date": str(d_val),
+                                "day_samples": f"{day_count:,} samples",
+                                "total_od_count": f"{day_count:,} samples",
+                            })
+                            station_idx += 1
+
+                # Fallback if single location
+                if not survey_site_pins:
+                    loc_list = df[COL_LOCATION].dropna().astype(str).tolist()
+                    for l_str in reversed(loc_list):
+                        if "," in l_str and l_str.lower() not in INVALID_TEXT:
+                            try:
+                                s_lat, s_lon = map(float, l_str.split(","))
+                                z_found, w_found = find_delhi_zone_by_lat_lng(s_lon, s_lat)
+                                survey_site_pins.append({
+                                    "lat": s_lat,
+                                    "lon": s_lon,
+                                    "coordinates": [s_lon, s_lat],
+                                    "name": "OD-1",
+                                    "station_code": "OD-1",
+                                    "ward_name": w_found if w_found and w_found != "Outside Delhi" else "-",
+                                    "zone_no": z_found,
+                                    "survey_date": "Active Survey Day",
+                                    "day_samples": f"{len(df):,} samples",
+                                    "total_od_count": f"{len(df):,} samples",
+                                })
+                                break
+                            except Exception:
+                                pass
+
+            if survey_site_pins:
+                # Green Circle Marker
+                survey_pin_layer = pdk.Layer(
+                    "ScatterplotLayer",
+                    data=survey_site_pins,
+                    get_position=["lon", "lat"],
+                    get_radius=360,
+                    get_fill_color=[46, 125, 50, 240],
+                    get_line_color=[255, 255, 255, 255],
+                    get_line_width=3,
+                    pickable=True,
+                    auto_highlight=True,
+                    highlight_color=[0, 230, 118, 255],
+                )
+                layers.append(survey_pin_layer)
+
+                # Station Label (only OD-1, OD-2, etc.)
+                survey_pin_text_layer = pdk.Layer(
+                    "TextLayer",
+                    data=survey_site_pins,
+                    get_position=["lon", "lat"],
+                    get_text="station_code",
+                    get_size=14,
+                    get_color=[27, 94, 32, 255],
+                    get_angle=0,
+                    get_text_anchor="'middle'",
+                    get_alignment_baseline="'bottom'",
+                    get_pixel_offset=[0, -14],
+                    pickable=False,
+                )
+                layers.append(survey_pin_text_layer)
+
+            # Pydeck ViewState centered on Delhi (or active station)
+            init_lat = survey_site_pins[0]["lat"] if survey_site_pins else 28.6139
+            init_lon = survey_site_pins[0]["lon"] if survey_site_pins else 77.2090
+
+            view_state = pdk.ViewState(
+                latitude=init_lat,
+                longitude=init_lon,
+                zoom=10.5,
+                pitch=0,
+            )
+
+            tooltip = {
+                "html": """
+                    <div style="font-family: sans-serif; padding: 6px 10px; font-size: 13px; line-height: 1.4;">
+                        <b style="color: #2E7D32; font-size: 15px;">📍 {name}</b><br/>
+                        <b>Zone:</b> {zone_no}<br/>
+                        <hr style="margin: 4px 0; border: 0; border-top: 1px solid #ddd;"/>
+                        <b>Total Samples:</b> <span style="color: #D81B60; font-weight: bold;">{total_od_count}</span>
+                    </div>
+                """,
+                "style": {
+                    "backgroundColor": "rgba(255, 255, 255, 0.96)",
+                    "color": "#222",
+                    "borderRadius": "6px",
+                    "boxShadow": "0 2px 8px rgba(0,0,0,0.25)",
+                    "border": "1px solid #B0BEC5",
+                },
+            }
+
+            deck = pdk.Deck(
+                layers=layers,
+                initial_view_state=view_state,
+                map_style=selected_style,
+                tooltip=tooltip,
+            )
+
+            st.pydeck_chart(deck, use_container_width=True)
+
+            st.caption(
+                "ℹ️ **Delhi Zoning Map**: Blue polygons show Delhi administrative zones. "
+                "🟢 **Green Pins** mark daily survey stations (**OD-1**, **OD-2**, etc.) from the last sample coordinate of each day ($>100$ samples). "
+                "🔴 **Pink-Red Pointers** show zone trip density (hover over any dot or shape to view sample details)."
+            )
+
+            # Expandable zone reference table
+            with st.expander("📋 View Delhi Zones Reference Table (295 Zones)"):
+                st.dataframe(df_zones, use_container_width=True, hide_index=True)
+                st.download_button(
+                    "⬇️ Download Delhi Zones List (CSV)",
+                    data=df_zones.to_csv(index=False).encode("utf-8"),
+                    file_name="delhi_zoning_list.csv",
+                    mime="text/csv",
+                )
+
+    # ── SUBTAB O2: OD Correction ─────────────────────────────────────────────
+    with subtab_o2:
+        st.markdown("### 🛠️ Origin–Destination Spelling Correction & Zone Assignment")
+        st.caption(
+            "Compiles all unique locations entered across Origins and Destinations in the survey, "
+            "standardizes abbreviations and spelling (e.g. `cp` ➔ `Connaught Place`, `gk` ➔ `Greater Kailash`), "
+            "maps verified Delhi locations to their **Zone No**, marks NCR locations as **Outside**, "
+            "and sets unverified/unmatched locations to **Nill**."
+        )
+
+        geojson_data, centroids_data, df_zones = load_delhi_zoning_data(DELHI_ZONING_KML)
+
+        # 1. Compilation Controls
+        c_scope_col, c_search_col, c_min_count_col = st.columns([1.5, 2, 1.2])
+
+        with c_scope_col:
+            od_scope = st.radio(
+                "Scope of Locations",
+                options=["All Locations (Origin + Destination)", "Origins Only", "Destinations Only"],
+                index=0,
+                horizontal=True,
+                key="od_correction_scope",
+            )
+
+        with c_search_col:
+            od_search_query = st.text_input(
+                "🔍 Search Location / Zone",
+                placeholder="Type location name (e.g. Lajpat, CP, GK, Noida)...",
+                key="od_correction_search",
+            )
+
+        with c_min_count_col:
+            min_count = st.number_input(
+                "Min Occurrence Count",
+                min_value=1,
+                max_value=1000,
+                value=1,
+                step=1,
+                key="od_correction_min_count",
+            )
+
+        # 2. Extract series according to scope
+        loc_series_list = []
+        if od_scope in ["All Locations (Origin + Destination)", "Origins Only"]:
+            if "origin" in filtered_df.columns:
+                loc_series_list.append(filtered_df["origin"].dropna().astype(str))
+        if od_scope in ["All Locations (Origin + Destination)", "Destinations Only"]:
+            if "destination" in filtered_df.columns:
+                loc_series_list.append(filtered_df["destination"].dropna().astype(str))
+
+        if not loc_series_list:
+            st.info("No OD location data available.")
+        else:
+            combined_locs = pd.concat(loc_series_list, ignore_index=True)
+            # Filter out invalid text
+            valid_locs = combined_locs[
+                combined_locs.str.strip().str.lower().apply(lambda x: x not in INVALID_TEXT and len(x) > 1)
+            ]
+
+            if valid_locs.empty:
+                st.info("No valid OD locations found.")
+            else:
+                # Value counts table
+                od_counts = valid_locs.value_counts().reset_index()
+                od_counts.columns = ["OD", "Count"]
+
+                if min_count > 1:
+                    od_counts = od_counts[od_counts["Count"] >= min_count]
+
+                # Filter by search
+                if od_search_query.strip():
+                    q_lower = od_search_query.strip().lower()
+                    od_counts = od_counts[od_counts["OD"].str.lower().str.contains(q_lower, na=False)]
+
+                # Session state for manual / AI geocoded overrides
+                if "od_custom_mappings" not in st.session_state:
+                    st.session_state["od_custom_mappings"] = {}
+
+                # AI & Geocoding Resolver Panel
+                with st.expander("🌐 External Spatial Geocoding & AI LLM Semantic Resolution", expanded=False):
+                    tab_geo, tab_llm = st.tabs(["🌐 Spatial Polygon Geocoding (Google/LocationIQ/OSM)", "🧠 AI LLM Semantic Resolver (Gemini/Ollama/OpenAI)"])
+                    
+                    with tab_geo:
+                        g_col1, g_col2, g_col3 = st.columns([1.5, 1.8, 1.8])
+                        with g_col1:
+                            geo_provider = st.selectbox(
+                                "Geocoding Provider",
+                                options=[
+                                    "Google Maps",
+                                    "LocationIQ (5,000 free/day)",
+                                    "Geoapify (3,000 free/day)",
+                                    "OpenStreetMap (Free, No Key)",
+                                ],
+                                index=0,
+                                key="od_geocoding_provider_select",
+                            )
+                        with g_col2:
+                            custom_geo_key = st.text_input(
+                                f"{geo_provider.split(' ')[0]} API Key",
+                                type="password",
+                                placeholder="Enter your API key...",
+                                help="Enter your Google Maps / LocationIQ / Geoapify API key.",
+                                key="od_custom_geo_api_key_input",
+                            )
+                        with g_col3:
+                            st.write("")
+                            st.write("")
+                            btn_c1, btn_c2 = st.columns(2)
+                            with btn_c1:
+                                run_geocoding = st.button(
+                                    "🌐 Run Spatial Search",
+                                    key="btn_run_geocoding_spatial",
+                                    help="Queries coordinates for unmapped locations and finds their exact Delhi Zone number from the zoning polygons.",
+                                )
+                            with btn_c2:
+                                reset_mappings = st.button(
+                                    "🔄 Reset AI Matches",
+                                    key="btn_reset_od_mappings",
+                                    help="Clears cached session overrides and applies the expanded 600+ Delhi master AI gazetteer.",
+                                )
+
+                    with tab_llm:
+                        st.caption("🧠 **AI LLM Semantic Correction**: Uses powerful language models (Gemini / Ollama / OpenAI) to understand real semantic intent (e.g. *'Great Kailash'* ➔ *'Greater Kailash'*, *'Devoli Village'* ➔ *'Deoli'*).")
+                        l_col1, l_col2, l_col3, l_col4 = st.columns([1.5, 1.2, 1.8, 1.3])
+                        with l_col1:
+                            llm_provider = st.selectbox(
+                                "LLM Provider",
+                                options=["Google Gemini", "Ollama (Local / Offline)", "OpenAI"],
+                                index=0,
+                                key="od_llm_provider_select",
+                            )
+                        with l_col2:
+                            if llm_provider == "Google Gemini":
+                                model_options = [
+                                    "gemini-3.7-flash",
+                                    "gemini-3.5-flash-lite",
+                                    "gemini-2.5-flash",
+                                    "gemini-2.0-flash",
+                                    "gemini-1.5-flash",
+                                    "gemini-3.1-pro",
+                                    "gemini-1.5-pro",
+                                ]
+                            elif llm_provider == "Ollama (Local / Offline)":
+                                model_options = ["llama3.2", "mistral", "qwen2.5", "phi3"]
+                            else:
+                                model_options = ["gpt-4o-mini", "gpt-4o"]
+                            llm_model = st.selectbox("Model Name", options=model_options, index=0, key="od_llm_model_name")
+                        with l_col3:
+                            if "Ollama" in llm_provider:
+                                llm_key_or_url = st.text_input("Ollama Base URL", value="http://localhost:11434", key="od_llm_ollama_url")
+                            else:
+                                llm_key_or_url = st.text_input(f"{llm_provider.split(' ')[0]} API Key", type="password", placeholder="Paste Gemini / OpenAI API key...", key="od_llm_api_key")
+                        with l_col4:
+                            st.write("")
+                            st.write("")
+                            run_llm_resolver = st.button("🤖 Run AI LLM Batch", key="btn_run_llm_semantic_batch", help="Sends unmapped locations in semantic batches to the LLM for context-aware Delhi zone assignment.")
+
+                if "reset_mappings" in locals() and reset_mappings:
+                    st.session_state["od_custom_mappings"] = {}
+                    st.success("✅ Applied expanded Master AI Gazetteer! Locations re-matched.")
+                    st.rerun()
+
+                # If LLM batch button clicked, process unmapped items with LLM
+                if "run_llm_resolver" in locals() and run_llm_resolver:
+                    st.session_state["llm_api_last_error"] = None
+                    unmapped_llm_items = []
+                    for raw_od in od_counts["OD"]:
+                        if raw_od not in st.session_state["od_custom_mappings"]:
+                            c_od, z_no, _ = suggest_corrected_od_and_zone(raw_od)
+                            if c_od == "Nill" or z_no == "-":
+                                unmapped_llm_items.append(raw_od)
+
+                    if not unmapped_llm_items:
+                        st.info("🎉 All displayed locations are already resolved!")
+                    elif "Gemini" in llm_provider and (not llm_key_or_url or len(llm_key_or_url.strip()) < 10):
+                        st.warning("⚠️ Please enter your Google Gemini API key above to run AI Semantic Resolution.")
+                    elif "OpenAI" in llm_provider and (not llm_key_or_url or len(llm_key_or_url.strip()) < 10):
+                        st.warning("⚠️ Please enter your OpenAI API key above to run AI Semantic Resolution.")
+                    else:
+                        batch_size = 20
+                        total_batches = (len(unmapped_llm_items) + batch_size - 1) // batch_size
+                        p_bar = st.progress(0, text=f"Starting AI LLM Semantic Resolution for {len(unmapped_llm_items)} locations across {total_batches} batches...")
+                        status_box = st.empty()
+                        
+                        resolved_llm_count = 0
+                        for b_idx in range(total_batches):
+                            chunk = unmapped_llm_items[b_idx * batch_size : (b_idx + 1) * batch_size]
+                            p_bar.progress((b_idx + 1) / total_batches, text=f"🧠 [Batch {b_idx+1}/{total_batches}] Asking {llm_provider} ({llm_model}) to resolve {len(chunk)} locations...")
+                            
+                            batch_results = resolve_od_batch_with_llm(
+                                raw_locations=chunk,
+                                provider=llm_provider,
+                                api_key=llm_key_or_url if "Ollama" not in llm_provider else "",
+                                endpoint_url=llm_key_or_url if "Ollama" in llm_provider else "http://localhost:11434",
+                                model_name=llm_model,
+                            )
+                            
+                            for raw_k, (corr_val, z_val, stat_val) in batch_results.items():
+                                if corr_val != "Nill" and z_val != "-":
+                                    st.session_state["od_custom_mappings"][raw_k] = (corr_val, z_val, stat_val)
+                                    resolved_llm_count += 1
+                                    
+                            status_box.markdown(f"📊 **AI LLM Progress**: Processed `{min((b_idx+1)*batch_size, len(unmapped_llm_items))} / {len(unmapped_llm_items)}` | ✅ **Resolved**: `{resolved_llm_count}`")
+                        
+                        p_bar.empty()
+                        status_box.empty()
+                        if resolved_llm_count > 0:
+                            st.success(f"🎉 **AI LLM Semantic Resolution Complete!** Successfully mapped **{resolved_llm_count}** noisy survey locations to official Delhi Zones.")
+                            st.rerun()
+                        else:
+                            err_msg = st.session_state.get("llm_api_last_error", "No response returned from model.")
+                            st.error(f"⚠️ **AI Resolution Failed**: {err_msg}. Please check your API Key and Model Selection.")
+
+                # Compute auto-corrections and zone numbers instantaneously
+                corrected_list = []
+                zone_list = []
+                match_status_list = []
+
+                # If geocoding button clicked, process unmapped items with rich live progress feedback
+                if "run_geocoding" in locals() and run_geocoding:
+                    unmapped_items = []
+                    for raw_od in od_counts["OD"]:
+                        if raw_od not in st.session_state["od_custom_mappings"]:
+                            c_od, z_no, _ = suggest_corrected_od_and_zone(raw_od)
+                            if c_od == "Nill" or z_no == "-":
+                                unmapped_items.append(raw_od)
+
+                    if not unmapped_items:
+                        st.info("🎉 All displayed locations are already resolved and assigned!")
+                    elif "Google" in geo_provider and (not custom_geo_key or len(custom_geo_key.strip()) < 10):
+                        st.warning("⚠️ Please enter your Google Maps API key above to run Google Maps spatial search.")
+                    elif "LocationIQ" in geo_provider and (not custom_geo_key or len(custom_geo_key.strip()) < 10):
+                        st.warning("⚠️ Please enter your LocationIQ API key above to run LocationIQ spatial search (or select OpenStreetMap for free keyless search).")
+                    elif "Geoapify" in geo_provider and (not custom_geo_key or len(custom_geo_key.strip()) < 10):
+                        st.warning("⚠️ Please enter your Geoapify API key above to run Geoapify spatial search (or select OpenStreetMap for free keyless search).")
+                    else:
+                        import time
+                        progress_container = st.container()
+                        with progress_container:
+                            p_bar = st.progress(0, text=f"Starting spatial polygon geocoding for {len(unmapped_items)} locations...")
+                            status_box = st.empty()
+                            
+                            new_delhi_count = 0
+                            new_outside_count = 0
+                            unresolved_count = 0
+                            
+                            for idx, raw_loc in enumerate(unmapped_items):
+                                current_step = idx + 1
+                                fraction = current_step / len(unmapped_items)
+                                p_bar.progress(fraction, text=f"🔍 [{current_step}/{len(unmapped_items)}] Resolving: **{raw_loc}** via {geo_provider.split(' ')[0]}...")
+                                
+                                geo_od, geo_z, geo_m = geocode_location_spatial(raw_loc, geo_provider, custom_geo_key)
+                                if geo_od != "Nill" and geo_z != "-":
+                                    st.session_state["od_custom_mappings"][raw_loc] = (geo_od, geo_z, geo_m)
+                                    if geo_z == "Outside":
+                                        new_outside_count += 1
+                                    else:
+                                        new_delhi_count += 1
+                                else:
+                                    unresolved_count += 1
+                                
+                                status_box.markdown(
+                                    f"📊 **Progress**: **{current_step} / {len(unmapped_items)}** checked | "
+                                    f"✅ **Resolved**: `{new_delhi_count + new_outside_count}` *(📍 Delhi: {new_delhi_count} | 🏢 Outside NCR: {new_outside_count})* | "
+                                    f"⚠️ **Nill**: `{unresolved_count}`"
+                                )
+                                time.sleep(0.04)
+                            
+                            p_bar.empty()
+                            status_box.empty()
+                            st.success(
+                                f"🎉 **Geocoding Complete!** Resolved **{new_delhi_count + new_outside_count}** new locations "
+                                f"(📍 **{new_delhi_count}** mapped to Delhi Zones, 🏢 **{new_outside_count}** Outside Delhi, ⚠️ **{unresolved_count}** remained Nill)."
+                            )
+
+                for raw_od in od_counts["OD"]:
+                    if raw_od in st.session_state["od_custom_mappings"]:
+                        corr_od, z_no, m_type = st.session_state["od_custom_mappings"][raw_od]
+                    else:
+                        corr_od, z_no, m_type = suggest_corrected_od_and_zone(raw_od)
+                    corrected_list.append(corr_od)
+                    zone_list.append(z_no)
+                    match_status_list.append(m_type)
+
+                od_table = pd.DataFrame({
+                    "Sr. No.": range(1, len(od_counts) + 1),
+                    "OD": od_counts["OD"].tolist(),
+                    "Count": od_counts["Count"].tolist(),
+                    "Corrected OD": corrected_list,
+                    "Zone No": zone_list,
+                    "Match Status": match_status_list,
+                })
+
+                # Summary Metric Cards
+                total_unique_ods = len(od_table)
+                total_volume = od_table["Count"].sum()
+                delhi_mapped_count = ((od_table["Zone No"] != "-") & (od_table["Zone No"] != "Outside")).sum()
+                outside_count = (od_table["Zone No"] == "Outside").sum()
+                nill_count = (od_table["Corrected OD"] == "Nill").sum()
+
+                m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+                m_col1.metric("Unique OD Locations", total_unique_ods)
+                m_col2.metric("Delhi Zones Mapped", delhi_mapped_count)
+                m_col3.metric("Outside Delhi Locations", outside_count)
+                m_col4.metric("Unmatched (Nill)", nill_count)
+
+                st.markdown("---")
+                st.markdown("#### 📝 Editable OD Mapping Table")
+                st.caption("You can directly click and edit **Corrected OD** or **Zone No** cells in the table below to adjust any mapping:")
+
+                # Interactive editable table
+                edited_od_table = st.data_editor(
+                    od_table,
+                    use_container_width=True,
+                    disabled=["Sr. No.", "OD", "Count", "Match Status"],
+                    hide_index=True,
+                    num_rows="fixed",
+                    key="od_correction_data_editor",
+                )
+
+                # Download Buttons
+                d_col1, d_col2 = st.columns(2)
+                with d_col1:
+                    st.download_button(
+                        "⬇️ Download OD Correction Mapping (CSV)",
+                        data=edited_od_table.to_csv(index=False).encode("utf-8"),
+                        file_name="od_correction_zone_mapping.csv",
+                        mime="text/csv",
+                    )
+
+                with d_col2:
+                    # Create enriched survey data with corrected OD columns
+                    mapping_dict_od = dict(zip(edited_od_table["OD"], edited_od_table["Corrected OD"]))
+                    mapping_dict_zone = dict(zip(edited_od_table["OD"], edited_od_table["Zone No"]))
+
+                    enriched_df = filtered_df.copy()
+                    if "origin" in enriched_df.columns:
+                        enriched_df["Corrected_Origin"] = enriched_df["origin"].map(mapping_dict_od).fillna("Nill")
+                        enriched_df["Origin_Zone"] = enriched_df["origin"].map(mapping_dict_zone).fillna("-")
+                    if "destination" in enriched_df.columns:
+                        enriched_df["Corrected_Destination"] = enriched_df["destination"].map(mapping_dict_od).fillna("Nill")
+                        enriched_df["Destination_Zone"] = enriched_df["destination"].map(mapping_dict_zone).fillna("-")
+
+                    st.download_button(
+                        "⬇️ Download Full Enriched Survey Data with Zones (CSV)",
+                        data=enriched_df.to_csv(index=False).encode("utf-8"),
+                        file_name="delhi_survey_data_with_corrected_zones.csv",
+                        mime="text/csv",
+                    )
+
+    # ── SUBTAB O3: Origin-Destination Analysis ───────────────────────────────
+    with subtab_o3:
+        st.markdown("### 📊 Origin–Destination Pairs & Flows")
+        od_valid = filtered_df.dropna(subset=["origin", "destination"]).copy()
+
+        st.markdown(
+            f"**{len(od_valid):,}** records have valid Origin and Destination "
+            f"out of **{len(filtered_df):,}** filtered records."
+        )
+
+        if od_valid.empty:
+            st.info("No valid OD records.")
+        else:
+            od_pairs = (
+                od_valid.groupby(["origin", "destination"])
+                .size()
+                .reset_index(name="Trip Count")
+                .sort_values("Trip Count", ascending=False)
+            )
+
+            od_pairs["OD Pair"] = od_pairs["origin"] + " → " + od_pairs["destination"]
+
+            col1, col2 = st.columns([2, 3])
+
+            with col1:
+                st.markdown("### Top OD Pairs")
+                st.dataframe(
+                    od_pairs[["OD Pair", "Trip Count"]].head(25),
+                    use_container_width=True,
+                )
+
+            with col2:
+                top_od = od_pairs.head(15).sort_values("Trip Count", ascending=True)
+
+                fig = px.bar(
+                    top_od,
+                    x="Trip Count",
+                    y="OD Pair",
+                    orientation="h",
+                    title="Top 15 OD Pairs",
+                    color_discrete_sequence=[PRIMARY_COLOR],
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+            col3, col4 = st.columns(2)
+
+            with col3:
+                top_origins = filtered_df["origin"].value_counts().head(15).reset_index()
+                top_origins.columns = ["Origin", "Count"]
+
+                fig = px.bar(
+                    top_origins.sort_values("Count", ascending=True),
+                    x="Count",
+                    y="Origin",
+                    orientation="h",
+                    title="Top Origins",
+                    color_discrete_sequence=[PRIMARY_COLOR],
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+            with col4:
+                top_destinations = (
+                    filtered_df["destination"].value_counts().head(15).reset_index()
+                )
+                top_destinations.columns = ["Destination", "Count"]
+
+                fig = px.bar(
+                    top_destinations.sort_values("Count", ascending=True),
+                    x="Count",
+                    y="Destination",
+                    orientation="h",
+                    title="Top Destinations",
+                    color_discrete_sequence=[SECONDARY],
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+        st.markdown("---")
+        st.subheader("Missing OD Entries")
+
+        bad_od = filtered_df[filtered_df["bad_od_entry"] == True].copy()
+
+        if bad_od.empty:
+            st.success("No missing OD entries.")
+        else:
+            st.warning(f"{len(bad_od):,} records have missing Origin or Destination.")
+            st.dataframe(prepare_display(bad_od), use_container_width=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # FOOTER
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.caption(
     "Dashboard built for Delhi OD Passenger / Goods Survey — "
-    "Entry-duration fraud check uses end_time minus start_time."
 )

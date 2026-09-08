@@ -1,9 +1,47 @@
+# Virtual Environment
 .venv/
+env/
+venv/
+ENV/
+
+# Python Cache
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
 *.pyd
+
+# Environment & Secrets
 .env
+.env*.local
+**/.streamlit/secrets.toml
+**/secrets.toml
+
+# Session & Authentication Data
+**/data/session.json
+**/session.json
+**/captured_network.json
+
+# Node & Next.js
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# Excel temp/test downloads
+**/data/temp_*.xlsx
+**/data/test_*.xlsx
+**/data/latest_survey.xlsx
+
+# Logs
+*.log
+
+# OS & Editor files
 .DS_Store
+Thumbs.db
 .vscode/
-.streamlit/secrets.toml
+.idea/
+

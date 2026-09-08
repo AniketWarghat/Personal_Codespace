@@ -44,7 +44,7 @@ class TrafficLenzConfig:
     portal_url: str = "https://www.trafficlenz.com/"
     username: str = ""
     password: str = ""
-    survey_id: str = "DC513DL01"
+    survey_id: str = "DC513MH06"
     save_dir: str = "data"
     save_filename: str = "latest_survey.xlsx"
     headless: bool = True
@@ -236,7 +236,7 @@ def download_excel_bytes(config: TrafficLenzConfig) -> Tuple[bytes, str]:
         page.set_default_timeout(config.timeout_ms)
 
         try:
-            survey_code = config.survey_id or "DC513DL01"
+            survey_code = config.survey_id or "DC513MH06"
 
             # ── Step 1: Open myDashboardView ──────────────────────────────
             logger.info("1. Opening dashboard...")
@@ -282,23 +282,46 @@ def download_excel_bytes(config: TrafficLenzConfig) -> Tuple[bytes, str]:
 
             # ── Step 5: Expand task actions (+) ───────────────────────────
             logger.info("5. Expanding task actions (+)...")
-            page.evaluate("""() => {
+            flow_file = Path(config.save_dir) / "flow_config.json"
+            rec_btn_id = None
+            if flow_file.exists():
+                try:
+                    import json
+                    with open(flow_file, "r", encoding="utf-8") as ff:
+                        f_data = json.load(ff)
+                        for c in f_data.get("clicks", []):
+                            cid = c.get("id", "")
+                            if cid.startswith("button_"):
+                                rec_btn_id = cid
+                                break
+                except Exception:
+                    pass
+
+            page.evaluate("""(btnId) => {
+                if (btnId) {
+                    const b = document.getElementById(btnId);
+                    if (b) { b.click(); return; }
+                }
                 const plus = Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').includes('+'));
                 if (plus) plus.click();
-            }""")
+            }""", rec_btn_id)
             page.wait_for_timeout(1500)
 
             # ── Step 6: Trigger download ───────────────────────────────────
             logger.info("6. Triggering questionnaire report download...")
             with page.expect_download(timeout=config.timeout_ms) as dl_info:
                 page.evaluate("""() => {
-                    const dlBtn = document.querySelector('a[onclick*="downloadQuestionnaireReport"]');
+                    const dlBtn = document.querySelector('a[onclick*="downloadQuestionnaireReport"], button[onclick*="downloadQuestionnaireReport"]');
                     if (dlBtn) {
                         dlBtn.click();
-                    } else if (typeof downloadQuestionnaireReport === 'function') {
-                        downloadQuestionnaireReport('93A8309C', '642AD95B');
+                    } else {
+                        const anyDl = Array.from(document.querySelectorAll('a, button')).find(
+                            el => (el.innerText || '').toLowerCase().includes('download') || (el.getAttribute('onclick') || '').includes('download')
+                        );
+                        if (anyDl) anyDl.click();
                     }
                 }""")
+
 
             download = dl_info.value
             download.save_as(str(temp_file))

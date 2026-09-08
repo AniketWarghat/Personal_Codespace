@@ -1,0 +1,2376 @@
+Sr. No.,OD,Count,Corrected OD,Zone No,Match Status
+1,Saket,943,Saket,16,Alias Match
+2,Lajpat Nagar,690,Lajpat Nagar,6,Alias Match
+3,Khanpur,546,Khanpur,26,Alias Match
+4,Sangam Vihar,415,Sangam Vihar,292,Alias Match
+5,Chirag Delhi,310,Chirag Delhi,11,Alias Match
+6,Nehru Place,242,Nehru Place,13,Alias Match
+7,Badarpur Border,235,Badarpur Border,283,Alias Match
+8,Greater Kailash,206,Greater Kailash,9,Alias Match
+9,Dakshinpuri,196,Dakshinpuri,18,Alias Match
+10,Mehrauli,193,Mehrauli,278,Alias Match
+11,Malviya Nagar,188,Malviya Nagar,11,Alias Match
+12,Hauz Khas,173,Hauz Khas,8,Alias Match
+13,Chhatarpur,164,Chhatarpur,282,Alias Match
+14,Okhla,157,Okhla,287,Alias Match
+15,Lado Sarai,150,Ladosarai,20,AI Match (94%)
+16,Rk Puram,149,R.K. Puram,216,Alias Match
+17,Badarpur,139,Badarpur,283,Alias Match
+18,Ambedkar Nagar,128,Ambedkar Nagar,18,Alias Match
+19,Anand Vihar,114,Anand Vihar,151,Alias Match
+20,Noida,105,Noida,Outside,Outside Delhi
+21,Kashmiri Gate,102,Kashmere Gate,133,AI Match (84%)
+22,Moolchand,102,Nill,-,Unmatched
+23,Defence Colony,101,Defence Colony,14,Alias Match
+24,Kalkaji,98,Kalkaji,13,Alias Match
+25,Madan Giri,93,Nill,-,Unmatched
+26,Green Park,89,Green Park,8,Alias Match
+27,Gurugram,82,Gurugram,Outside,Outside Delhi
+28,Aiims Hospital,78,AIIMS (Ansari Nagar),218,Alias Match
+29,Chattarpur,78,Chhatarpur,290,AI Match (90%)
+30,Hamdard Nagar,75,Ambedkar Nagar,22,AI Match (81%)
+31,Sarojini Nagar,74,Sarojini Nagar,213,Alias Match
+32,Madangiri,73,Madangir,21,Sub-Ward Match
+33,Madangir,71,Madangir,18,Alias Match
+34,Tigri,71,Tigri,26,Alias Match
+35,Mehrauli Terminal,69,Mehrauli,278,Alias Match
+36,South Extension,64,South Extension,12,Alias Match
+37,Aashram,64,Ashram Chowk,14,AI Match (92%)
+38,Kotla,60,Kotla Mubarakpur,2,Sub-Ward Match
+39,Devli,59,Deoli,26,Alias Match
+40,Jangpura,59,Jungpura,14,AI Match (87%)
+41,Nizamuddin,59,Hazrat Nizamuddin,14,Alias Match
+42,Chirag,59,Chirag Delhi,14,Sub-Ward Match
+43,Rk Puram Sector 1,58,R.K. Puram,216,Alias Match
+44,Prem Nagar,58,Prem Nagar,73,Exact Ward Match
+45,Aiims,57,AIIMS (Ansari Nagar),218,Alias Match
+46,Mayur Vihar,57,Mayur Vihar,234,Alias Match
+47,Sarai Kale Khan,55,Nill,-,Unmatched
+48,Humdard Nagar,55,Hari Nagar,206,AI Match (78%)
+49,Lado Sarai Firni Road,54,Nill,-,Unmatched
+50,Vasant Vihar,54,Vasant Vihar,269,Alias Match
+51,Dhaula Kuan,53,Dhaula Kuan,215,Alias Match
+52,Ghaziabad,51,Ghaziabad,Outside,Outside Delhi
+53,Panchsheel Park,49,Panchsheel Park,11,Alias Match
+54,Kanpur,49,Khanpur,24,AI Match (92%)
+55,India Gate,47,IIT Gate Junction,8,AI Match (77%)
+56,Kalka Ji,46,Nill,-,Unmatched
+57,Pushp Vihar,45,Pushp Vihar,16,Alias Match
+58,Kapashera Border,45,Kapashera,275,Sub-Ward Match
+59,Faridabad,42,Faridabad,Outside,Outside Delhi
+60,Vijay Nagar,42,Vikas Nagar,195,AI Match (81%)
+61,Nizamuddin Railway Station,41,Hazrat Nizamuddin Railway Station,14,Alias Match
+62,Nizamuddin Station,40,Hazrat Nizamuddin,14,Alias Match
+63,Uttam Nagar,40,Uttam Nagar,225,Alias Match
+64,Sector 62 Noida,40,Sector 62 Noida,Outside,Outside Delhi
+65,Sheikh Sarai,39,Sheikh Sarai,11,Alias Match
+66,Safdarjung,38,Safdarjung Hospital / Enclave,218,Alias Match
+67,Ambedkar,36,Ambedkar Nagar,22,Sub-Ward Match
+68,Greater Noida,35,Greater Noida,Outside,Outside Delhi
+69,Lodhi Road,34,Lodhi Road,212,Alias Match
+70,Kailash Colony,34,Kailash Colony,9,Alias Match
+71,Aandh Vihar,34,Anand Vihar,151,AI Match (90%)
+72,Laxmi Nagar,32,Laxmi Nagar,228,Alias Match
+73,Ghitorni,32,Ghitorni,282,Alias Match
+74,Mandi Village,31,Ali Village,283,AI Match (83%)
+75,Vasant Kunj,31,Vasant Kunj,274,Alias Match
+76,Qutub Minar,31,Mehrauli (Qutub Minar),278,Alias Match
+77,Sultanpur,31,Sultanpur (Mehrauli),282,Alias Match
+78,Gautam Nagar,30,Uttam Nagar,223,AI Match (86%)
+79,Sarita Vihar,30,Sarita Vihar,273,Alias Match
+80,Sangham Vihar,30,Sangam Vihar,292,AI Match (96%)
+81,Lajpat Nagar Ring Road,30,Lajpat Nagar,6,Alias Match
+82,Delhi Chirag,30,Chirag Delhi,14,AI Match (100%)
+83,Jasola Vihar,29,Jasola Vihar,273,Alias Match
+84,Mahipalpur,28,Mahipalpur,277,Exact Ward Match
+85,Lodhi Garden,27,Mohan Garden,209,AI Match (75%)
+86,Madhan Gate,27,Nill,-,Unmatched
+87,Janakpuri,26,Janakpuri,205,Alias Match
+88,Sadar Bazar,26,Bazar Sitaram,177,AI Match (75%)
+89,Moti Bagh,26,Moti Bagh,217,Alias Match
+90,Badarpur Border Terminal,26,Badarpur,283,Alias Match
+91,Firani Road,26,Nill,-,Unmatched
+92,Dwarka,25,Dwarka,246,Alias Match
+93,Loni,25,Nill,-,Unmatched
+94,Sainik Farm,25,Nill,-,Unmatched
+95,Amar Colony,24,Amar Colony,6,Alias Match
+96,Nehru Nagar,24,Sunder Nagar,212,AI Match (78%)
+97,Sector 22 Noida,24,Sector 22 Noida,Outside,Outside Delhi
+98,Chandni Chowk,23,Chandni Chowk,153,Alias Match
+99,Vinob Puri,23,Govind Puri,17,AI Match (76%)
+100,Sector 52 Noida,23,Sector 52 Noida,Outside,Outside Delhi
+101,Seelampur,22,Seelampur,240,Alias Match
+102,Karol Bagh,22,Karol Bagh,172,Alias Match
+103,Ashram,22,Ashram Chowk,14,Alias Match
+104,Punjabi Bagh,21,Punjabi Bagh,164,Alias Match
+105,Tughlakabad,21,Tughlakabad,281,Exact Ward Match
+106,Great Kailash,21,Greater Kailash,9,AI Match (92%)
+107,New Delhi Railway Station,21,New Delhi Railway Station,182,Alias Match
+108,Durga Vihar,21,Nill,-,Unmatched
+109,Govindpuri,20,Govind Puri,17,AI Match (95%)
+110,Kalka,20,Kalkaji,12,Sub-Ward Match
+111,Kashmere Gate,20,ISBT Kashmere Gate,153,Alias Match
+112,Mahrauli,20,Mehrauli,23,AI Match (87%)
+113,Greater Kailash 2,20,Greater Kailash II,15,Alias Match
+114,Nehru Place Terminal,20,Nehru Place,13,Alias Match
+115,Nehru Palace,20,Nehru Place,13,AI Match (95%)
+116,Vivek Vihar,20,Vivek Vihar,127,Exact Ward Match
+117,Tughlaqabad Fort,20,Tughlakabad Extn,280,AI Match (75%)
+118,Qutab Minar,20,Mehrauli (Qutub Minar),278,AI Match (90%)
+119,City Forest,20,Nill,-,Unmatched
+120,Lajpat Nagar Market,19,Lajpat Nagar,6,Alias Match
+121,Munirka,19,Munirka,269,Alias Match
+122,Govind Puri,19,Govind Puri,17,Exact Ward Match
+123,Cyber City Gurugram,19,Cyber City Gurugram,Outside,Outside Delhi
+124,Lajpatnager,18,Lajpat Nagar,3,AI Match (86%)
+125,Basant Vihar,18,Vasant Vihar,269,AI Match (91%)
+126,Mulchand,18,Nill,-,Unmatched
+127,Rajouri Garden,18,Rajouri Garden,185,Exact Ward Match
+128,Chirag Delhi Metro Station,18,Chirag Delhi,11,Alias Match
+129,Inderpuri Krishi,18,Nill,-,Unmatched
+130,Madan Gir,18,Nill,-,Unmatched
+131,Airport,17,Nill,-,Unmatched
+132,Lajpat,17,Lajpat Nagar,6,Alias Match
+133,Maharani Bagh,17,Maharani Bagh,14,Alias Match
+134,Shahdara,17,Shahdara,232,Alias Match
+135,Khanpur Gao,17,Khanpur,26,Alias Match
+136,Krishna Nagar,17,Krishna  Nagar,154,Exact Ward Match
+137,Kalkaji Mandir,17,Kalkaji,13,Alias Match
+138,South X,17,South Extension,12,AI Match (93%)
+139,Okhla Phase 1,17,Okhla Industrial Area Phase I,287,Alias Match
+140,Saomi Nagar,17,Jamia Nagar,273,AI Match (81%)
+141,Neharu Place,16,Nehru Place,13,AI Match (95%)
+142,Sant Nagar,16,Sant Nagar (East of Kailash),10,Alias Match
+143,Tuglakabad,16,Tughlakabad,281,AI Match (95%)
+144,Mahrauli Terminal,16,Nill,-,Unmatched
+145,Aya Nagar Terminal,16,Aya Nagar,282,Alias Match
+146,South Ex,16,South Extension,12,Alias Match
+147,Chirag Dhali,16,Chirag Delhi,14,AI Match (83%)
+148,Bhondsi,16,Nill,-,Unmatched
+149,Harsh Vihar,15,Harsh Vihar,68,Exact Ward Match
+150,Okhla Vihar,15,Okhla Vihar,273,Alias Match
+151,Khanpur Village,15,Khanpur Village,26,Alias Match
+152,New Delhi Railway Station Gate 2,15,New Delhi Railway Station,182,Alias Match
+153,Chatarpur,15,Chhatarpur,290,AI Match (94%)
+154,Kalika Ji Mandir,15,Nill,-,Unmatched
+155,Tughalkabad,15,Tughlakabad,281,AI Match (90%)
+156,Talimabad,15,Nill,-,Unmatched
+157,Connaught Place,14,Connaught Place,211,Alias Match
+158,Krishi Vihar,14,Shiv Vihar,48,AI Match (81%)
+159,R K Puram,14,R.K. Puram,216,Alias Match
+160,Iit,14,IIT Delhi,8,Alias Match
+161,Huaz Khas,14,Hauz Khas,8,AI Match (88%)
+162,Central Market,14,Nill,-,Unmatched
+163,Lajpatnagar,14,Lajpat Nagar,3,AI Match (95%)
+164,Vinod Puri,14,Govind Puri,17,AI Match (85%)
+165,Aims,13,AIIMS (Ansari Nagar),218,AI Match (88%)
+166,Gurgaon,13,Gurgaon,Outside,Outside Delhi
+167,Igi Airport,13,Nill,-,Unmatched
+168,Mool Chand,13,Nill,-,Unmatched
+169,Sadiq Nagar,13,Sadh Nagar,248,AI Match (85%)
+170,Palam Vihar,13,Palam,255,Sub-Ward Match
+171,Sukhdev Vihar,13,Sukhdev Vihar,14,Alias Match
+172,Sarai Kale Ka,13,Nill,-,Unmatched
+173,Khanpur Market,13,Khanpur,26,Alias Match
+174,Saket Court,13,Saket,16,Alias Match
+175,Rangpuri,13,Mangolpuri,92,AI Match (77%)
+176,Gupta Market,13,Nill,-,Unmatched
+177,Rama Krishna Puram,13,R.K. Puram,216,AI Match (76%)
+178,Mehroli,13,Mehrauli,23,AI Match (80%)
+179,Chirag Dilli,13,Chirag Delhi,14,AI Match (83%)
+180,Okhla Phase 2,12,Okhla Industrial Area Phase II,287,Alias Match
+181,Aya Nagar,12,Aya Nagar,282,Alias Match
+182,Mori Gate,12,Mori Gate,153,Alias Match
+183,Basant Kunj,12,Vasant Kunj,274,AI Match (90%)
+184,Gandhi Nagar,12,Gandhi Nagar,149,Exact Ward Match
+185,Ito,12,Nill,-,Unmatched
+186,Mathura,12,Nill,-,Unmatched
+187,Greater Kailash Phase 1,12,Greater Kailash,9,Alias Match
+188,Sabdarjan Hospital,11,Safdarjung Hospital,218,AI Match (86%)
+189,Nehru Enclave,11,Nehru Enclave,15,Alias Match
+190,Sabdarjan,11,Nill,-,Unmatched
+191,Sangam Vihar Delhi,11,Sangam Vihar,292,Alias Match
+192,Sundar Nagar,11,Sunder Nagar,212,AI Match (91%)
+193,Greater Kailash 1,11,Greater Kailash I,9,Alias Match
+194,Rk Puram Sec 1,11,R.K. Puram,216,Alias Match
+195,Lajapat Nagar,11,Lajpat Nagar,3,AI Match (96%)
+196,Old Delhi Railway Station,11,Old Delhi Railway Station,153,Alias Match
+197,Paharganj,11,Paharganj,182,Alias Match
+198,Jor Bagh,11,Jor Bagh,212,Alias Match
+199,Saket Metro Station,11,Saket,16,Alias Match
+200,Mori Gate Terminal,11,Mori Gate,153,Alias Match
+201,Vikram Vihar,11,Vikram Vihar (Lajpat Nagar),6,Alias Match
+202,Sonaya Vihar,11,Sonia Vihar,46,AI Match (86%)
+203,Indira Gandhi Airport,11,Nill,-,Unmatched
+204,Lado Sarai Firni,11,Nill,-,Unmatched
+205,Shaket,11,Saket,16,AI Match (90%)
+206,Haus Khas,11,Hauz Khas,8,AI Match (88%)
+207,Saini Farm,11,Nill,-,Unmatched
+208,Hriyana,11,Nill,-,Unmatched
+209,New Delhi,10,New Delhi Railway Station,182,AI Match (100%)
+210,Chanakyapuri,10,Chanakyapuri,217,Alias Match
+211,Pragati Maidan,10,Nill,-,Unmatched
+212,Lodhi Colony,10,Lodhi Colony,212,Alias Match
+213,Chidiyaghar,10,Nill,-,Unmatched
+214,Khanpur Gaon,10,Khanpur,26,Alias Match
+215,Anand Vihar Terminal,10,Anand Vihar,151,Alias Match
+216,Vinobapuri,10,Vinobapuri (Lajpat Nagar),3,Alias Match
+217,Safdarjung Terminal,10,Safdarjung Hospital / Enclave,218,Alias Match
+218,Uttam Nagar Terminal,10,Uttam Nagar,225,Alias Match
+219,Sector 62,10,Vasant Kunj Sector A,274,AI Match (80%)
+220,Sarojini Market,10,Sarojini Nagar,213,AI Match (75%)
+221,Indrapuri Krishi Kunj,10,Nill,-,Unmatched
+222,Jamiya,9,Jamia Millia Islamia,273,AI Match (90%)
+223,Safdarjung Hospital,9,Safdarjung Hospital,218,Alias Match
+224,Daryaganj,9,Daryaganj,167,Alias Match
+225,Tughalakabad Delhi,9,Tughlakabad Extn,280,AI Match (76%)
+226,Paschim Vihar,9,Paschim Vihar,154,Alias Match
+227,Sadar Bajar,9,Nill,-,Unmatched
+228,Dwarika,9,Dwarka,246,AI Match (92%)
+229,Panchsheel,9,Panchsheel Park,11,AI Match (100%)
+230,Jaitpur,9,Jaitpur,283,Alias Match
+231,Okhla Extension,9,Okhla,287,Alias Match
+232,Azadpur Metro Station,9,Nill,-,Unmatched
+233,Difference Colony,9,Defence Colony,14,AI Match (83%)
+234,Pant Nagar,9,Pant Nagar,14,Alias Match
+235,Devoli Village,9,Ali Village,283,AI Match (80%)
+236,Jaunpur,9,Jungpura,14,AI Match (80%)
+237,Kirti Nagar,9,Kirti Nagar,160,Exact Ward Match
+238,Tigdi,9,Tigri,25,AI Match (80%)
+239,Neb Sarai,9,Ber Sarai,269,AI Match (77%)
+240,Ambedkar Park,9,Ambedkar Nagar,22,AI Match (81%)
+241,Bhati Mines,9,Bhati,295,Sub-Ward Match
+242,Yamuna Vihar,8,Yamuna Vihar,76,Exact Ward Match
+243,Sangamvihar,8,Sangam Vihar,292,AI Match (95%)
+244,Bhajanpura,8,Bhajanpura,81,Exact Ward Match
+245,Mahroli,8,Nill,-,Unmatched
+246,Akshardham,8,Ashram Chowk,14,AI Match (75%)
+247,Kalka Ji Delhi,8,Nill,-,Unmatched
+248,Pragati Vihar,8,Pratap Vihar,106,AI Match (80%)
+249,Rajiv Chowk,8,Connaught Place (Rajiv Chowk),211,Alias Match
+250,Mandi House,8,Nill,-,Unmatched
+251,Patparganj,8,Patparganj,234,Alias Match
+252,Kutub Minar,8,Mehrauli (Qutub Minar),278,AI Match (90%)
+253,Madan Puri,8,Kardam Puri,90,AI Match (76%)
+254,Pushpa Bhavan,8,Nill,-,Unmatched
+255,Otla,8,Kotla Mubarakpur,2,Sub-Ward Match
+256,Ashok Vihar,8,Ashok Vihar,74,Alias Match
+257,Anand Vihar Isbt,8,Anand Vihar ISBT,151,Alias Match
+258,Dakshin Puri,8,Dakshinpuri,18,AI Match (95%)
+259,Indralok,8,Nill,-,Unmatched
+260,Inderpuri Krishi Kunj,8,Nill,-,Unmatched
+261,Sector 14 Noida,8,Sector 14 Noida,Outside,Outside Delhi
+262,Noida Sector 32,8,Noida Sector 32,Outside,Outside Delhi
+263,Dera Village,8,Ali Village,283,AI Match (78%)
+264,Palam,7,Palam,255,Exact Ward Match
+265,Sangam Bihar,7,Sangam Vihar,292,AI Match (91%)
+266,Trilokpuri,7,Nill,-,Unmatched
+267,Jungpura,7,Jungpura,14,Alias Match
+268,Noida Sector 62,7,Noida Sector 62,Outside,Outside Delhi
+269,Sarhol,7,Nill,-,Unmatched
+270,Patel Nagar,7,Patel Nagar,182,Alias Match
+271,Nahru Place,7,Nehru Place,13,AI Match (90%)
+272,Delhi Gate,7,Delhi Cantonment,215,AI Match (76%)
+273,Dhachanpuri,7,Nill,-,Unmatched
+274,Mohan Estate,7,Nill,-,Unmatched
+275,Railway Station Gate 2,7,Hazrat Nizamuddin Railway Station,14,AI Match (81%)
+276,Isbt Anand Vihar,7,ISBT Kashmere Gate,153,Alias Match
+277,Sultanpuri,7,Sultanpuri  South,111,Sub-Ward Match
+278,Sarojini,7,Sarojini Nagar,213,AI Match (100%)
+279,Netaji Nagar,7,Nauroji Nagar,213,AI Match (80%)
+280,Sarojani Market,7,Nill,-,Unmatched
+281,Mandoli,7,Mandawali,200,AI Match (75%)
+282,Millennium City Gurugram,7,Millennium City Gurugram,Outside,Outside Delhi
+283,Rani Bagh,7,Rani Bagh,118,Exact Ward Match
+284,Vikash Puri,7,Vikas Puri,207,AI Match (95%)
+285,Khan Market,7,Khan Market,212,Alias Match
+286,Okhala,7,Okhla,268,AI Match (90%)
+287,Safdarajang Hospital,7,Safdarjung Hospital,218,AI Match (92%)
+288,Fatehpur Beri,7,Nill,-,Unmatched
+289,Chadni Chowk,7,Chandni Chowk,153,AI Match (96%)
+290,Aiims (Hospital),7,AIIMS (Ansari Nagar),218,Alias Match
+291,Jj Colony,7,Kailash Colony,9,AI Match (80%)
+292,Igi Airport Terminal 2,7,Nill,-,Unmatched
+293,Haryana,7,Haryana,Outside,Outside Delhi
+294,Firni Road,7,Nill,-,Unmatched
+295,Test,6,Nill,-,Unmatched
+296,Maruti Kunj,6,Nill,-,Unmatched
+297,Pushpa Bhawan,6,Nill,-,Unmatched
+298,Delhi,6,Delhi Cantt Charge 1,215,Sub-Ward Match
+299,Malvinager,6,Malviya Nagar,13,AI Match (78%)
+300,Najafgarh,6,Najafgarh,252,Alias Match
+301,Sakat,6,Saket,16,AI Match (80%)
+302,Jaipur,6,Jaitpur,282,AI Match (92%)
+303,Jawaharlal Nehru Stadium,6,Nill,-,Unmatched
+304,Madanpur,6,Madanpur Khadar,278,Sub-Ward Match
+305,Ballabhgarh,6,Ballabhgarh,Outside,Outside Delhi
+306,Gandhinagar,6,Gandhi Nagar,149,AI Match (95%)
+307,Gazipur,6,Alipur,31,AI Match (76%)
+308,Khanpur Tigdi,6,Khanpur,26,Alias Match
+309,High Court,6,Nill,-,Unmatched
+310,Lal Kila,6,Nill,-,Unmatched
+311,Seemapuri,6,Seelampur,240,AI Match (77%)
+312,Dhachan Puri,6,Nill,-,Unmatched
+313,Ambedkar Nagar Sector 5,6,Ambedkar Nagar,18,Alias Match
+314,Anand Vihar Railway Station,6,Anand Vihar,151,Alias Match
+315,Lakshmi Nagar,6,Laxmi Nagar,188,AI Match (83%)
+316,Anand Niketan,6,Nill,-,Unmatched
+317,Ambedkar Nagar Sector 4,6,Ambedkar Nagar,18,Alias Match
+318,Kendriya Terminal,6,Nill,-,Unmatched
+319,Nangloi,6,Nangloi East,132,Sub-Ward Match
+320,New Delhi Railway Station Gate No 2,6,New Delhi Railway Station,182,Alias Match
+321,Supreme Court,6,Nill,-,Unmatched
+322,Shiniwas Puri,6,Nill,-,Unmatched
+323,Shankar Vihar,6,Sangam Vihar,292,AI Match (80%)
+324,Mohan Nagar,6,Mohan Garden,209,AI Match (78%)
+325,Greater Kelash,6,Greater Kailash,9,AI Match (89%)
+326,Sector 14 Gurugram,6,Sector 14 Gurugram,Outside,Outside Delhi
+327,Ambedkar Nagar Terminal,6,Ambedkar Nagar,18,Alias Match
+328,Saket Metro,6,Saket,16,Alias Match
+329,Fatehpur,6,Nill,-,Unmatched
+330,Chiraag Delhi,6,Chirag Delhi,14,AI Match (96%)
+331,Ludo Sarai,6,Ladosarai,20,AI Match (84%)
+332,Panjabi Bagh,6,Punjabi Bagh,141,AI Match (91%)
+333,Madangate,6,Nill,-,Unmatched
+334,Dwarka Metro Station,6,Dwarka,246,Alias Match
+335,Minto Road,6,Minto Road,192,Alias Match
+336,Lazpat Nagar,6,Lajpat Nagar,3,AI Match (91%)
+337,Ashram Lajpat Nagar,6,Lajpat Nagar,6,Alias Match
+338,Oklha,6,Okhla,268,AI Match (80%)
+339,Mahorli,5,Nill,-,Unmatched
+340,Vikaspuri,5,Vikaspuri,210,Alias Match
+341,Inderpuri,5,Inder Puri,202,AI Match (94%)
+342,Dadri,5,Dabri,236,AI Match (80%)
+343,Patel Chowk,5,Nill,-,Unmatched
+344,Jamia Delhi,5,Jamia Millia Islamia,273,Alias Match
+345,Gk,5,Greater Kailash,9,Alias Match
+346,Shaheen Bagh,5,Shaheen Bagh,273,Alias Match
+347,Welcome,5,Welcome Colony,122,Sub-Ward Match
+348,Jasola,5,Jasola Vihar,273,Alias Match
+349,Rajeev Gandi,5,Nill,-,Unmatched
+350,Azadpur,5,Nill,-,Unmatched
+351,Gandi Nagar,5,Gandhi Nagar,149,AI Match (95%)
+352,Karampura Terminal,5,Rampura,123,Sub-Ward Match
+353,Pratap Vihar,5,Pratap Vihar,106,Exact Ward Match
+354,Arjangarh,5,Najafgarh,231,AI Match (77%)
+355,Panchsheel Enclave,5,Panchsheel Enclave,15,Alias Match
+356,Dilshad Garden,5,Dilshad Garden,236,Alias Match
+357,Shahdara Terminal,5,Shahdara,232,Alias Match
+358,Sarojni,5,Nill,-,Unmatched
+359,Shri Nivas Puri,5,Sri Niwaspuri,266,AI Match (85%)
+360,Airport Delhi,5,Nill,-,Unmatched
+361,Ashok Nagar,5,Ashok Nagar,84,Exact Ward Match
+362,Narayana,5,Naraina,204,AI Match (80%)
+363,Aims Hospital,5,AIIMS (Ansari Nagar),218,AI Match (96%)
+364,Lajpat Nagar Metro,5,Lajpat Nagar,6,Alias Match
+365,Nizamuddin West,5,Nizamuddin West,14,Alias Match
+366,Jangpura Extension,5,IP Extension,234,AI Match (85%)
+367,Sarojni Market,5,Nill,-,Unmatched
+368,Sector 18 Noida,5,Sector 18 Noida,Outside,Outside Delhi
+369,Sector 15 Noida,5,Sector 15 Noida,Outside,Outside Delhi
+370,Pashcim Vihar,5,Paschim Vihar,154,AI Match (92%)
+371,Raju Park,5,Chitranjan Park,15,AI Match (75%)
+372,Greater Kailash Phase 2,5,Greater Kailash,9,Alias Match
+373,Qamruddin Nagar Terminal,5,Nill,-,Unmatched
+374,Mayur Vihar Phase 3,5,Mayur Vihar Phase III,223,Alias Match
+375,Grugram,5,Nill,-,Unmatched
+376,Madan Gate,5,Nill,-,Unmatched
+377,Alaknanda,5,Alaknanda,15,Alias Match
+378,Devli Village,5,Deoli,26,Alias Match
+379,Qutb Minar,5,Mehrauli (Qutub Minar),278,AI Match (95%)
+380,Siri Fort,5,Nill,-,Unmatched
+381,Kalka Ji Mandir,5,Nill,-,Unmatched
+382,Lajpat Nagar Delhi,5,Lajpat Nagar,6,Alias Match
+383,Kalika Devi Mandir,5,Nill,-,Unmatched
+384,Mayur Vihar Phase 1,5,Mayur Vihar Phase I,234,Alias Match
+385,Sector 68 Noida,5,Sector 68 Noida,Outside,Outside Delhi
+386,Shahbad Mohammad,5,Nill,-,Unmatched
+387,Panchsheel Park Metro Station,5,Panchsheel Park,11,Alias Match
+388,Bus Stand,5,Nill,-,Unmatched
+389,Aiims(Hospital),5,AIIMS (Ansari Nagar),218,Alias Match
+390,Delhi Railway Station,4,New Delhi Railway Station,182,AI Match (100%)
+391,Manesar,4,Manesar,Outside,Outside Delhi
+392,Safdarjung Delhi,4,Safdarjung Hospital / Enclave,218,Alias Match
+393,Moolchand Delhi,4,Nill,-,Unmatched
+394,Lodhi Road Crossing,4,Lodhi Road,212,Alias Match
+395,Tuglakabbad,4,Tughlakabad,281,AI Match (90%)
+396,Shahpur,4,Shakarpur,203,AI Match (75%)
+397,Munrika,4,Munirka,270,AI Match (85%)
+398,Kalak,4,Nill,-,Unmatched
+399,Tuglakebad,4,Tughlakabad,281,AI Match (85%)
+400,Govindpuri Delhi,4,Nill,-,Unmatched
+401,Jamrudpur,4,Nill,-,Unmatched
+402,Tughalakabad,4,Tughlakabad,281,AI Match (95%)
+403,Nheru Place,4,Nehru Place,13,AI Match (90%)
+404,Karawal Nagar,4,Karawal Nagar East,53,Sub-Ward Match
+405,Gazipur Mandi,4,Nill,-,Unmatched
+406,Bhogal,4,Bhogal,14,Alias Match
+407,Sarai,4,Sarai Pipal Thala,50,Sub-Ward Match
+408,Pushpa Vihar,4,Pushp Vihar,19,AI Match (95%)
+409,Mandawali,4,Mandawali,200,Exact Ward Match
+410,Sikandarpur Metro Station,4,Nill,-,Unmatched
+411,Nadan Nagari,4,Aya Nagar,294,AI Match (76%)
+412,Saheen Bagh,4,Shaheen Bagh,273,AI Match (95%)
+413,Rajeev Nagar,4,Raj Nagar,262,AI Match (85%)
+414,Buradi,4,Burari,32,AI Match (83%)
+415,Rk Colony,4,Kailash Colony,9,AI Match (80%)
+416,Sikandarpur,4,Nill,-,Unmatched
+417,Neeti Bagh,4,Nill,-,Unmatched
+418,Mayapuri,4,Manglapuri,246,AI Match (77%)
+419,Cannaught Place,4,Connaught Place,211,AI Match (93%)
+420,Ekta Vihar,4,Okhla Vihar,273,AI Match (76%)
+421,Durgapuri,4,Durga Puri,100,AI Match (94%)
+422,Rajori Garden,4,Rajouri Garden,185,AI Match (96%)
+423,Difance Colony,4,Defence Colony,14,AI Match (85%)
+424,Sector 22,4,Vasant Kunj Sector A,274,AI Match (80%)
+425,Ghazipur,4,Nill,-,Unmatched
+426,Indraprastha,4,Nill,-,Unmatched
+427,Dhola Kuwa,4,Dhaula Kuan,215,AI Match (76%)
+428,Dilsad Garden,4,Dilshad Garden,110,AI Match (96%)
+429,Nand Nagri,4,Nand Nagri,88,Exact Ward Match
+430,Sufdarjung Hospital,4,Safdarjung Hospital,218,AI Match (94%)
+431,Sahibabad,4,Sahibabad,Outside,Outside Delhi
+432,Chawri Bazar,4,Nill,-,Unmatched
+433,Gurgaon Sector 32,4,Gurgaon Sector 32,Outside,Outside Delhi
+434,New Delhi Railway Station Gate Number 2,4,New Delhi Railway Station,182,Alias Match
+435,Devolli Village,4,Ali Village,283,AI Match (77%)
+436,Humdard,4,Nill,-,Unmatched
+437,Ambekar Nagar,4,Ambedkar Nagar,22,AI Match (96%)
+438,Hamdard,4,Nill,-,Unmatched
+439,Vishwavidyalay,4,Nill,-,Unmatched
+440,Huda City,4,Nill,-,Unmatched
+441,Madipur Jj Colony,4,Madipur,136,Sub-Ward Match
+442,Okhala Phase I,4,Okhla Industrial Area Phase I,287,AI Match (88%)
+443,Red Fort,4,Red Fort / Chandni Chowk,153,Alias Match
+444,Sector 52 Gurgaon,4,Sector 52 Gurgaon,Outside,Outside Delhi
+445,Bahadurpur Border,4,Badarpur Border,283,AI Match (87%)
+446,Mandi Gaon,4,Nill,-,Unmatched
+447,Panchsheel Park Delhi,4,Panchsheel Park,11,Alias Match
+448,Bilaspur,4,Bindapur,227,AI Match (75%)
+449,Saket Delhi,4,Saket,16,Alias Match
+450,Pushp Bhavan,4,Nill,-,Unmatched
+451,Mahipal Pur,4,Mahipalpur,277,AI Match (95%)
+452,Pansheel Park,4,Panchsheel Park,11,AI Match (92%)
+453,Jal Vihar,4,Jasola Vihar,273,AI Match (85%)
+454,Mulchand Metro Station,4,Nill,-,Unmatched
+455,Dayanand Colony,4,Dayanand Colony,6,Alias Match
+456,Dhaula Kua,4,Dhaula Kuan,215,AI Match (95%)
+457,Shadra,4,Shahdara,135,AI Match (85%)
+458,Noida Sector 15,4,Noida Sector 15,Outside,Outside Delhi
+459,Mayur Vihar Colony,4,Mayur Vihar,234,Alias Match
+460,Bhati Mines Terminal,4,Bhati,295,Sub-Ward Match
+461,Hariyana,4,Nill,-,Unmatched
+462,Safdarganj,4,Nill,-,Unmatched
+463,Kamla Market,4,Khan Market,212,AI Match (78%)
+464,Maruti Kunj (Gurgaon),3,Maruti Kunj Gurgaon,Outside,Outside Delhi
+465,"Kalka Ji, Delhi",3,Nill,-,Unmatched
+466,Meerut,3,Meerut,Outside,Outside Delhi
+467,Savitri Nagar,3,Tri Nagar,126,Sub-Ward Match
+468,Sector 51,3,Vasant Kunj Sector A,274,AI Match (80%)
+469,Sarai Kale Kha,3,Nill,-,Unmatched
+470,Nehru Place Delhi,3,Nehru Place,13,Alias Match
+471,Cp,3,Connaught Place,211,Alias Match
+472,Mahorali,3,Mehrauli,23,AI Match (75%)
+473,Chirag Nagar,3,Ram Nagar,174,AI Match (76%)
+474,Kalaka,3,Kalkaji,12,AI Match (76%)
+475,Mandangir,3,Madangir,21,AI Match (94%)
+476,Mulchandar,3,Nill,-,Unmatched
+477,Lodhi Nagar,3,Gandhi Nagar,149,AI Match (78%)
+478,Tugalkabad,3,Tughlakabad,281,AI Match (85%)
+479,Azadpur Mandi,3,Nill,-,Unmatched
+480,Siyar Park,3,Nill,-,Unmatched
+481,Jamia,3,Jamia Millia Islamia,273,Alias Match
+482,Nizahamudin,3,Nizamuddin,240,AI Match (85%)
+483,Noida Sector 25,3,Noida Sector 25,Outside,Outside Delhi
+484,Panchil,3,Nill,-,Unmatched
+485,New Friend Colony,3,New Friends Colony,14,AI Match (97%)
+486,Nehru Enclave East,3,Nehru Enclave East,15,Alias Match
+487,Chhattarpur,3,Chhatarpur,290,AI Match (95%)
+488,Rajendra Nagar,3,Rajendra Nagar,179,Alias Match
+489,Cr Park,3,Chitranjan Park,15,Alias Match
+490,Nirman Vihar,3,Nirman Vihar,227,Alias Match
+491,Dariyaganj,3,Daryaganj,197,AI Match (94%)
+492,Saket Nagar Court,3,Saket,16,Alias Match
+493,Vaishali,3,Vaishali,Outside,Outside Delhi
+494,Kashmiri Gate Terminal,3,Nill,-,Unmatched
+495,Jamia Nagar,3,Jamia Nagar,273,Alias Match
+496,It Gate,3,IIT Gate Junction,8,AI Match (93%)
+497,Connaught Place Delhi,3,Connaught Place,211,Alias Match
+498,Kalindi Kunj,3,Kalindi Kunj,273,Alias Match
+499,Preet Vihar,3,Preet Vihar,227,Alias Match
+500,Zakir Nagar,3,Zakir Nagar,273,Alias Match
+501,Bahadurgarh,3,Bahadurgarh,Outside,Outside Delhi
+502,Nijamuddin,3,Nizamuddin,240,AI Match (90%)
+503,Soami Nagar,3,Jamia Nagar,273,AI Match (81%)
+504,Geeta Colony,3,Geeta Colony,173,Exact Ward Match
+505,Meethapur,3,Meethapur,283,Alias Match
+506,Mayapur,3,Nill,-,Unmatched
+507,Nizamuddin Railway Road,3,Hazrat Nizamuddin,14,Alias Match
+508,Safdarjung Enclave,3,Safdarjung Enclave,7,Alias Match
+509,Sarojni Nagar,3,Sarojini Nagar,213,AI Match (96%)
+510,Different Colony,3,INA Colony,213,AI Match (75%)
+511,Gadhi,3,Garhi (East of Kailash),10,AI Match (80%)
+512,Sagarpur,3,Sagarpur,239,Exact Ward Match
+513,Shri Nivas Pur,3,Sri Niwaspuri,266,AI Match (81%)
+514,Lal Saheb Market,3,Nill,-,Unmatched
+515,Gurudwara Pur,3,Nill,-,Unmatched
+516,Chidiya Ghar,3,Nill,-,Unmatched
+517,Chhatarpur Temple,3,Chhatarpur,282,Alias Match
+518,Difence Colony,3,Defence Colony,14,AI Match (92%)
+519,Ansari Nagar,3,Hari Nagar,206,AI Match (81%)
+520,Mangolpuri,3,Mangolpuri,92,Exact Ward Match
+521,Kidwai Nagar,3,Kidwai Nagar,213,Alias Match
+522,Kaka Nagar,3,Kamla Nagar,124,AI Match (85%)
+523,Saray Kale Kha,3,Nill,-,Unmatched
+524,Sector 31 Noida,3,Sector 31 Noida,Outside,Outside Delhi
+525,Andrews Ganj,3,Andrews Ganj,12,Alias Match
+526,Rajghat,3,Nill,-,Unmatched
+527,Sector 68 Gurugram,3,Sector 68 Gurugram,Outside,Outside Delhi
+528,Saraya Kale Kha,3,Nill,-,Unmatched
+529,Sultan Puri,3,Sita Puri,232,AI Match (80%)
+530,Shastri Nagar,3,Shastri Nagar,131,Exact Ward Match
+531,Sangam Vihar Colony,3,Sangam Vihar,292,Alias Match
+532,Shalimar Garden,3,Shalimar Bagh,57,AI Match (76%)
+533,Sarojini Nagar Market,3,Sarojini Nagar,213,Alias Match
+534,Chhatarpur Mandir,3,Chhatarpur,282,Alias Match
+535,Punjabi Bagh Terminal,3,Punjabi Bagh,164,Alias Match
+536,Okhla Phase -1,3,Okhla Industrial Area Phase I,287,Alias Match
+537,Shahabad Mohammadpur,3,Nill,-,Unmatched
+538,Qamruddin Nagar,3,Quammruddin Nagar,157,AI Match (93%)
+539,Bhawani Kunj,3,Nill,-,Unmatched
+540,Sector 48 Gurugram,3,Sector 48 Gurugram,Outside,Outside Delhi
+541,Madangir Village,3,Madangir,18,Alias Match
+542,Naradana,3,Naraina,204,AI Match (80%)
+543,Sagm Bihar,3,Nill,-,Unmatched
+544,Zamrudpur,3,Nill,-,Unmatched
+545,Jahangirpuri,3,Jahangirpuri-I,49,Sub-Ward Match
+546,Vishwas Nagar,3,Vishwash Nagar,148,AI Match (96%)
+547,Silam Pur,3,Sita Puri,232,AI Match (77%)
+548,Shastri Park,3,Shastri Nagar,131,AI Match (80%)
+549,Karkardooma Court,3,Nill,-,Unmatched
+550,Pandav Nagar,3,Pandav Nagar,210,Exact Ward Match
+551,Kapashera,3,Kapashera,275,Exact Ward Match
+552,Nand Nagari,3,Nand Nagri,88,AI Match (95%)
+553,Krishi Kunj,3,Kishan Kunj,193,AI Match (81%)
+554,Gaziyabad,3,Nill,-,Unmatched
+555,Dehli Lajpat Nagar,3,Lajpat Nagar,6,Alias Match
+556,Sangambihar,3,Sangam Vihar,292,AI Match (86%)
+557,Sardar Patel Vidyalaya,3,Nill,-,Unmatched
+558,Khanpur Delhi,3,Khanpur,26,Alias Match
+559,Goutam Nagar,3,Uttam Nagar,223,AI Match (86%)
+560,Maya Nagar,3,Aya Nagar,294,Sub-Ward Match
+561,Uday Park,3,Nill,-,Unmatched
+562,Aiims Delhi,3,AIIMS (Ansari Nagar),218,Alias Match
+563,Shashtri Nagar,3,Tri Nagar,126,Sub-Ward Match
+564,Vasant Vihar Delhi,3,Vasant Vihar,269,Alias Match
+565,Maharoli Terminal,3,Nill,-,Unmatched
+566,Madanagiri,3,Madangir,21,AI Match (88%)
+567,Gatter Kelash,3,Greater Kailash,9,AI Match (78%)
+568,Pushpvihar,3,Pushp Vihar,19,AI Match (95%)
+569,Mehram Nagar,3,Ram Nagar,174,Sub-Ward Match
+570,Nagloi,3,Nill,-,Unmatched
+571,Dakshanpuri,3,Dakshinpuri,18,AI Match (90%)
+572,Devli Gaon,3,Deoli,26,Alias Match
+573,Cornnought Place,3,Connaught Place,211,AI Match (90%)
+574,Ina,3,INA Colony / Market,213,Alias Match
+575,South Delhi,3,South Extension,12,AI Match (76%)
+576,Shivaji,3,Nill,-,Unmatched
+577,Indirapuram,3,Indirapuram,Outside,Outside Delhi
+578,Raj Nagar Gajiyabad,3,Raj Nagar,262,Sub-Ward Match
+579,Noida Sector 135,3,Noida Sector 135,Outside,Outside Delhi
+580,Allen Coaching Centre Lajpat Nagar,3,Lajpat Nagar,6,Alias Match
+581,Ambedkar Nagar Depot,3,Ambedkar Nagar,18,Alias Match
+582,Nizamuddin Dargah,3,Hazrat Nizamuddin,14,Alias Match
+583,Shahbad Mohammad Pur,3,Nill,-,Unmatched
+584,Okhla Extension (Abdul Fazal Enclave),3,Okhla,287,Alias Match
+585,Tigiri,3,Tigri,25,AI Match (90%)
+586,Rajpur,3,Tajpur Pahadi,283,AI Match (83%)
+587,Batra Hospital,3,Nill,-,Unmatched
+588,Gokhla,3,Okhla,268,Sub-Ward Match
+589,N Block Market,3,Nill,-,Unmatched
+590,Ladu Sarai,3,Ladosarai,20,AI Match (84%)
+591,Gurgaon Sector 43,3,Gurgaon Sector 43,Outside,Outside Delhi
+592,Agra,3,Nill,-,Unmatched
+593,Aiims ( Hospital),3,AIIMS (Ansari Nagar),218,Alias Match
+594,Badshahpur,2,Badarpur,283,AI Match (77%)
+595,Faribad,2,Nill,-,Unmatched
+596,Greater Kailash Delhi,2,Greater Kailash,9,Alias Match
+597,"Cr Park, Delhi",2,Chitranjan Park,15,Alias Match
+598,Pencil,2,Nill,-,Unmatched
+599,Delhi Jal Board,2,Nill,-,Unmatched
+600,Rohini,2,Rohini,44,Alias Match
+601,Sangam Nigam,2,Sangam Vihar,292,AI Match (75%)
+602,Lodhi,2,Lodhi Colony,212,AI Match (100%)
+603,Maharoli,2,Gharoli,217,AI Match (80%)
+604,Sankarpur,2,Shakarpur,203,AI Match (88%)
+605,Sarai Kali Kha,2,Nill,-,Unmatched
+606,Madangiri Village Delhi,2,Madangir,21,Sub-Ward Match
+607,Lal Kuan,2,Nill,-,Unmatched
+608,Sonipat,2,Sonipat,Outside,Outside Delhi
+609,Badarpur Delhi,2,Badarpur,283,Alias Match
+610,Vasant Bihar,2,Vasant Vihar,269,AI Match (91%)
+611,Okhlaganj,2,Okhla,268,Sub-Ward Match
+612,Chirag Dehli,2,Chirag Delhi,14,AI Match (91%)
+613,Sangam,2,Sangam Vihar Central,291,Sub-Ward Match
+614,Mandi,2,Nill,-,Unmatched
+615,Shaikh Sarai,2,Sheikh Sarai,11,AI Match (91%)
+616,Hozkhas,2,Hauz Khas,8,AI Match (75%)
+617,Sadik Nagar,2,Sadh Nagar,248,AI Match (85%)
+618,Malviynagar,2,Malviya Nagar,13,AI Match (91%)
+619,Dabri,2,Dabri,236,Exact Ward Match
+620,Jamya,2,Jamia Millia Islamia,273,AI Match (80%)
+621,Sadangir,2,Madangir,21,AI Match (87%)
+622,Dhuraga Puri,2,Durga Puri,100,AI Match (90%)
+623,Shahpur Jaat,2,Shapur Jat,11,AI Match (90%)
+624,Gokal Puri,2,Gokalpur,72,AI Match (88%)
+625,Old Delhi,2,Old Delhi Railway Station,153,AI Match (100%)
+626,Jafrabad,2,Zaffrabad,128,AI Match (82%)
+627,Deoli,2,Deoli,26,Alias Match
+628,Pahadganj,2,Paharganj,182,AI Match (88%)
+629,Saket Nagar,2,Saket,16,Alias Match
+630,Okhala Mandi,2,Nill,-,Unmatched
+631,Surya Nagar,2,Aya Nagar,294,AI Match (80%)
+632,Malviya Nagar Market,2,Malviya Nagar,11,Alias Match
+633,Udyog Nagar,2,Nill,-,Unmatched
+634,Supreme Court New Delhi,2,Nill,-,Unmatched
+635,Saket Mall,2,Saket,16,Alias Match
+636,Arjan Garh,2,Nill,-,Unmatched
+637,Panchshil Enclave,2,Panchsheel Enclave,15,AI Match (91%)
+638,Noida Sector 16,2,Noida Sector 16,Outside,Outside Delhi
+639,Panchshil,2,Nill,-,Unmatched
+640,Kushak Nallah Depo,2,Nill,-,Unmatched
+641,Sahin Bagh,2,Shaheen Bagh,273,AI Match (81%)
+642,Mukherjee Nagar,2,Mukherjee Nagar,62,Alias Match
+643,Kalyanpuri,2,Kalyan Puri,219,AI Match (95%)
+644,Sarai Rohilla Railway Station,2,New Delhi Railway Station,182,AI Match (75%)
+645,Bhikaji Cama,2,Nill,-,Unmatched
+646,Niti Bagh,2,Moti Bagh,217,AI Match (77%)
+647,Panchi Enclave,2,Panchsheel Enclave,15,AI Match (81%)
+648,Gaffar Manzil Colony,2,INA Colony,213,AI Match (75%)
+649,Purani Delhi Railway Station,2,New Delhi Railway Station,182,AI Match (91%)
+650,Shahpur Jat,2,Shapur Jat,11,AI Match (95%)
+651,Sarai Jullena,2,Nill,-,Unmatched
+652,Madan Giri Market,2,Nill,-,Unmatched
+653,Sewa Nagar,2,Sant Nagar (East of Kailash),10,AI Match (80%)
+654,Okhla Phase 3,2,Okhla Industrial Area Phase III,287,Alias Match
+655,Madanpur Khadar,2,Madanpur Khadar,283,Alias Match
+656,Chhatarpur Village,2,Chhatarpur,282,Alias Match
+657,Badkhal Mod,2,Nill,-,Unmatched
+658,Hazrat Nizamuddin,2,Hazrat Nizamuddin,14,Alias Match
+659,Lajpat Nagar Center Market,2,Lajpat Nagar,6,Alias Match
+660,Rajori Gardan,2,Rajouri Garden,185,AI Match (88%)
+661,Rajnagar Extension,2,IP Extension,234,AI Match (85%)
+662,Asram,2,Ashram Chowk,14,AI Match (90%)
+663,Asaram,2,Ashram Chowk,14,AI Match (83%)
+664,Imam Pur Market,2,Nill,-,Unmatched
+665,Bharat Moringa,2,Nill,-,Unmatched
+666,Moti Nagar,2,Moti Nagar,138,Exact Ward Match
+667,Malvinagar,2,Malviya Nagar,13,AI Match (86%)
+668,Jangpuri,2,Janakpuri,205,AI Match (82%)
+669,Sadigpur,2,Madipur,136,AI Match (80%)
+670,Tegri,2,Tigri,25,AI Match (80%)
+671,Sarai Khale Khan,2,Nill,-,Unmatched
+672,Lal Shaheb Market,2,Nill,-,Unmatched
+673,Sahdev Nagar,2,Dev Nagar,164,Sub-Ward Match
+674,Krishna Market,2,Khan Market,212,AI Match (80%)
+675,Dehradun,2,Nill,-,Unmatched
+676,Diffance Colony,2,Defence Colony,14,AI Match (82%)
+677,Central School,2,Nill,-,Unmatched
+678,Ina Market,2,INA Colony / Market,213,Alias Match
+679,Khotla,2,Nill,-,Unmatched
+680,Janpath,2,Nill,-,Unmatched
+681,Sarjani Market,2,Nill,-,Unmatched
+682,Sector 21,2,Vasant Kunj Sector A,274,AI Match (80%)
+683,Gk1,2,Greater Kailash I,9,Alias Match
+684,Sufdarjung,2,Safdarjung Hospital / Enclave,218,AI Match (90%)
+685,Rithala,2,Rithala,58,Exact Ward Match
+686,Sector 12 Gurgaon,2,Sector 12 Gurgaon,Outside,Outside Delhi
+687,Jhangirpuri,2,Jahangirpuri-I,49,AI Match (88%)
+688,Jama Masjid,2,Jama Masjid,177,Alias Match
+689,Ip State,2,Nill,-,Unmatched
+690,Bangdoli,2,Nill,-,Unmatched
+691,Amsh Hospital,2,AIIMS (Ansari Nagar),218,AI Match (88%)
+692,Khajuri,2,Nill,-,Unmatched
+693,Sector 24 Gurgaon,2,Sector 24 Gurgaon,Outside,Outside Delhi
+694,Delhi Cantt,2,Delhi Cantonment,215,Alias Match
+695,Palam Airport,2,Palam,255,Sub-Ward Match
+696,Vinod Nagar,2,Vinod Nagar,208,Exact Ward Match
+697,Shahdhra,2,Shahdara,135,AI Match (87%)
+698,Cgo Complex,2,Nill,-,Unmatched
+699,Sarojni Vihar,2,Sonia Vihar,46,AI Match (83%)
+700,Noida Sector 31,2,Noida Sector 31,Outside,Outside Delhi
+701,Sector 10 Noida,2,Sector 10 Noida,Outside,Outside Delhi
+702,Dilshdhgadan,2,Dilshad Garden,110,AI Match (76%)
+703,Dfl Cyber City Gurugram,2,Dfl Cyber City Gurugram,Outside,Outside Delhi
+704,Sector 37 Noida,2,Sector 37 Noida,Outside,Outside Delhi
+705,Kalyan Puri,2,Kalyan Puri,219,Exact Ward Match
+706,Laxmi Bai Nagar,2,Laxmi Nagar,188,AI Match (100%)
+707,Kendriya Terminal (Church Road),2,Nill,-,Unmatched
+708,Janak Puri,2,Janak Puri North,205,Sub-Ward Match
+709,Yusuf Sarai,2,Nill,-,Unmatched
+710,Palika Kendra,2,Nill,-,Unmatched
+711,Hauz Khas Terminal,2,Hauz Khas,8,Alias Match
+712,Birla,2,Nill,-,Unmatched
+713,Isbt Anand Vihar Terminal,2,ISBT Kashmere Gate,153,Alias Match
+714,Anand Vihar Isbt Terminal,2,Anand Vihar,151,Alias Match
+715,Shahbad Mohammadpur,2,Nill,-,Unmatched
+716,Jakira,2,Nill,-,Unmatched
+717,Saket Block E,2,Saket,16,Alias Match
+718,Rajasthan Jodhpur,2,Rajasthan Jodhpur,Outside,Outside Delhi
+719,Rajokri Village,2,Ali Village,283,AI Match (77%)
+720,Chhatarpur Metro Station,2,Chhatarpur,282,Alias Match
+721,Jangpur,2,Jungpura,14,AI Match (80%)
+722,Kishangarh Village,2,Kishangarh,283,Sub-Ward Match
+723,Saket Block C,2,Saket,16,Alias Match
+724,Shani Bazar,2,Nill,-,Unmatched
+725,Sunny Bazar,2,Nill,-,Unmatched
+726,Jonapur,2,Janakpuri,205,AI Match (75%)
+727,Dr Karni Singh Shooting Range,2,Nill,-,Unmatched
+728,Kishangarh Gaon,2,Kishangarh,283,Sub-Ward Match
+729,New Delhi Railway,2,New Delhi Railway Station,182,AI Match (100%)
+730,Indira Gandhi International Airport,2,Nill,-,Unmatched
+731,Push Vihar,2,Pushp Vihar,19,AI Match (95%)
+732,Hoskhas,2,Nill,-,Unmatched
+733,Tughlaqabad,2,Tughlakabad,281,AI Match (90%)
+734,Aaya Nagar,2,Aya Nagar,294,Sub-Ward Match
+735,Jindal Bell School,2,Nill,-,Unmatched
+736,Pusap Bihar,2,Pusa,201,Sub-Ward Match
+737,Kashmiri,2,Nill,-,Unmatched
+738,Nadarana,2,Naraina,204,AI Match (80%)
+739,Madn Giri,2,Nill,-,Unmatched
+740,Sangam Vihar E Block,2,Sangam Vihar,292,Alias Match
+741,Sadra,2,Shahdara,135,AI Match (76%)
+742,And Bihar,2,Anand Vihar,151,AI Match (80%)
+743,Indrapuri,2,Inder Puri,202,AI Match (84%)
+744,Gurgaon Sector 15,2,Gurgaon Sector 15,Outside,Outside Delhi
+745,Pul Pehladpur,2,Pul Pehladpur,287,Alias Match
+746,Sector 29 Gurgaon,2,Sector 29 Gurgaon,Outside,Outside Delhi
+747,Sector 21 Gurgaon,2,Sector 21 Gurgaon,Outside,Outside Delhi
+748,Badarpur Boder,2,Badarpur,283,Alias Match
+749,Archani,2,Nill,-,Unmatched
+750,Najafgarh Terminal,2,Najafgarh,252,Alias Match
+751,Hauz Khas Metro,2,Hauz Khas,8,Alias Match
+752,Gajiabad,2,Nill,-,Unmatched
+753,Inderlok,2,Nill,-,Unmatched
+754,Ajmeri Gate,2,Mori Gate,153,AI Match (80%)
+755,I.I.T,2,Nill,-,Unmatched
+756,Shahdra,2,Shahdara,135,AI Match (93%)
+757,Iti Metro,2,Nill,-,Unmatched
+758,Delhi Lajpat Nagar,2,Lajpat Nagar,6,Alias Match
+759,Lajpat Nagr,2,Lajpat Nagar,6,Alias Match
+760,"Sadik Nagar, Delhi",2,Nill,-,Unmatched
+761,Definition Colony,2,INA Colony,213,AI Match (75%)
+762,Sadik Nagr,2,Sadh Nagar,248,AI Match (80%)
+763,Hozkhash,2,Nill,-,Unmatched
+764,Chirag Delhi Delhi,2,Chirag Delhi,11,Alias Match
+765,Siri Fort Model Park,2,Nill,-,Unmatched
+766,Sakte,2,Saket,16,AI Match (80%)
+767,Delhi Hat,2,Delhi Cantonment,215,AI Match (80%)
+768,Habibpur,2,Nill,-,Unmatched
+769,Kk1,2,Nill,-,Unmatched
+770,Rashtrapati Bhavan,2,Nill,-,Unmatched
+771,Basant Lok,2,Nill,-,Unmatched
+772,Chirag Delhi Pocket 2,2,Chirag Delhi,11,Alias Match
+773,Kalu Sarai,2,Nill,-,Unmatched
+774,Lado,2,Ladosarai,20,Sub-Ward Match
+775,Badarpur Bordar,2,Badarpur,283,Alias Match
+776,Basant Gaon,2,Nill,-,Unmatched
+777,Okhala Phase 1,2,Okhla Industrial Area Phase I,287,AI Match (96%)
+778,Delhi Haat Ina,2,INA Colony / Market,213,Alias Match
+779,Jwala Circle,2,Nill,-,Unmatched
+780,Lajpat Nagar Metro Station,2,Lajpat Nagar,6,Alias Match
+781,Maidan Garhi,2,Garhi (East of Kailash),10,Alias Match
+782,Connaught Place New Delhi,2,Connaught Place,211,Alias Match
+783,Bhati,2,Bhati,295,Exact Ward Match
+784,Katwaria Sarai,2,Katwaria Sarai,269,Alias Match
+785,Inderpuri Terminal,2,Nill,-,Unmatched
+786,Ambedkar Nagar Sector 4/5,2,Ambedkar Nagar,18,Alias Match
+787,Okhla Mandi,2,Okhla,287,Alias Match
+788,Jia Sarai,2,Nill,-,Unmatched
+789,Inderpuri Krshi Kunj,2,Nill,-,Unmatched
+790,Dilshad Garden G Pocket,2,Dilshad Garden,236,Alias Match
+791,J J Colony,2,Kailash Colony,9,AI Match (85%)
+792,Palam Village,2,Palam,255,Sub-Ward Match
+793,Great Noida,2,Great Noida,Outside,Outside Delhi
+794,Kailash Nagar,2,Kamla Nagar,124,AI Match (83%)
+795,Basant Pur,2,Nill,-,Unmatched
+796,Jamuna Park,2,Nill,-,Unmatched
+797,Kr Mangalam,2,Nill,-,Unmatched
+798,Naharu Place,2,Nehru Place,13,AI Match (86%)
+799,Gk-1,2,Greater Kailash I,9,Alias Match
+800,Gk 1,2,Greater Kailash I,9,Alias Match
+801,Green Park (Metro Station),2,Green Park,8,Alias Match
+802,Aashram Delhi,2,Nill,-,Unmatched
+803,Stop Kailash,2,East Of Kailash,10,AI Match (81%)
+804,Ambadkr Nagr,2,Ambedkar Nagar,22,AI Match (84%)
+805,Jungpur,2,Jungpura,14,AI Match (93%)
+806,Moolchand Hospital,2,Nill,-,Unmatched
+807,Rojpuri Garden,2,Rajouri Garden,185,AI Match (85%)
+808,New Friends Colony,2,New Friends Colony,14,Alias Match
+809,East Of Kailash,2,East of Kailash,10,Alias Match
+810,Okhla Phase -2,2,Okhla Industrial Area Phase II,287,Alias Match
+811,Palwal,2,Palwal,Outside,Outside Delhi
+812,Defince Colany,2,Defence Colony,14,AI Match (85%)
+813,Ghadi,2,Nill,-,Unmatched
+814,Moolchand Metro,2,Nill,-,Unmatched
+815,Madanpur Khadar Jj Colony,2,Madanpur Khadar,283,Alias Match
+816,Noida Sector 18,2,Noida Sector 18,Outside,Outside Delhi
+817,Kalkaji Temple,2,Kalkaji,13,Alias Match
+818,Kasturba Nagar,2,Kasturba Nagar,254,Exact Ward Match
+819,Dr Ambedkar Nagar,2,Ambedkar Nagar,18,Alias Match
+820,Noida Sector 65,2,Noida Sector 65,Outside,Outside Delhi
+821,Anand Vihar Transport,2,Anand Vihar,151,Alias Match
+822,Khoda Colony,2,INA Colony,213,AI Match (75%)
+823,Karolbagh,2,Nill,-,Unmatched
+824,Pvr 3Cs Lajpat Nagar,2,Lajpat Nagar,6,Alias Match
+825,Bisrakh Jalalpur,2,Nill,-,Unmatched
+826,Par Par Ganj,2,Pahar Ganj,184,AI Match (88%)
+827,Sector 34 Noida,2,Sector 34 Noida,Outside,Outside Delhi
+828,Madipur Metro Station,2,Madipur,136,Sub-Ward Match
+829,Sunny Vihar,2,Nill,-,Unmatched
+830,Aanand Vihar,2,Anand Vihar,151,Sub-Ward Match
+831,Igi Airport Terminal,2,Nill,-,Unmatched
+832,Arsd College,2,Nill,-,Unmatched
+833,Rk Param,2,R.K. Puram,216,AI Match (87%)
+834,Arsd College Dhaula Kuan,2,Dhaula Kuan,215,Alias Match
+835,Sagam Vihar,2,Sangam Vihar,292,AI Match (95%)
+836,Surat Kund,2,Nill,-,Unmatched
+837,Indra Inclave,2,Nill,-,Unmatched
+838,Deoli Khanpur,2,Deoli,26,Alias Match
+839,Bhalsva,2,Bhalswa,38,AI Match (85%)
+840,Gudgaon,2,Nill,-,Unmatched
+841,Hauz Khas Village,2,Hauz Khas Village,8,Alias Match
+842,Bas Stand,2,Nill,-,Unmatched
+843,Sultan Pur,2,Nill,-,Unmatched
+844,Mithapur,2,Meethapur,283,AI Match (82%)
+845,Burari,2,Burari,26,Alias Match
+846,Shahbad Mohmmad Pur,2,Nill,-,Unmatched
+847,Pupsh Vihar,2,Pushp Vihar,19,AI Match (90%)
+848,Iit Campus,2,IIT Delhi,8,Alias Match
+849,Paroli Village,2,Ali Village,283,AI Match (88%)
+850,Proli Village,2,Ali Village,283,AI Match (83%)
+851,Chhattarpur Extension,2,IP Extension,234,AI Match (85%)
+852,Sarojaninagar,2,Nill,-,Unmatched
+853,Safdarajang,2,Safdarjung Hospital / Enclave,218,AI Match (85%)
+854,Kirori Mal College,2,Nill,-,Unmatched
+855,Isbt Kashmere Gate,2,ISBT Kashmere Gate,153,Alias Match
+856,Abul Fazal Enclave,2,Abul Fazal Enclave,273,Alias Match
+857,Isbt Kashmiri Gate,2,ISBT Kashmere Gate,153,Alias Match
+858,Sikandarpur Gurgaon,2,Sikandarpur Gurgaon,Outside,Outside Delhi
+859,Delhi Metro,1,Nill,-,Unmatched
+860,Maruti Kunja,1,Nill,-,Unmatched
+861,Greater Sekal,1,Greater Kailash,9,AI Match (78%)
+862,Kanart Place,1,Nill,-,Unmatched
+863,Bisena,1,Nill,-,Unmatched
+864,Aanad Bihar,1,Anand Vihar,151,AI Match (81%)
+865,Kalkji,1,Kalkaji,12,AI Match (92%)
+866,Bulad Sehar,1,Nill,-,Unmatched
+867,Pappu Colony,1,INA Colony,213,AI Match (75%)
+868,Khan Pur Delhi,1,Nill,-,Unmatched
+869,Nangloi Delhi,1,Nill,-,Unmatched
+870,Delhi Jangpura,1,Nill,-,Unmatched
+871,Panchil Marg,1,Nill,-,Unmatched
+872,Mazzid Mod,1,Nill,-,Unmatched
+873,Jk 1,1,Greater Kailash I,9,AI Match (75%)
+874,Cpd,1,Connaught Place,211,AI Match (80%)
+875,Lagpat Nagar Delhi,1,Lajpat Nagar I,3,AI Match (75%)
+876,Sadik Nager,1,Sadh Nagar,248,AI Match (76%)
+877,Gogal,1,Nill,-,Unmatched
+878,Sararpur Nagar,1,Nill,-,Unmatched
+879,Dilsadpuri,1,Nill,-,Unmatched
+880,Mangolpur,1,Mangolpuri  West,109,Sub-Ward Match
+881,Iti,1,Nill,-,Unmatched
+882,Stock Plus,1,Nill,-,Unmatched
+883,Rajistan Jadpu,1,Nill,-,Unmatched
+884,"Bata Chawk, Faridabad",1,Bata Chawk Faridabad,Outside,Outside Delhi
+885,Paharganj Delhi,1,Paharganj,182,Alias Match
+886,Panchil Park,1,Panchsheel Park,11,AI Match (81%)
+887,"Panchsheel Park, Vasant Vihar, Delhi",1,Panchsheel Park,11,Alias Match
+888,Nehru Stadium,1,Nill,-,Unmatched
+889,Ambadker Nagar,1,Ambedkar Nagar,22,AI Match (85%)
+890,Lakhnow,1,Nill,-,Unmatched
+891,Sumrta Park,1,Nill,-,Unmatched
+892,Delhi Aanadbihar,1,Nill,-,Unmatched
+893,Pachi Bihar,1,Nill,-,Unmatched
+894,Loni Bihar,1,Nill,-,Unmatched
+895,Madan Geet,1,Nill,-,Unmatched
+896,Bikaji Kama Place,1,Nill,-,Unmatched
+897,South Gate,1,South Extension,12,AI Match (77%)
+898,Moolchand Nagar,1,Nill,-,Unmatched
+899,Different Colony Delhi,1,INA Colony,213,AI Match (75%)
+900,Purani Delhi,1,Nill,-,Unmatched
+901,Iit Delhi,1,IIT Delhi,8,Alias Match
+902,Darbhanga Bihar,1,Nill,-,Unmatched
+903,Mahalori,1,Nill,-,Unmatched
+904,Pinnacle School,1,Nill,-,Unmatched
+905,Londhi Road,1,Lodhi Road,212,AI Match (95%)
+906,Koshika,1,Nill,-,Unmatched
+907,"Palam Metro Station, Delhi",1,Palam,255,Sub-Ward Match
+908,Sent Polis School,1,Nill,-,Unmatched
+909,Lohadhi Garden,1,Dilshad Garden,110,AI Match (78%)
+910,Miyan Mong,1,Nill,-,Unmatched
+911,Chirag(Delhi),1,Chirag Delhi,11,Alias Match
+912,Tuglakbad Delhi,1,Nill,-,Unmatched
+913,K R Mangalam,1,Nill,-,Unmatched
+914,Ballamgarh,1,Nill,-,Unmatched
+915,Shaadi Nagar,1,Sadh Nagar,248,AI Match (81%)
+916,Kr Manglam University Delhi,1,Nill,-,Unmatched
+917,Jangpura Matro,1,Nill,-,Unmatched
+918,Lodhi Gardan,1,Nill,-,Unmatched
+919,Secunderabad,1,Nill,-,Unmatched
+920,Mahroli Delhi,1,Nill,-,Unmatched
+921,Udaipur Rajasthan,1,Udaipur Rajasthan,Outside,Outside Delhi
+922,Vasant Log Delhi,1,Nill,-,Unmatched
+923,Rohini Sec -22,1,Rohini,44,Alias Match
+924,Mahorli Terminal,1,Nill,-,Unmatched
+925,Himatnagar,1,Nill,-,Unmatched
+926,Badanpur Border,1,Badarpur Border,283,AI Match (93%)
+927,Nizamuddin West Slum,1,Hazrat Nizamuddin,14,Alias Match
+928,Mangi Village,1,Ali Village,283,AI Match (83%)
+929,Badar Pur Delhi,1,Badar Pur,284,Sub-Ward Match
+930,Lohdi Road,1,Lodhi Road,212,AI Match (90%)
+931,Hyatt Hotel,1,Nill,-,Unmatched
+932,Sariyagang,1,Nill,-,Unmatched
+933,Krishi Bihar,1,Nill,-,Unmatched
+934,Sankpura Phase _2,1,Nill,-,Unmatched
+935,Gurugram (Sector 24),1,Gurugram Sector 24,Outside,Outside Delhi
+936,Birla Vidya Niketan School,1,Nill,-,Unmatched
+937,Jankpura,1,Janakpuri,205,AI Match (82%)
+938,Bhajnpura,1,Bhajanpura,81,AI Match (94%)
+939,Rohini Sector 19,1,Rohini,44,Alias Match
+940,Malivya Nagar,1,Malviya Nagar,13,AI Match (92%)
+941,Basantvihaar,1,Vasant Vihar,269,AI Match (83%)
+942,Shadipur,1,Madipur,136,AI Match (80%)
+943,Vashant Vihar,1,Vasant Vihar,269,AI Match (96%)
+944,Govindpuri Puri Delhi,1,Nill,-,Unmatched
+945,Kal Ka Ji Mandir,1,Nill,-,Unmatched
+946,Sangam Bihar H Block 14No Gali Delhi,1,Nill,-,Unmatched
+947,Rohini Sector 18,1,Rohini,44,Alias Match
+948,Jamna Par Kardampuri Delhi,1,Nill,-,Unmatched
+949,Moolchan,1,Nill,-,Unmatched
+950,Sashtrinagar,1,Nill,-,Unmatched
+951,Jhagir Puri,1,Jahangir Puri -Ii,45,AI Match (81%)
+952,Sector 7,1,Vasant Kunj Sector A,274,AI Match (85%)
+953,India Gate Sector 12,1,Nill,-,Unmatched
+954,Tugalakebad Aria Mahorli Badarpur,1,Badarpur,283,Alias Match
+955,Anugoonj,1,Nill,-,Unmatched
+956,Patel Vihar,1,Pratap Vihar,106,AI Match (78%)
+957,Sankarpura,1,Shakarpur,203,AI Match (84%)
+958,Horse Cars,1,Nill,-,Unmatched
+959,Sector 12 Lucknow,1,Nill,-,Unmatched
+960,Madan Ge,1,Nill,-,Unmatched
+961,Tugalkabad Kila,1,Nill,-,Unmatched
+962,Saraie Kha,1,Nill,-,Unmatched
+963,Tuglakbad,1,Tughlakabad,281,AI Match (90%)
+964,Dakshinpuri Sector 10,1,Dakshinpuri,18,Alias Match
+965,Mahorli Bus Tarminal,1,Nill,-,Unmatched
+966,Okhla Phase _1,1,Okhla Industrial Area Phase I,287,Alias Match
+967,South Extense,1,South Extension,12,AI Match (85%)
+968,Sadipur,1,Madipur,136,AI Match (85%)
+969,Mehrauli Terminal Delhi,1,Mehrauli,278,Alias Match
+970,Chanakya,1,Chanakyapuri,217,AI Match (80%)
+971,Sangmbihar,1,Sangam Vihar,292,AI Match (81%)
+972,Dheeraj Nagar Faridabad,1,Dheeraj Nagar Faridabad,Outside,Outside Delhi
+973,Vasant Kuj,1,Vasant Kunj,274,AI Match (95%)
+974,Isbt Kasmere Gate,1,ISBT Kashmere Gate,153,Alias Match
+975,Hamdardnagar,1,Ambedkar Nagar,22,AI Match (76%)
+976,Chhhatrpur,1,Chhatarpur,290,AI Match (90%)
+977,Sashi Bihar,1,Nill,-,Unmatched
+978,Cr Park Delhi,1,Chitranjan Park,15,Alias Match
+979,Gk Gatter Class,1,Greater Kailash,9,AI Match (100%)
+980,Sab Darjan Hospital,1,Nill,-,Unmatched
+981,Jaymai,1,Nill,-,Unmatched
+982,Ambedkar Nagar Sec 4,1,Ambedkar Nagar,18,Alias Match
+983,Param Sec1,1,Nill,-,Unmatched
+984,Delhi Highcourt,1,Nill,-,Unmatched
+985,Sangam Vihrar Delhi,1,Sangam Vihar East,285,AI Match (77%)
+986,Lala Lajpat Nagar,1,Lajpat Nagar,6,Alias Match
+987,Bhoguo Pur Junction,1,Nill,-,Unmatched
+988,Saikh Sarai,1,Sheikh Sarai,11,AI Match (86%)
+989,Okla,1,Okhla,268,AI Match (88%)
+990,Okhla Delhi,1,Okhla,287,Alias Match
+991,Bhurhadi,1,Nill,-,Unmatched
+992,Namazuddin,1,Nizamuddin,240,AI Match (80%)
+993,Kadarpur,1,Badarpur,283,AI Match (87%)
+994,Sagreter Noida,1,Sagreter Noida,Outside,Outside Delhi
+995,Chandnichowk,1,Chandni Chowk,153,AI Match (96%)
+996,Lal Kua,1,Nill,-,Unmatched
+997,Sunder Nagar,1,Sunder Nagar,212,Alias Match
+998,Mehran Nagar,1,Ram Nagar,174,AI Match (76%)
+999,Sec 7 Duwarka,1,Dwarka Sector 1,246,AI Match (88%)
+1000,Sector 44,1,Vasant Kunj Sector A,274,AI Match (80%)
+1001,Shaadi Pur,1,Nill,-,Unmatched
+1002,Gagipur Murga Mandi,1,Nill,-,Unmatched
+1003,Gori Gate,1,Mori Gate,153,AI Match (88%)
+1004,Lanpat Nagar,1,Lajpat Nagar,3,AI Match (91%)
+1005,Grater Calas,1,Nill,-,Unmatched
+1006,Hauz-Khas,1,Hauz Khas,8,Alias Match
+1007,Bata Chawk Faridabad,1,Bata Chawk Faridabad,Outside,Outside Delhi
+1008,Namazudin,1,Nill,-,Unmatched
+1009,Ballabgarh,1,Nill,-,Unmatched
+1010,Mayur Bihar Phase -3,1,Mayur Vihar Phase III,223,AI Match (94%)
+1011,Kelash Colony,1,Kailash Colony,9,AI Match (88%)
+1012,Kelash Coloney,1,Kailash Colony,9,AI Match (85%)
+1013,Taimoor Nagar,1,Zakir Nagar,261,AI Match (75%)
+1014,Bharati Nagar,1,Hari Nagar,206,AI Match (86%)
+1015,Ballabhagarh,1,Nill,-,Unmatched
+1016,Chandni Chock,1,Chandni Chowk,153,AI Match (92%)
+1017,Ambedkar Geet,1,Ambedkar Nagar,22,AI Match (76%)
+1018,Mahatma Gandhi Road,1,Nill,-,Unmatched
+1019,Bhiwani,1,Nill,-,Unmatched
+1020,Modwane,1,Nill,-,Unmatched
+1021,Babarpur,1,Babar Pur,105,AI Match (94%)
+1022,Friend Colony East,1,Friends Colony East,14,AI Match (97%)
+1023,Majid Moth,1,Nill,-,Unmatched
+1024,Jamia Humdard,1,Jamia Millia Islamia,273,Alias Match
+1025,Tcil Bhawan,1,Nill,-,Unmatched
+1026,Grater Kailash,1,Greater Kailash,9,AI Match (96%)
+1027,Siar Park,1,Chitranjan Park,15,AI Match (75%)
+1028,Okhala Sabji Mandi,1,Nill,-,Unmatched
+1029,Lajpat Nagar Pocket 2,1,Lajpat Nagar,6,Alias Match
+1030,Jasola Apollo,1,Jasola Vihar,273,Alias Match
+1031,Greater Kailas,1,Greater Kailash-I,9,Sub-Ward Match
+1032,Trilok Puri,1,Trilok Puri,242,Exact Ward Match
+1033,Friends Colony,1,New Friends Colony,14,Alias Match
+1034,Pm Sangralay,1,Nill,-,Unmatched
+1035,Srinivaspuri,1,Nill,-,Unmatched
+1036,Hanshal Plaza,1,Nill,-,Unmatched
+1037,"Khanpur, Govind Puri",1,Khanpur,26,Alias Match
+1038,Harkesh Nagar Okhla,1,Okhla,287,Alias Match
+1039,Sai Mandir,1,Nill,-,Unmatched
+1040,Dilsadhagadan,1,Nill,-,Unmatched
+1041,Saftarjang Hospital,1,Safdarjung Hospital,218,AI Match (89%)
+1042,Ganadi Nagan Market,1,Nill,-,Unmatched
+1043,Chauhan Mohalla,1,Nill,-,Unmatched
+1044,Bharat Nagar,1,Hari Nagar,206,AI Match (81%)
+1045,Noida Mamura,1,Noida Mamura,Outside,Outside Delhi
+1046,Khanpur Tagdi,1,Khanpur,26,Alias Match
+1047,Pancham Enclave,1,Panchsheel Enclave,15,AI Match (78%)
+1048,R K Puri,1,R. K. Puram,264,AI Match (82%)
+1049,Rajoli Gardan,1,Rajouri Garden,185,AI Match (81%)
+1050,Sanjay Colony,1,Janta Colony,112,AI Match (80%)
+1051,Gagan,1,Nill,-,Unmatched
+1052,K.R.Mangalam Public School,1,Nill,-,Unmatched
+1053,Red Cloth,1,Nill,-,Unmatched
+1054,Noida Sec63,1,Noida Sec63,Outside,Outside Delhi
+1055,"Matangi, Khanpur",1,Khanpur,26,Alias Match
+1056,Safdarjung Hospita,1,Safdarjung Hospital / Enclave,218,Alias Match
+1057,Railway Station Purani Delhi,1,New Delhi Railway Station,182,AI Match (91%)
+1058,Nheru Enclave,1,Nehru Enclave,15,AI Match (92%)
+1059,Lajpat Nagar Ef Bhivag,1,Lajpat Nagar,6,Alias Match
+1060,Salarpur,1,Sagarpur,239,AI Match (87%)
+1061,Kapassera,1,Kapashera,275,AI Match (88%)
+1062,Palika Bhawan,1,Nill,-,Unmatched
+1063,"Saket Nagar, Market",1,Saket,16,Alias Match
+1064,Kailash Hills,1,Kailash Hills,10,Alias Match
+1065,Haigh Courts,1,Nill,-,Unmatched
+1066,"Madangiri, Khanpur Gao",1,Khanpur,24,Sub-Ward Match
+1067,Ganadi Nagar,1,Gandhi Nagar,149,AI Match (91%)
+1068,Noida Sec 16,1,Noida Sec 16,Outside,Outside Delhi
+1069,Maujpur Babarpur,1,Maujpur,97,Sub-Ward Match
+1070,Usmanpur,1,New Usmanpur,119,Sub-Ward Match
+1071,Ganga Vihar,1,Sangam Vihar,292,AI Match (86%)
+1072,Rk Puram Sec1,1,R.K. Puram,216,Alias Match
+1073,Aandhvihar,1,Anand Vihar,151,AI Match (85%)
+1074,"Chatarpur, Market",1,Nill,-,Unmatched
+1075,Kadkadduma,1,Nill,-,Unmatched
+1076,Saketpur,1,Saket,16,AI Match (76%)
+1077,Sahdhra Market,1,Nill,-,Unmatched
+1078,Noida Pari Chowk,1,Noida Pari Chowk,Outside,Outside Delhi
+1079,Dwarika Court,1,Nill,-,Unmatched
+1080,Avadh Rani,1,Nill,-,Unmatched
+1081,Chandani Chock,1,Chandni Chowk,153,AI Match (88%)
+1082,Pampose Enclave,1,Nill,-,Unmatched
+1083,Grater Kailash 2,1,Greater Kailash II,15,AI Match (96%)
+1084,Chankpuri,1,Chanakyapuri,217,AI Match (85%)
+1085,Sector 50 Noida,1,Sector 50 Noida,Outside,Outside Delhi
+1086,Saket Nagar Market,1,Saket,16,Alias Match
+1087,Mbs Mall,1,Nill,-,Unmatched
+1088,Vidya Niketan School,1,Nill,-,Unmatched
+1089,Lodhi Road Mousam Vibhag Office,1,Lodhi Road,212,Alias Match
+1090,Hemkunt Colony,1,INA Colony,213,AI Match (75%)
+1091,Dhola Kuan,1,Dhaula Kuan,215,AI Match (85%)
+1092,Chhawani,1,Chhawla,276,AI Match (80%)
+1093,Chaudary Mod Gaziabad,1,Nill,-,Unmatched
+1094,Ududyog Nagar,1,Nill,-,Unmatched
+1095,Connaught Place Market,1,Connaught Place,211,Alias Match
+1096,Sadar Bajar Delhi,1,Nill,-,Unmatched
+1097,Sauth X,1,Nill,-,Unmatched
+1098,Jamuna Paar,1,Nill,-,Unmatched
+1099,Dwarka Mod Mod,1,Dwarka,246,Alias Match
+1100,Ishwar Nagar,1,Vishwash Nagar,148,AI Match (84%)
+1101,Anand Gram,1,Nill,-,Unmatched
+1102,Bhikaji Cama Place,1,Nill,-,Unmatched
+1103,Kalkaji Extension,1,Kalkaji Extension,15,Alias Match
+1104,Maharashtra,1,Nill,-,Unmatched
+1105,Kamal Cinema,1,Nill,-,Unmatched
+1106,Turkman Gate Delhi,1,Turkman Gate,181,Sub-Ward Match
+1107,Greater Kailash Enclave,1,Greater Kailash,9,Alias Match
+1108,Nri Colony,1,Nimri Colony,117,AI Match (90%)
+1109,Okhla Nsic,1,Okhla,287,Alias Match
+1110,Pacific Mall Jasola,1,Jasola Vihar,273,Alias Match
+1111,Lado Sarai Furniture Road Terminal,1,Nill,-,Unmatched
+1112,Mori Get,1,Mori Gate,153,AI Match (82%)
+1113,Solan Himachal Pardesh,1,Nill,-,Unmatched
+1114,Lado Sarai Furniture Terminal,1,Nill,-,Unmatched
+1115,"Sangam Vihar Terminal,",1,Sangam Vihar,292,Alias Match
+1116,"Madan Puri Secto,7",1,Nill,-,Unmatched
+1117,Madangiri Khanpur,1,Khanpur,26,Alias Match
+1118,"Saket Nagar, Court",1,Saket,16,Alias Match
+1119,T1 Departure,1,Nill,-,Unmatched
+1120,Noida Sector 1,1,Noida Sector 1,Outside,Outside Delhi
+1121,Pacific Mall Jasol,1,Nill,-,Unmatched
+1122,Sakri Gate,1,Nill,-,Unmatched
+1123,Lodhi Colony (Lodhi Road Crossing),1,Lodhi Colony,212,Alias Match
+1124,Shahpur Junction,1,Nill,-,Unmatched
+1125,Arun Vihar,1,Yamuna Vihar,76,AI Match (81%)
+1126,Rk Puram Sector 2,1,R.K. Puram,216,Alias Match
+1127,Rajnath Marg,1,Nill,-,Unmatched
+1128,Harkes Nagar Okhla,1,Okhla,287,Alias Match
+1129,Airport Mehram Nagar,1,Ram Nagar,174,Sub-Ward Match
+1130,Hauj Khas,1,Hauz Khas,8,AI Match (88%)
+1131,Patparganj (Madhu Vihar),1,Patparganj,234,Alias Match
+1132,Mehrauli Badarpur Road,1,Mehrauli,278,Alias Match
+1133,Shain Bagh,1,Shaheen Bagh,273,AI Match (81%)
+1134,Apollo Gas Agency,1,Nill,-,Unmatched
+1135,Ladhi Road,1,Lodhi Road,212,AI Match (90%)
+1136,Ambedkar Nagar Sector Iv,1,Ambedkar Nagar,18,Alias Match
+1137,Bikaji Cama,1,Nill,-,Unmatched
+1138,Delhi High Court,1,Nill,-,Unmatched
+1139,Arya Samaj Mandir New Delhi,1,Nill,-,Unmatched
+1140,Rohani,1,Rohini,44,AI Match (83%)
+1141,Sector 45,1,Vasant Kunj Sector A,274,AI Match (80%)
+1142,Rk Puram Sector 4,1,R.K. Puram,216,Alias Match
+1143,Palam Palam,1,Palam,255,Sub-Ward Match
+1144,Tusyana,1,Nill,-,Unmatched
+1145,Vihikaji,1,Nill,-,Unmatched
+1146,Sahadhra Market,1,Nill,-,Unmatched
+1147,Dilsadhgadan,1,Dilshad Garden,110,AI Match (76%)
+1148,Nai Delhi Sadar Bajar,1,Nill,-,Unmatched
+1149,Sear Parak,1,Nill,-,Unmatched
+1150,Kavi Nagar Gaziabad,1,Nill,-,Unmatched
+1151,Canghut Palace,1,Connaught Place,211,AI Match (75%)
+1152,Okhla Face 3,1,Okhla,287,Alias Match
+1153,Inaba Gate,1,Nill,-,Unmatched
+1154,Motilal Nehru College,1,Nill,-,Unmatched
+1155,Square Mall Saket,1,Saket,16,Alias Match
+1156,Neharwali,1,Nill,-,Unmatched
+1157,Arun Joki Park,1,Nill,-,Unmatched
+1158,Seva Nagar Chowk,1,Nill,-,Unmatched
+1159,Dakshinpuri B Block,1,Dakshinpuri,18,Alias Match
+1160,Cjo Office,1,Nill,-,Unmatched
+1161,Suare Maul,1,Nill,-,Unmatched
+1162,Tekhand,1,Tekhand,279,Exact Ward Match
+1163,Indira Gandhi,1,Nill,-,Unmatched
+1164,Vikas Ji Gana Place Thank You Bro,1,Nill,-,Unmatched
+1165,Sahidabad,1,Nill,-,Unmatched
+1166,Shahpur Jath,1,Shapur Jat,11,AI Match (90%)
+1167,Sant Colony,1,Janta Colony,112,AI Match (86%)
+1168,Khsux Khas,1,Nill,-,Unmatched
+1169,Green Park Green Park,1,Green Park,8,Alias Match
+1170,Sikander Pur,1,Nill,-,Unmatched
+1171,Canconnaught Place,1,Connaught Place,211,AI Match (90%)
+1172,Vijaynagar Ghaziabad,1,Vijaynagar Ghaziabad,Outside,Outside Delhi
+1173,Connaught Palace,1,Connaught Place,211,AI Match (96%)
+1174,Dr. Ambedkar Colony Chhatarpur Village,1,Chhatarpur,290,Sub-Ward Match
+1175,Hauz Khas Enclave,1,Hauz Khas,8,Alias Match
+1176,Rose Garden,1,Tagore Garden,180,AI Match (75%)
+1177,Saket Market,1,Saket,16,Alias Match
+1178,Rk Puram Sector 12,1,R.K. Puram,216,Alias Match
+1179,Delhi Turkman Gate,1,Turkman Gate,181,Sub-Ward Match
+1180,Aastha Kunj Park,1,Nill,-,Unmatched
+1181,Khanpur Patti,1,Khanpur,26,Alias Match
+1182,Rajinder Place,1,Nill,-,Unmatched
+1183,It Get Hauz Khas,1,Hauz Khas,8,Alias Match
+1184,Dwarika Sector 10,1,Dwarka Sector 10,246,AI Match (86%)
+1185,Greater Kailash Metro,1,Greater Kailash,9,Alias Match
+1186,Socket Metro Station,1,Nill,-,Unmatched
+1187,Shyam Nagar,1,Aya Nagar,294,AI Match (80%)
+1188,Vasundhara,1,Nill,-,Unmatched
+1189,Sarai Rohilla,1,Nill,-,Unmatched
+1190,Chandi Chowk,1,Chandni Chowk,153,AI Match (96%)
+1191,Private Colony,1,INA Colony,213,AI Match (75%)
+1192,Madan Giri Fab Hotel,1,Nill,-,Unmatched
+1193,Imt Sector 14 Rohtak,1,Imt Sector 14 Rohtak,Outside,Outside Delhi
+1194,Sahibabad Ghaziabad,1,Sahibabad Ghaziabad,Outside,Outside Delhi
+1195,Natthu Colony Chauk,1,INA Colony,213,AI Match (75%)
+1196,Pushpa Market Lajpat Nagar,1,Lajpat Nagar,6,Alias Match
+1197,Gagan Bas Stop,1,Nill,-,Unmatched
+1198,Loha Mandi,1,Nill,-,Unmatched
+1199,Gree Nagar,1,Prem Nagar,73,AI Match (80%)
+1200,Canal Colony,1,Janta Colony,112,AI Match (83%)
+1201,Rajeev Gandhi,1,Nill,-,Unmatched
+1202,Rewari,1,Rewari,Outside,Outside Delhi
+1203,Noida Film City,1,Noida Film City,Outside,Outside Delhi
+1204,Kargil Chowk,1,Nill,-,Unmatched
+1205,Indraprasth Depo,1,Nill,-,Unmatched
+1206,Lodhi Coloney Road,1,Lodhi Road,212,AI Match (100%)
+1207,Chandrapur,1,Nill,-,Unmatched
+1208,Kamla Nagar Delhi,1,Kamla Nagar,124,Sub-Ward Match
+1209,Ambala,1,Nill,-,Unmatched
+1210,Battery Kailash,1,Greater Kailash,9,AI Match (80%)
+1211,Aurangzeb,1,Nill,-,Unmatched
+1212,Rohini Sector 5,1,Rohini,44,Alias Match
+1213,Chawdi Bazar,1,Nill,-,Unmatched
+1214,Bombayd,1,Nill,-,Unmatched
+1215,Individual,1,Nill,-,Unmatched
+1216,Jawahar Lal Nehru Stadium (Terminal),1,Nill,-,Unmatched
+1217,Ajadpur Metro Station,1,Nill,-,Unmatched
+1218,Madan Pur Khadar Village,1,Ali Village,283,AI Match (77%)
+1219,Indrapuram Aà,1,Nill,-,Unmatched
+1220,Sukhdev Vihar (Depot),1,Sukhdev Vihar,14,Alias Match
+1221,Kailash Colony Metro Station,1,Kailash Colony,9,Alias Match
+1222,Shakhopur,1,Shakarpur,203,AI Match (77%)
+1223,Rajiv Nagar,1,Raj Nagar,262,AI Match (90%)
+1224,Define Colony,1,Defence Colony,14,AI Match (88%)
+1225,Amrit Nagar,1,Hari Nagar,206,AI Match (85%)
+1226,Neta Ji Nagar,1,Jamia Nagar,273,AI Match (75%)
+1227,Jawahar Lala Nehru Stadium,1,Nill,-,Unmatched
+1228,Bus Stan,1,Nill,-,Unmatched
+1229,Gole Market,1,Nill,-,Unmatched
+1230,Patang Wala,1,Nill,-,Unmatched
+1231,Otala,1,Nill,-,Unmatched
+1232,Senteral Market,1,Nill,-,Unmatched
+1233,Auto Sdand,1,Nill,-,Unmatched
+1234,Motinagar,1,Moti Nagar,138,AI Match (94%)
+1235,Ram Manohar Lohiya Hospital,1,Nill,-,Unmatched
+1236,Ghaziabad (Vaishali),1,Ghaziabad Vaishali,Outside,Outside Delhi
+1237,Vmc Safdarjung Hospital,1,Safdarjung Hospital,218,Alias Match
+1238,Inmapuri Market,1,Nill,-,Unmatched
+1239,Mahur Bhair,1,Nill,-,Unmatched
+1240,Rohini Sector 4,1,Rohini,44,Alias Match
+1241,Shakurpur,1,Shakarpur,203,AI Match (88%)
+1242,Anuj Ganj,1,Nill,-,Unmatched
+1243,Lal Sahab Market,1,Nill,-,Unmatched
+1244,Hari Nagar,1,Hari Nagar,206,Exact Ward Match
+1245,Grise Hotel,1,Nill,-,Unmatched
+1246,Shrinivas Puri,1,Nill,-,Unmatched
+1247,Sahdev,1,Nill,-,Unmatched
+1248,Khanpur Defence Colony,1,Defence Colony,14,Alias Match
+1249,Lal Shabe Market,1,Nill,-,Unmatched
+1250,Ishu Sarai,1,Nill,-,Unmatched
+1251,Tilak Nagar,1,Tilak Nagar,203,Alias Match
+1252,Dlf Colony,1,Kailash Colony,9,AI Match (75%)
+1253,Sarioni Nagar,1,Sarojini Nagar,213,AI Match (88%)
+1254,Lohdhi Road,1,Lodhi Road,212,AI Match (95%)
+1255,Janghpura,1,Jungpura,14,AI Match (82%)
+1256,Jankpuri,1,Janakpuri,205,AI Match (94%)
+1257,Gkhone,1,Nill,-,Unmatched
+1258,Bus Sdan,1,Nill,-,Unmatched
+1259,Adazpur Metro Station,1,Nill,-,Unmatched
+1260,Lala Shaib Market,1,Nill,-,Unmatched
+1261,Sunheri Pulla,1,Nill,-,Unmatched
+1262,Passport Office,1,Nill,-,Unmatched
+1263,Mulchandar E-5,1,Nill,-,Unmatched
+1264,Daulat Hua,1,Dhaula Kuan,215,AI Match (76%)
+1265,Amar Colany,1,Amar Colony,6,AI Match (90%)
+1266,Raja Garden,1,Raja Garden,198,Alias Match
+1267,Siya Pass,1,Nill,-,Unmatched
+1268,Kotlachandar,1,Nill,-,Unmatched
+1269,Sri Nivas Puri,1,Sri Niwaspuri,266,AI Match (88%)
+1270,Naharu Nagar,1,Hari Nagar,206,AI Match (81%)
+1271,Vivak Vihar,1,Vivek Vihar,127,AI Match (90%)
+1272,Sadik Pur,1,Nill,-,Unmatched
+1273,Narayana Vihar,1,Nirman Vihar,227,AI Match (76%)
+1274,Sunehari Pulla,1,Nill,-,Unmatched
+1275,Shadra Termainaol,1,Nill,-,Unmatched
+1276,Siddharth Nagar,1,Nill,-,Unmatched
+1277,Aasharam,1,Ashram Chowk,14,AI Match (85%)
+1278,Shinivas Puri,1,Nill,-,Unmatched
+1279,Sangam Nager,1,Sangam Park,82,AI Match (78%)
+1280,Neharu Nagar,1,Hari Nagar,206,AI Match (81%)
+1281,Saket Nager,1,Saket,16,Alias Match
+1282,Rajghat Power House,1,Nill,-,Unmatched
+1283,Lajpatnager (Center Market),1,Nill,-,Unmatched
+1284,Great Kailash Phase 1,1,Greater Kailash I,9,AI Match (84%)
+1285,Maharani Bag,1,Maharani Bagh,14,AI Match (96%)
+1286,Sri Bhoj,1,Nill,-,Unmatched
+1287,Bsf Canteen,1,Nill,-,Unmatched
+1288,Aerocity,1,Nill,-,Unmatched
+1289,Gurudwara Pura,1,Nill,-,Unmatched
+1290,Subhash Nagar,1,Subhash Nagar,197,Alias Match
+1291,Alpha 1 (Greater Noida),1,Alpha 1 Greater Noida,Outside,Outside Delhi
+1292,Defence Colony Block C,1,Defence Colony,14,Alias Match
+1293,Bhairo Mandir,1,Nill,-,Unmatched
+1294,Imampur Market,1,Nill,-,Unmatched
+1295,Badkal Ganj,1,Nill,-,Unmatched
+1296,Inka Puri Market,1,Nill,-,Unmatched
+1297,Chavadi Mod,1,Nill,-,Unmatched
+1298,Shahdara (Terminal),1,Shahdara,232,Alias Match
+1299,Defence Market,1,Nill,-,Unmatched
+1300,Vasant Nagar,1,Sant Nagar (East of Kailash),10,AI Match (90%)
+1301,Sikanderpur,1,Inder Puri,202,AI Match (76%)
+1302,Sector 72,1,Vasant Kunj Sector A,274,AI Match (80%)
+1303,Lajpat Nagar 3,1,Lajpat Nagar III,6,Alias Match
+1304,Sector 57,1,Vasant Kunj Sector A,274,AI Match (80%)
+1305,Puspa Vihar,1,Pushp Vihar,19,AI Match (90%)
+1306,Sector 8,1,Vasant Kunj Sector A,274,AI Match (85%)
+1307,Madan Giri Kasturi Scholar School,1,Nill,-,Unmatched
+1308,Chirag Delhi Electronic Mart,1,Chirag Delhi,11,Alias Match
+1309,Sector 42 Aur,1,Nill,-,Unmatched
+1310,Aazadpur Metro Station,1,Nill,-,Unmatched
+1311,South Daksh,1,South Extension,12,AI Match (76%)
+1312,Arjun Vihar,1,Yamuna Vihar,76,AI Match (78%)
+1313,Dilshdhagadan,1,Nill,-,Unmatched
+1314,Khanpy,1,Khanpur,24,AI Match (76%)
+1315,Lakshmi Bai Nagar,1,Nill,-,Unmatched
+1316,"Munirka, New Delhi",1,Munirka,269,Alias Match
+1317,Sector 31,1,Vasant Kunj Sector A,274,AI Match (80%)
+1318,S.D.A,1,Nill,-,Unmatched
+1319,Sector 60,1,Vasant Kunj Sector A,274,AI Match (80%)
+1320,Sector 42,1,Vasant Kunj Sector A,274,AI Match (80%)
+1321,Sector 18,1,Vasant Kunj Sector A,274,AI Match (80%)
+1322,Sufdarjung Terminal,1,Nill,-,Unmatched
+1323,Sector 121,1,Vasant Kunj Sector A,274,AI Match (75%)
+1324,Kidvayi Nagar,1,Kidwai Nagar,213,AI Match (88%)
+1325,Rejoining Gadan,1,Nill,-,Unmatched
+1326,Panchsheel Vihar,1,Panchsheel Park,11,AI Match (83%)
+1327,Som Vihar,1,Ashok Vihar,87,AI Match (80%)
+1328,Sabal Nagar,1,Aya Nagar,294,AI Match (80%)
+1329,Sarojal Vihar,1,Sarita Vihar,273,AI Match (80%)
+1330,Seva Theerth,1,Nill,-,Unmatched
+1331,Sector 62 Gurgaon,1,Sector 62 Gurgaon,Outside,Outside Delhi
+1332,Sector 38,1,Vasant Kunj Sector A,274,AI Match (80%)
+1333,Maharani Bhag,1,Maharani Bagh,14,AI Match (92%)
+1334,Sadig Nagar,1,Sadh Nagar,248,AI Match (85%)
+1335,G.K. 1 Malviya Nagar,1,Malviya Nagar,11,Alias Match
+1336,Seemapuru,1,Seelampur,240,AI Match (77%)
+1337,Sotak,1,Nill,-,Unmatched
+1338,Go Colors Store Gurugram,1,Go Colors Store Gurugram,Outside,Outside Delhi
+1339,Bharti Nagar,1,Hari Nagar,206,AI Match (90%)
+1340,G.K.1 Malviya Nagar,1,Malviya Nagar,11,Alias Match
+1341,Janakpur,1,Janakpuri,205,AI Match (94%)
+1342,Freinds Colony,1,New Friends Colony,14,AI Match (92%)
+1343,Palika Vihar,1,Vikram Vihar (Lajpat Nagar),6,AI Match (75%)
+1344,Gurugram Cyber City,1,Gurugram Cyber City,Outside,Outside Delhi
+1345,Malvi Nagao,1,Malviya Nagar,13,AI Match (83%)
+1346,Shapur,1,Shapur Jat,11,Sub-Ward Match
+1347,Gautam Buddh Nagar,1,Nill,-,Unmatched
+1348,Narhera,1,Narela,28,AI Match (76%)
+1349,Azad Nagar,1,Azad Nagar,142,Exact Ward Match
+1350,Sector 45 Noida,1,Sector 45 Noida,Outside,Outside Delhi
+1351,Gk 2,1,Greater Kailash II,15,Alias Match
+1352,Shout Ex,1,South Extension,12,AI Match (87%)
+1353,Pahad Ghanj,1,Pahar Ganj,184,AI Match (85%)
+1354,Bapa Nagar,1,Aya Nagar,294,AI Match (84%)
+1355,Sector 81 Noida,1,Sector 81 Noida,Outside,Outside Delhi
+1356,Shiniwas,1,Nill,-,Unmatched
+1357,Jln Stadium,1,Nill,-,Unmatched
+1358,Sundar Nagri,1,Sunder Nagari,85,AI Match (88%)
+1359,L.S.R Malviya Nagar,1,Malviya Nagar,11,Alias Match
+1360,Civil Colony,1,INA Colony,213,AI Match (75%)
+1361,Sector 12A Gurgaon,1,Sector 12a Gurgaon,Outside,Outside Delhi
+1362,Panjabi,1,Nill,-,Unmatched
+1363,Pocket B,1,Nill,-,Unmatched
+1364,Gorakh Puri-1,1,Nill,-,Unmatched
+1365,Gorakh Puri-2,1,Nill,-,Unmatched
+1366,Saini Park,1,Sawan Park,98,AI Match (80%)
+1367,Lal Quila,1,Nill,-,Unmatched
+1368,Sector 54 Noida,1,Sector 54 Noida,Outside,Outside Delhi
+1369,Greater Kelash Market,1,Nill,-,Unmatched
+1370,Sector 63 Noida,1,Sector 63 Noida,Outside,Outside Delhi
+1371,Max Hospital Saket,1,Saket,16,Alias Match
+1372,Safdurjung Terminal,1,Nill,-,Unmatched
+1373,Golf Links,1,Golf Links,212,Alias Match
+1374,Sector 16 Noida,1,Sector 16 Noida,Outside,Outside Delhi
+1375,Vinowa Pori,1,Nill,-,Unmatched
+1376,Palwal Faridabad,1,Palwal Faridabad,Outside,Outside Delhi
+1377,Noida Sector 51,1,Noida Sector 51,Outside,Outside Delhi
+1378,Shiniwaspuri,1,Nill,-,Unmatched
+1379,Vaishali Sectors 6,1,Vaishali Sectors 6,Outside,Outside Delhi
+1380,Archna Shopping Arcade,1,Nill,-,Unmatched
+1381,Malviya,1,Malviya Nagar,13,Sub-Ward Match
+1382,Saket Gaon,1,Saket,16,Alias Match
+1383,Saket Archna Shopping Arcade,1,Saket,16,Alias Match
+1384,Delhi Railway Station Gate No.2,1,New Delhi Railway Station,182,AI Match (91%)
+1385,Iskcon Mandir,1,Nill,-,Unmatched
+1386,Gokulpuri,1,Gokalpur,72,AI Match (82%)
+1387,Hindu College,1,Nill,-,Unmatched
+1388,Mandalam,1,Nill,-,Unmatched
+1389,Sector 137 Noida,1,Sector 137 Noida,Outside,Outside Delhi
+1390,Reference Colony,1,Defence Colony,14,AI Match (86%)
+1391,Iit Campus Hostel,1,IIT Delhi,8,Alias Match
+1392,Sector 126 Noida,1,Sector 126 Noida,Outside,Outside Delhi
+1393,Sector 15 Gurugram,1,Sector 15 Gurugram,Outside,Outside Delhi
+1394,Gagan Vihar,1,Anand Vihar,151,AI Match (81%)
+1395,Kali Ghata,1,Nill,-,Unmatched
+1396,Defense Colony,1,Defence Colony,14,AI Match (92%)
+1397,Sangam Vihar 16 Number Gali,1,Sangam Vihar,292,Alias Match
+1398,Malvi Nagar,1,Malviya Nagar,13,AI Match (91%)
+1399,Uday Park South Extension,1,South Extension,12,Alias Match
+1400,Karan Gate,1,Nill,-,Unmatched
+1401,Zamrudpur Greater Kelash,1,Nill,-,Unmatched
+1402,Naroji Nagar,1,Nauroji Nagar,213,AI Match (96%)
+1403,Delhi Kent,1,Delhi Cantonment,215,AI Match (76%)
+1404,Kanpur Gaon,1,Nill,-,Unmatched
+1405,Amar Vihar,1,Mayur Vihar,234,AI Match (85%)
+1406,Vasundhra,1,Nill,-,Unmatched
+1407,Purana Quila,1,Nill,-,Unmatched
+1408,Sadatpur,1,Badarpur,283,AI Match (75%)
+1409,Gurgaon Sector 38,1,Gurgaon Sector 38,Outside,Outside Delhi
+1410,Dwarka Sector 19 Pkt -3,1,Dwarka,246,Alias Match
+1411,Sunheri Pulla Depot,1,Nill,-,Unmatched
+1412,Punjabi Hot,1,Punjabi Bagh,141,AI Match (78%)
+1413,Sri Fort Road New Delhi,1,Nill,-,Unmatched
+1414,Shankar Nagar,1,Sant Nagar (East of Kailash),10,AI Match (78%)
+1415,Khirjabad,1,Nill,-,Unmatched
+1416,Uttam Nagar Terminal (Out Gate),1,Uttam Nagar,225,Alias Match
+1417,Mohan Nagar Ghaziabad,1,Mohan Nagar Ghaziabad,Outside,Outside Delhi
+1418,Fatehpuri,1,Nill,-,Unmatched
+1419,Pul Mithaai,1,Nill,-,Unmatched
+1420,Chawla,1,Chhawla,276,AI Match (92%)
+1421,Gagan Cinema,1,Nill,-,Unmatched
+1422,Ip Estate,1,Nill,-,Unmatched
+1423,Kakrola,1,Kakraula,244,AI Match (80%)
+1424,Vivekanand Marg,1,Nill,-,Unmatched
+1425,Bhopura Theka,1,Nill,-,Unmatched
+1426,Sarol,1,Nill,-,Unmatched
+1427,Huaz Khas Village,1,Hauz Khas Village,8,AI Match (94%)
+1428,Dhankot,1,Nill,-,Unmatched
+1429,Gtb Nagar,1,GTB Nagar,62,Alias Match
+1430,Railway Colony,1,Kailash Colony,9,AI Match (78%)
+1431,Chatar Pur,1,Chhatarpur,290,AI Match (90%)
+1432,Zamrudpur Market,1,Nill,-,Unmatched
+1433,Khora Colony,1,INA Colony,213,AI Match (75%)
+1434,Sector 37 Gurugram,1,Sector 37 Gurugram,Outside,Outside Delhi
+1435,Narouji Nagar,1,Nauroji Nagar,213,AI Match (92%)
+1436,Vikashpuri,1,Vikaspuri,210,AI Match (94%)
+1437,Dwarka Sector 19 Pkt 3,1,Dwarka,246,Alias Match
+1438,Saheed Nagar,1,Sadh Nagar,248,AI Match (81%)
+1439,Pasonda,1,Nill,-,Unmatched
+1440,Kartavya Bhavan,1,Nill,-,Unmatched
+1441,Pahladpur,1,Nill,-,Unmatched
+1442,Delhi Cantt Railway Station,1,Delhi Cantonment,215,Alias Match
+1443,Gurgaun Sector 15,1,Nill,-,Unmatched
+1444,Saket Village,1,Saket,16,Alias Match
+1445,Sector 112 Gurugram,1,Sector 112 Gurugram,Outside,Outside Delhi
+1446,Gurgaon Sector 18,1,Gurgaon Sector 18,Outside,Outside Delhi
+1447,Noida Sec 62,1,Noida Sec 62,Outside,Outside Delhi
+1448,Lajpat Nagar Up,1,Lajpat Nagar Up,Outside,Outside Delhi
+1449,Mundka,1,Mundaka,113,AI Match (92%)
+1450,Shstri Park,1,Shastri Nagar,131,AI Match (75%)
+1451,Gurgaun Sector 18,1,Nill,-,Unmatched
+1452,Millennium City Gur,1,Nill,-,Unmatched
+1453,Green Park Metro Station,1,Green Park,8,Alias Match
+1454,Ghantaghar,1,Nill,-,Unmatched
+1455,Dwarka Sector 19 Pocket 3,1,Dwarka,246,Alias Match
+1456,Mansarovar Park,1,Nill,-,Unmatched
+1457,Gurugram Sec_14,1,Gurugram Sec 14,Outside,Outside Delhi
+1458,Shivaji Park,1,Nill,-,Unmatched
+1459,Madang Giri,1,Nill,-,Unmatched
+1460,Jasolabad,1,Jasola Vihar,273,AI Match (80%)
+1461,Rajasthan Alwer,1,Rajasthan Alwer,Outside,Outside Delhi
+1462,Alwar,1,Alwar,Outside,Outside Delhi
+1463,Kokla,1,Okhla,268,AI Match (80%)
+1464,R.K. Puram Sector 1,1,R.K. Puram,216,Alias Match
+1465,Isbt Kashmiri Gate Terminal,1,ISBT Kashmere Gate,153,Alias Match
+1466,Lodhi Colony/ Lodhi Road Colony,1,Lodhi Colony,212,Alias Match
+1467,Jakhira,1,Nill,-,Unmatched
+1468,Meb Sarai Village,1,Ali Village,283,AI Match (77%)
+1469,Begampur,1,Begumpur,34,AI Match (87%)
+1470,Sangam Vihar E-Block,1,Sangam Vihar,292,Alias Match
+1471,Teen Murti,1,Nill,-,Unmatched
+1472,Kama Rajasthan,1,Kama Rajasthan,Outside,Outside Delhi
+1473,Badarpur Borders,1,Badarpur,283,Alias Match
+1474,Shankar Chauk,1,Nill,-,Unmatched
+1475,Navjeevan Vihar,1,Nill,-,Unmatched
+1476,Hauz Khas Market,1,Hauz Khas,8,Alias Match
+1477,Mehrauli Road,1,Mehrauli,278,Alias Match
+1478,Asothar Fatehpur,1,Nill,-,Unmatched
+1479,Badar Puri Border,1,Badar Pur,284,Sub-Ward Match
+1480,Saket Matro Station,1,Saket,16,Alias Match
+1481,(Dehli) Minto Road Terminal,1,Minto Road,192,Sub-Ward Match
+1482,Bahadurgarh New Bus Stand,1,Bahadurgarh New Bus Stand,Outside,Outside Delhi
+1483,(Dehli) Devoli Village,1,Ali Village,283,AI Match (77%)
+1484,Bagpat,1,Nill,-,Unmatched
+1485,Bijwassn,1,Bijwasan,271,AI Match (87%)
+1486,Bhawanipur,1,Bhajanpura,81,AI Match (80%)
+1487,Chhatarpur Extensions,1,Chhatarpur,282,Alias Match
+1488,Tulakabad,1,Tughlakabad,281,AI Match (90%)
+1489,Chhatarpur Enclave,1,Chhatarpur Enclave,282,Alias Match
+1490,Kishangarh Ward Number 3,1,Kishangarh,283,Sub-Ward Match
+1491,Mehrauli Market,1,Mehrauli,278,Alias Match
+1492,Mehrauli Village,1,Mehrauli,278,Alias Match
+1493,Adhchini Village,1,Ali Village,283,AI Match (77%)
+1494,Nardana,1,Naraina,204,AI Match (85%)
+1495,Asthal Mandir,1,Nill,-,Unmatched
+1496,Zakhira,1,Nill,-,Unmatched
+1497,Rangpuri Pahari,1,Nill,-,Unmatched
+1498,Ruchi Bihar,1,Nill,-,Unmatched
+1499,Masudpur Village,1,Ali Village,283,AI Match (77%)
+1500,Ghitorni Metro Station,1,Ghitorni,282,Alias Match
+1501,Qutub Minar Metro Station,1,Mehrauli (Qutub Minar),278,Alias Match
+1502,Sunny Dham Mandir,1,Nill,-,Unmatched
+1503,Jasola Nagar,1,Jasola Vihar,273,Alias Match
+1504,Gb Road,1,Nill,-,Unmatched
+1505,Badrk Puram,1,R.K. Puram,216,AI Match (84%)
+1506,Indira Gandhi National Open University,1,National Park (Lajpat Nagar),6,AI Match (76%)
+1507,Chiral Dhali,1,Chirag Delhi,14,AI Match (75%)
+1508,Vinay Nagar Faridabad,1,Vinay Nagar Faridabad,Outside,Outside Delhi
+1509,21 Sector Gurgaon,1,21 Sector Gurgaon,Outside,Outside Delhi
+1510,Pritampura,1,Pitampura,66,AI Match (94%)
+1511,Hauz Rani Park,1,Hauz Rani,16,Alias Match
+1512,Mittal Chowk,1,Nill,-,Unmatched
+1513,Anand Parvat Terminal,1,Nill,-,Unmatched
+1514,R. K. Puram,1,R.K. Puram,216,Alias Match
+1515,R.K. Puram,1,R.K. Puram,216,Alias Match
+1516,Jashola Vihar,1,Jasola Vihar,273,AI Match (96%)
+1517,Jagpura,1,Jungpura,14,AI Match (80%)
+1518,Ramkirsan Puram,1,R.K. Puram,216,AI Match (76%)
+1519,Indragandi Hospital,1,Nill,-,Unmatched
+1520,Sakha Sarye,1,Nill,-,Unmatched
+1521,Jindal Bail School,1,Nill,-,Unmatched
+1522,Sastri Park,1,Shastri Nagar,131,AI Match (75%)
+1523,Nvc Plaza,1,Nill,-,Unmatched
+1524,Madngiri,1,Madangir,21,AI Match (87%)
+1525,Sector 58 Gurugram,1,Sector 58 Gurugram,Outside,Outside Delhi
+1526,Majnu Ka Thela,1,Majnu Ka Tila,120,AI Match (88%)
+1527,Gurgaon Sector 19,1,Gurgaon Sector 19,Outside,Outside Delhi
+1528,Anad Vihar,1,Anand Vihar,151,AI Match (95%)
+1529,Hanuman Mandir,1,Nill,-,Unmatched
+1530,Morigat,1,Nill,-,Unmatched
+1531,Ram Vihar,1,Vikram Vihar (Lajpat Nagar),6,AI Match (85%)
+1532,Bhairav Mandir,1,Nill,-,Unmatched
+1533,Punjabi Bagh Crossing,1,Punjabi Bagh,164,Alias Match
+1534,City Mall Saket,1,Saket,16,Alias Match
+1535,Shiv Park,1,Nill,-,Unmatched
+1536,Madipur Jj Colony Metro Station,1,Madipur,136,Sub-Ward Match
+1537,Muradnagar,1,Nill,-,Unmatched
+1538,Hauz Rani,1,Hauz Rani,16,Alias Match
+1539,Sainik 1 Number Gate,1,Nill,-,Unmatched
+1540,Kr Puram Sector 1,1,R.K. Puram,216,AI Match (76%)
+1541,Khajuri Khas,1,Khajoori Khas,67,AI Match (88%)
+1542,Iipm Sector 18 Gurgaon,1,Iipm Sector 18 Gurgaon,Outside,Outside Delhi
+1543,Lodi Colony,1,Lodhi Colony,212,AI Match (95%)
+1544,Karkarduma,1,Nill,-,Unmatched
+1545,Shyamlal College,1,Nill,-,Unmatched
+1546,Purana Qila,1,Nill,-,Unmatched
+1547,"Sarhol, Gurgaon",1,Sarhol Gurgaon,Outside,Outside Delhi
+1548,Sadiq Nagar Water Tank,1,Nill,-,Unmatched
+1549,Azadapur Mandi,1,Nill,-,Unmatched
+1550,Shyam Lal College Shahdara,1,Shahdara,232,Alias Match
+1551,Pamposh Inclave,1,Nill,-,Unmatched
+1552,Shyamlal College Shahdara,1,Shahdara,232,Alias Match
+1553,Welcome Shahdara,1,Shahdara,232,Alias Match
+1554,Pvr Anupma Saket,1,Saket,16,Alias Match
+1555,Cyber City Gurgaon,1,Cyber City Gurgaon,Outside,Outside Delhi
+1556,Bahadurpur Border Terminal,1,Nill,-,Unmatched
+1557,Press Nagar,1,Prem Nagar,73,AI Match (85%)
+1558,Lado Sarai Crossing,1,Nill,-,Unmatched
+1559,Narandana,1,Naraina,204,AI Match (75%)
+1560,Basantpur,1,Nill,-,Unmatched
+1561,Shiv Vihar,1,Shiv Vihar,48,Exact Ward Match
+1562,Madangiri Madangiri,1,Madangir,21,Sub-Ward Match
+1563,Alipur,1,Alipur,31,Exact Ward Match
+1564,Khurja,1,Nill,-,Unmatched
+1565,Salempor,1,Nill,-,Unmatched
+1566,Older Railway Station,1,Hazrat Nizamuddin Railway Station,14,AI Match (83%)
+1567,Hapur,1,Hapur,Outside,Outside Delhi
+1568,Tonica City,1,Nill,-,Unmatched
+1569,Old Bas Stand Gaziyabad,1,Nill,-,Unmatched
+1570,Gautam Buddha Nagar,1,Nill,-,Unmatched
+1571,Mayur Vihar -1,1,Mayur Vihar,234,Alias Match
+1572,Masjid Moth Phase 1,1,Nill,-,Unmatched
+1573,Jagannath Mandir,1,Nill,-,Unmatched
+1574,Honda Chowk,1,Chandni Chowk,153,AI Match (75%)
+1575,Bhim Nagar,1,Hari Nagar,206,AI Match (80%)
+1576,Rama Road Bisleri Company,1,Nill,-,Unmatched
+1577,Adchini,1,Nill,-,Unmatched
+1578,Matiya,1,Matiala,252,AI Match (76%)
+1579,Chhattarpur Metro,1,Nill,-,Unmatched
+1580,Taj Palace,1,Nill,-,Unmatched
+1581,Santo Pol School,1,Nill,-,Unmatched
+1582,Iti Colony,1,Nimri Colony,117,AI Match (81%)
+1583,Devil,1,Deoli,26,AI Match (80%)
+1584,Vasant Vihar Depot,1,Vasant Vihar,269,Alias Match
+1585,Nangal Dewat Village,1,Ali Village,283,AI Match (77%)
+1586,Belsarai,1,Ber Sarai,269,AI Match (82%)
+1587,Ip Extensions Pratapgarh,1,Nill,-,Unmatched
+1588,Mukandpur,1,Mukund Pur,36,AI Match (84%)
+1589,Vinoba Puri Metro Station,1,Nill,-,Unmatched
+1590,Sadarpur,1,Badarpur,283,AI Match (87%)
+1591,Mayurka,1,Nill,-,Unmatched
+1592,Hisar,1,Nill,-,Unmatched
+1593,Gulmohar Enclave,1,Mahavir Enclave,243,AI Match (77%)
+1594,Madanpur Khadar Terminal,1,Madanpur Khadar,283,Alias Match
+1595,Sikandarbad,1,Nill,-,Unmatched
+1596,Khair,1,Nill,-,Unmatched
+1597,Delhi Ajmeri Gate,1,Nill,-,Unmatched
+1598,Amroha,1,Nill,-,Unmatched
+1599,Modi Nagar,1,Moti Nagar,138,AI Match (90%)
+1600,Green,1,Green Park,8,AI Match (100%)
+1601,Greater Noida West,1,Greater Noida West,Outside,Outside Delhi
+1602,Indian Gate,1,Nill,-,Unmatched
+1603,Khanpur Khan,1,Khanpur,26,Alias Match
+1604,West Delhi,1,Nill,-,Unmatched
+1605,Katoria Sarai,1,Katwaria Sarai,269,AI Match (88%)
+1606,Delhi Sachivalaya,1,Nill,-,Unmatched
+1607,Chattarpur Chat,1,Chhatarpur,290,AI Match (80%)
+1608,Shalimar Bagh,1,Shalimar Bagh,57,Alias Match
+1609,Vasant Vihar(Delhi),1,Vasant Vihar,269,Alias Match
+1610,Maruti Kung,1,Nill,-,Unmatched
+1611,Mumbai,1,Nill,-,Unmatched
+1612,Aazadpur,1,Nill,-,Unmatched
+1613,Dhaskhinpuri,1,Dakshinpuri,18,AI Match (86%)
+1614,Frends Caloni,1,New Friends Colony,14,AI Match (81%)
+1615,Khanpur School,1,Khanpur,26,Alias Match
+1616,Krishna Nager,1,Krishna  Nagar,154,AI Match (92%)
+1617,Khewli Kanpur,1,Nill,-,Unmatched
+1618,Sabdarjn Hospital,1,Safdarjung Hospital,218,AI Match (88%)
+1619,Defance Colani,1,Defence Colony,14,AI Match (78%)
+1620,Saaket,1,Saket,16,AI Match (90%)
+1621,Pushpa Bhavan Thank U Bhai,1,Nill,-,Unmatched
+1622,Lajpat Bhavan,1,Lajpat Nagar,6,Alias Match
+1623,Jamiya Milya Islimya,1,Nill,-,Unmatched
+1624,Noide (Sec-10),1,Nill,-,Unmatched
+1625,Dakshinpuri Ambedker Nagar,1,Dakshinpuri,18,Alias Match
+1626,"Lajpat Nagar, Delhi",1,Lajpat Nagar,6,Alias Match
+1627,Malwanagar,1,Malviya Nagar,13,AI Match (78%)
+1628,Sri Nivaspuri,1,Sri Niwaspuri,266,AI Match (92%)
+1629,Cng Pump,1,Nill,-,Unmatched
+1630,Dashapuri,1,Dakshinpuri,18,AI Match (80%)
+1631,Pencil Pack,1,Nill,-,Unmatched
+1632,Sadignager,1,Nill,-,Unmatched
+1633,Phoolchand,1,Nill,-,Unmatched
+1634,Aliganj,1,Malkaganj,130,AI Match (75%)
+1635,"Hauz Khas, Delhi",1,Hauz Khas,8,Alias Match
+1636,Dakshinpuri 2 No Block,1,Dakshinpuri,18,Alias Match
+1637,Kannur,1,Khanpur,24,AI Match (76%)
+1638,Sardar Patel Vidalya Delhi,1,Nill,-,Unmatched
+1639,Aims (Hospital),1,AIIMS (Ansari Nagar),218,AI Match (96%)
+1640,Cabint Secatryi East Blok1,1,Nill,-,Unmatched
+1641,Gurugram Sec 49,1,Gurugram Sec 49,Outside,Outside Delhi
+1642,"Moolchand, Delhi",1,Nill,-,Unmatched
+1643,Vidya Niketan School Mehrauli Badarpur,1,Badarpur,283,Alias Match
+1644,Vidyaniketan School,1,Nill,-,Unmatched
+1645,Basant Bihar,1,Vasant Vihar,269,AI Match (83%)
+1646,Sushant Lok,1,Nill,-,Unmatched
+1647,Vidya Nikaten Public School,1,Nill,-,Unmatched
+1648,"Vasant Vihar, Delhi",1,Vasant Vihar,269,Alias Match
+1649,"Jammodpur, Delhi",1,Nill,-,Unmatched
+1650,Laxmi Vihar,1,Nill,-,Unmatched
+1651,Gautam Nagar Delhi,1,Nill,-,Unmatched
+1652,Gurdara Sin Shaba,1,Nill,-,Unmatched
+1653,Lado Sarai Firkani Road,1,Nill,-,Unmatched
+1654,"Okhla Vihar, Delhi",1,Okhla,287,Alias Match
+1655,Ancaniri Nagar,1,Hari Nagar,206,AI Match (75%)
+1656,Sangam Vihar Ka Dwarka,1,Sangam Vihar,292,Alias Match
+1657,Vasant Puri Delhi,1,Nill,-,Unmatched
+1658,Defence Colony Delhi,1,Defence Colony,14,Alias Match
+1659,Grugram Damadam Lake,1,Nill,-,Unmatched
+1660,Caja,1,Nill,-,Unmatched
+1661,Saket Delhi Bhai Sahab,1,Saket,16,Alias Match
+1662,Aanandbihar,1,Anand Vihar,151,AI Match (81%)
+1663,Dakshinpuri Delhi,1,Dakshinpuri,18,Alias Match
+1664,Rajghat Delhi,1,Nill,-,Unmatched
+1665,Igi Delhi,1,IIT Delhi,8,AI Match (88%)
+1666,Archana,1,Nill,-,Unmatched
+1667,Jorbagh Delhi,1,Nill,-,Unmatched
+1668,Silampur,1,Seelampur,240,AI Match (82%)
+1669,Hudgu Delhi,1,Nill,-,Unmatched
+1670,Chanakya Puri,1,Chanakyapuri,217,AI Match (96%)
+1671,Noide (Sector 62),1,Nill,-,Unmatched
+1672,Lohdhi Garden,1,Nill,-,Unmatched
+1673,Birla Vidyalay Niketan,1,Nill,-,Unmatched
+1674,Noide (Sector 36),1,Nill,-,Unmatched
+1675,Mubarakapur,1,Nill,-,Unmatched
+1676,R.K Puram (Sector 1),1,R.K. Puram,216,Alias Match
+1677,Sarai Hospital,1,AIIMS (Ansari Nagar),218,AI Match (78%)
+1678,"Saket, Delhi",1,Saket,16,Alias Match
+1679,Dakshin Pur,1,Dakshinpuri,18,AI Match (90%)
+1680,Cannaoght Place Delhi,1,Nill,-,Unmatched
+1681,Rohini Sec 18,1,Rohini,44,Alias Match
+1682,Rastrapati Bhavan,1,Nill,-,Unmatched
+1683,Dakshin Purv,1,Dakshinpuri,18,AI Match (86%)
+1684,Sheikhpura,1,Nill,-,Unmatched
+1685,Ambedkar Nagar Delhi,1,Ambedkar Nagar,18,Alias Match
+1686,Kashmir Gate,1,Kashmere Gate,133,AI Match (88%)
+1687,Defence,1,Defence Colony,14,AI Match (100%)
+1688,"Maruti Kunja, Gurugram",1,Maruti Kunja Gurugram,Outside,Outside Delhi
+1689,Phuspa Bhawan,1,Nill,-,Unmatched
+1690,Shaikh Sarai Delhi,1,Nill,-,Unmatched
+1691,"Karolbagh, Delhi Metro",1,Nill,-,Unmatched
+1692,Harkesh Nagar,1,Harkesh Nagar,272,Exact Ward Match
+1693,Ansal Plaza Delhi,1,Nill,-,Unmatched
+1694,Sadignagar,1,Nill,-,Unmatched
+1695,Saket Court Delhi,1,Saket,16,Alias Match
+1696,Khansar,1,Nill,-,Unmatched
+1697,Krishna Nagar Home,1,Krishna  Nagar,154,Sub-Ward Match
+1698,Nijimudden,1,Nill,-,Unmatched
+1699,Swami Nagar Delhi,1,Nill,-,Unmatched
+1700,Aayurvigyan Nagar,1,Nill,-,Unmatched
+1701,Meerut Uttar Pradesh,1,Meerut Uttar Pradesh,Outside,Outside Delhi
+1702,Okhla Phase_1,1,Okhla Industrial Area Phase I,287,Alias Match
+1703,Maharali,1,Mehrauli,23,AI Match (75%)
+1704,Lajpatnagar Delhi,1,Lajpat Nagar I,3,AI Match (77%)
+1705,Nijamuddin Station Delhi,1,Nill,-,Unmatched
+1706,Chirag Delhi Song,1,Chirag Delhi,11,Alias Match
+1707,Nijimudden Ralve Station,1,Hazrat Nizamuddin Railway Station,14,AI Match (76%)
+1708,Aimss,1,AIIMS (Ansari Nagar),218,AI Match (80%)
+1709,Karanpura Terminal,1,Nill,-,Unmatched
+1710,Safdarganj Terminal,1,Nill,-,Unmatched
+1711,Shaikh Sari,1,Sheikh Sarai,11,AI Match (86%)
+1712,Near Petrol Pump,1,Nill,-,Unmatched
+1713,Define Caloni,1,Nill,-,Unmatched
+1714,Nizamuddin Station Delhi,1,Hazrat Nizamuddin,14,Alias Match
+1715,Delhi Heart,1,Nill,-,Unmatched
+1716,Greenpark Delhi,1,Green Park Extension,8,AI Match (75%)
+1717,Mahorali Tarminal,1,Nill,-,Unmatched
+1718,Vasant Kung Indrsti Aria,1,Nill,-,Unmatched
+1719,Nizamuddin Delhi,1,Hazrat Nizamuddin,14,Alias Match
+1720,Sawami Nagar,1,Jamia Nagar,273,AI Match (78%)
+1721,Gurugram Haryana,1,Gurugram Haryana,Outside,Outside Delhi
+1722,Panchi Colony,1,INA Colony,213,AI Match (75%)
+1723,Mahorali Termainal,1,Nill,-,Unmatched
+1724,Uttam Nagar Delhi,1,Uttam Nagar,225,Alias Match
+1725,Sheik Sarai,1,Sheikh Sarai,11,AI Match (95%)
+1726,Om Shree Nayak Hospital,1,Nill,-,Unmatched
+1727,Ambedkar Sec_5,1,Nill,-,Unmatched
+1728,Rk Palace Delhi,1,Nill,-,Unmatched
+1729,Ck Block,1,Nill,-,Unmatched
+1730,Basant Lock,1,Nill,-,Unmatched
+1731,Gurugram Delhi,1,Gurugram Delhi,Outside,Outside Delhi
+1732,Ambedker Nagar,1,Ambedkar Nagar,22,AI Match (92%)
+1733,Shaheed Bhagat Singh College,1,Nill,-,Unmatched
+1734,Sector 4,1,Vasant Kunj Sector A,274,AI Match (85%)
+1735,Kalkaji Kalkaji,1,Kalkaji,13,Alias Match
+1736,Lodhie Road,1,Lodhi Road,212,AI Match (95%)
+1737,Shabad,1,Nill,-,Unmatched
+1738,Shabad Mohamad Pur Village,1,Ali Village,283,AI Match (77%)
+1739,Shaybad,1,Nill,-,Unmatched
+1740,Shya Bad,1,Nill,-,Unmatched
+1741,Shri Fort Road,1,Nill,-,Unmatched
+1742,Madangiri Village,1,Madangir,21,Sub-Ward Match
+1743,Mohindera Hospital,1,Nill,-,Unmatched
+1744,Prajapati Chock,1,Nill,-,Unmatched
+1745,Aanad Vihar,1,Anand Vihar,151,AI Match (90%)
+1746,Gurugram (Rajiv Chowk),1,Gurugram Rajiv Chowk,Outside,Outside Delhi
+1747,Gurugram (Civil Line),1,Gurugram Civil Line,Outside,Outside Delhi
+1748,Shaqid Nagar,1,Sadh Nagar,248,AI Match (81%)
+1749,Grater Kalas,1,Greater Kailash,9,AI Match (88%)
+1750,Hasan Puri,1,Kalyan Puri,219,AI Match (76%)
+1751,Madan Giri Delhi,1,Nill,-,Unmatched
+1752,Aanadvihar,1,Anand Vihar,151,AI Match (85%)
+1753,Madi Pur,1,Madipur,136,AI Match (93%)
+1754,Amis,1,Nill,-,Unmatched
+1755,Dholakua,1,Nill,-,Unmatched
+1756,Pushp Vihar Home,1,Pushp Vihar,16,Alias Match
+1757,Greater Kalesh,1,Greater Kailash,9,AI Match (89%)
+1758,Chirag Delh,1,Chirag Delhi,14,Sub-Ward Match
+1759,Punjab Bagh,1,Punjabi Bagh,141,AI Match (95%)
+1760,Andan Vihar,1,Anand Vihar,151,AI Match (90%)
+1761,Mandihouse,1,Nill,-,Unmatched
+1762,Tees Hajari,1,Nill,-,Unmatched
+1763,Gorcity,1,Nill,-,Unmatched
+1764,Karimnagar,1,Hari Nagar,206,AI Match (80%)
+1765,Ambedkar Nagar Oii,1,Ambedkar Nagar,18,Alias Match
+1766,Buradi Sant Nagar,1,Sant Nagar (East of Kailash),10,Alias Match
+1767,Firani I Road,1,Nill,-,Unmatched
+1768,Bandh Pay,1,Nill,-,Unmatched
+1769,Andus Ganj,1,Andrews Ganj,12,AI Match (81%)
+1770,Andruj Ganj,1,Andrews Ganj,12,AI Match (78%)
+1771,Rajeev Chowk,1,Connaught Place (Rajiv Chowk),211,AI Match (86%)
+1772,Tukalkabad,1,Tughlakabad,281,AI Match (76%)
+1773,Sangam Vihar Ratiya Marg,1,Sangam Vihar,292,Alias Match
+1774,Mulchand Parathe Bali Gali,1,Nill,-,Unmatched
+1775,Kutumb Minar,1,Mehrauli (Qutub Minar),278,AI Match (86%)
+1776,Ratanpuri,1,Nill,-,Unmatched
+1777,Ratiya Marg Road,1,Nill,-,Unmatched
+1778,Talimbad,1,Nill,-,Unmatched
+1779,Virat Hospital,1,Nill,-,Unmatched
+1780,Pratap Nagar,1,Pant Nagar,14,AI Match (81%)
+1781,Tees Hazari Court,1,Nill,-,Unmatched
+1782,Joseph Broz Tito Marg,1,Nill,-,Unmatched
+1783,Somi Nagar,1,Moti Nagar,138,AI Match (80%)
+1784,Chauhan Bangar,1,Chauhan Banger,115,AI Match (92%)
+1785,Cj Company,1,Nill,-,Unmatched
+1786,Kothra Market,1,Khan Market,212,AI Match (83%)
+1787,Hudco Place,1,Nill,-,Unmatched
+1788,Dda Park,1,Nill,-,Unmatched
+1789,Madanganj,1,Malkaganj,130,AI Match (77%)
+1790,Hauz Khas Fort,1,Hauz Khas,8,Alias Match
+1791,Haus Khas Market,1,Nill,-,Unmatched
+1792,Dowarka,1,Dwarka,246,AI Match (92%)
+1793,Institutional Area Vasant Kunj,1,Vasant Kunj,274,Alias Match
+1794,"Lajpat Nagar, Market",1,Lajpat Nagar,6,Alias Match
+1795,Pushpa Bhawan Virat,1,Nill,-,Unmatched
+1796,Sport View,1,Nill,-,Unmatched
+1797,"Cannought Place, New Delhi",1,Nill,-,Unmatched
+1798,Najaggarh,1,Najafgarh,231,AI Match (88%)
+1799,"Indira Gandhi Airport, New Delhi",1,Nill,-,Unmatched
+1800,Moolchand Nagar Paraanthe Wali Gali,1,Nill,-,Unmatched
+1801,"Lajpat Nagar, Metro Station",1,Lajpat Nagar,6,Alias Match
+1802,Udai Park,1,Nill,-,Unmatched
+1803,Balav Gadh,1,Nill,-,Unmatched
+1804,Ratiya Marg Weekly,1,Nill,-,Unmatched
+1805,Chilla Gaon,1,Nill,-,Unmatched
+1806,Khapur,1,Khanpur,24,AI Match (92%)
+1807,Lajpat Nagar Market Mohanlal Sweet,1,Lajpat Nagar,6,Alias Match
+1808,Sukhram Road,1,Nill,-,Unmatched
+1809,V3S Mall Nirman Vihar,1,Nirman Vihar,227,Alias Match
+1810,"Nehru Place, Delhi",1,Nehru Place,13,Alias Match
+1811,Zee Tv Hospital,1,Nill,-,Unmatched
+1812,"Defence Colony, Delhi",1,Defence Colony,14,Alias Match
+1813,Khanpur Tughla,1,Khanpur,26,Alias Match
+1814,Sekh Sarai,1,Sheikh Sarai,11,AI Match (90%)
+1815,Goutam Budh Nagar,1,Nill,-,Unmatched
+1816,Gokalpuri Chor Market,1,Gokalpur,72,Sub-Ward Match
+1817,Devri Road,1,Nill,-,Unmatched
+1818,Kiwdai Nagar,1,Kidwai Nagar,213,AI Match (91%)
+1819,Select City Mall Saket,1,Saket,16,Alias Match
+1820,Lado Sarai Furniture Road,1,Nill,-,Unmatched
+1821,Humdard Nagar Delhi,1,Nill,-,Unmatched
+1822,Chirag Delhi Pocket V,1,Chirag Delhi,11,Alias Match
+1823,Lajpat Nagar Market Paratha Wali Gali,1,Lajpat Nagar,6,Alias Match
+1824,New Delhi Rpf,1,New Delhi Railway Station,182,AI Match (81%)
+1825,Sangam Vihar Thank You,1,Sangam Vihar,292,Alias Match
+1826,Saket J Block,1,Saket,16,Alias Match
+1827,Lal Kila Fort,1,Nill,-,Unmatched
+1828,Chhabri Bazar,1,Nill,-,Unmatched
+1829,Khanpur Delhi Work,1,Khanpur,26,Alias Match
+1830,Chitranjan Park,1,Chitranjan Park,15,Alias Match
+1831,Khanpur Rps Col Colony,1,Khanpur,26,Alias Match
+1832,Saket Dakshinpuri,1,Saket,16,Alias Match
+1833,Mayur Vihar Phase Iii,1,Mayur Vihar,234,Alias Match
+1834,Noida Sector 40,1,Noida Sector 40,Outside,Outside Delhi
+1835,Kalka Mandir,1,Nill,-,Unmatched
+1836,Shanti Niketan,1,Nill,-,Unmatched
+1837,Nevli,1,Deoli,26,AI Match (80%)
+1838,Musaddi Chowk,1,Nill,-,Unmatched
+1839,Houze Khas,1,Hauz Khas,8,AI Match (84%)
+1840,Maidan Giri,1,Nill,-,Unmatched
+1841,Krishi Bhawan,1,Nill,-,Unmatched
+1842,Ambedkar Nagar Depo,1,Ambedkar Nagar,18,Alias Match
+1843,Saket Delhi Work,1,Saket,16,Alias Match
+1844,Dewli,1,Deoli,26,AI Match (80%)
+1845,Nbcc Pushp Vihar,1,Pushp Vihar,16,Alias Match
+1846,Khadar,1,Madanpur Khadar,278,Sub-Ward Match
+1847,Khanpur Alternate,1,Khanpur,26,Alias Match
+1848,Virat Cinema,1,Nill,-,Unmatched
+1849,Gurudwara Rakabganj Road,1,Nill,-,Unmatched
+1850,Kalika Mandir,1,Nill,-,Unmatched
+1851,Khanpur Devli,1,Khanpur,26,Alias Match
+1852,Jal Vihar Terminal,1,Nill,-,Unmatched
+1853,Pilan Ji,1,Nill,-,Unmatched
+1854,Tikdi Jj Colony,1,INA Colony,213,AI Match (75%)
+1855,Alli Pur Market,1,Nill,-,Unmatched
+1856,Igi Airport Terminal 1,1,Nill,-,Unmatched
+1857,"Dhola Kuaa, Narayana",1,Nill,-,Unmatched
+1858,Dhola Nagar Narayna,1,Nill,-,Unmatched
+1859,Nilauti Gao,1,Nill,-,Unmatched
+1860,Alakhnanda Apartment,1,Nill,-,Unmatched
+1861,Ratiya Marg Road Sangam Vihar,1,Sangam Vihar,292,Alias Match
+1862,Sangam Viahr,1,Sangam Vihar,292,AI Match (91%)
+1863,Sainik Park,1,Sawan Park,98,AI Match (76%)
+1864,Noida 62,1,Noida 62,Outside,Outside Delhi
+1865,Ajaad Pur,1,Nill,-,Unmatched
+1866,Azad Pur,1,Nill,-,Unmatched
+1867,Dwarikapuri,1,Nill,-,Unmatched
+1868,Kalikaji Mandir Metro Station,1,Nill,-,Unmatched
+1869,Kalika Ji,1,Nill,-,Unmatched
+1870,Tigdi Tigdi,1,Tigri,25,AI Match (80%)
+1871,Badli,1,Samaypur Badli,40,Sub-Ward Match
+1872,Ghara Village,1,Khanpur Village,26,AI Match (78%)
+1873,Bahadurpur Border(T),1,Badarpur Border,283,AI Match (82%)
+1874,Madangiri Thank You,1,Madangir,21,Sub-Ward Match
+1875,Hans Nagar,1,Sant Nagar (East of Kailash),10,AI Match (80%)
+1876,Krish Kunj,1,Kishan Kunj,193,AI Match (85%)
+1877,Karauli Gaon,1,Nill,-,Unmatched
+1878,Pvr3 Firoz Gandhi Road Lajpat Nagar,1,Lajpat Nagar,6,Alias Match
+1879,Madangir Ultimate,1,Madangir,18,Alias Match
+1880,Sadar,1,Shahdara,135,AI Match (76%)
+1881,Dhula Kuan,1,Dhaula Kuan,215,AI Match (95%)
+1882,Apollo Spectra Hospital Nehru Place,1,Nehru Place,13,Alias Match
+1883,Rk Puram Sec3,1,R.K. Puram,216,Alias Match
+1884,Khanpur T Point,1,Khanpur,26,Alias Match
+1885,Anand Vihar Patparganj,1,Anand Vihar,151,Alias Match
+1886,Kitvai Nagar,1,Kirti Nagar,160,AI Match (86%)
+1887,Madagate,1,Nill,-,Unmatched
+1888,"Dlf Cyber City, Gurugram",1,Dlf Cyber City Gurugram,Outside,Outside Delhi
+1889,Jairam Ashram,1,Ashram Chowk,14,Alias Match
+1890,Eros Hotel Nehru Place,1,Nehru Place,13,Alias Match
+1891,Loni Gaziyabad,1,Nill,-,Unmatched
+1892,Raj Nagar,1,Raj Nagar,262,Exact Ward Match
+1893,Raju Parakh Kanpur,1,Nill,-,Unmatched
+1894,Sadh Nagar,1,Sadh Nagar,248,Exact Ward Match
+1895,Nawada,1,Nawada,216,Exact Ward Match
+1896,Ramesh Nagar,1,Ram Nagar,174,AI Match (85%)
+1897,Aps Colony,1,INA Colony,213,AI Match (80%)
+1898,Khanpur Pande Ji Pande Crop,1,Khanpur,26,Alias Match
+1899,Sangram Vhiar,1,Sangam Vihar,292,AI Match (88%)
+1900,Iit Hostel,1,IIT Delhi,8,Alias Match
+1901,Saraswatipuram,1,Nill,-,Unmatched
+1902,Meyur Vihar,1,Mayur Vihar,234,AI Match (90%)
+1903,Chhatarpur Extension,1,Chhatarpur,282,Alias Match
+1904,Karnal Bypass,1,Nill,-,Unmatched
+1905,Sangam Nagar,1,Sant Nagar (East of Kailash),10,AI Match (81%)
+1906,Delhi Chiraf,1,Chirag Delhi,14,AI Match (91%)
+1907,Greater Kailashpur,1,Greater Kailash,9,AI Match (90%)
+1908,Ratiya Maar Sangam Vihar Delhi,1,Sangam Vihar,292,Sub-Ward Match
+1909,Soniya Vihar,1,Sonia Vihar,46,AI Match (95%)
+1910,Madan Giri Khanpur,1,Khanpur,26,Alias Match
+1911,Qutub Vihar,1,Mehrauli (Qutub Minar),278,AI Match (81%)
+1912,Pargati Vihar,1,Pratap Vihar,106,AI Match (80%)
+1913,Nasirpur,1,Wajirpur,108,AI Match (75%)
+1914,Sangram Vihar,1,Sangam Vihar,292,AI Match (96%)
+1915,Milineon City Metro Station,1,Nill,-,Unmatched
+1916,Sanskrit Vedhyapeet,1,Nill,-,Unmatched
+1917,Matiala,1,Matiala,252,Exact Ward Match
+1918,Gharhi,1,Peragharhi,125,Sub-Ward Match
+1919,Police Colony,1,INA Colony,213,AI Match (75%)
+1920,Vijay Nagar Gajiyabad,1,Nill,-,Unmatched
+1921,Dhakshinpuri,1,Dakshinpuri,18,AI Match (95%)
+1922,Prabhu Gausala Tejpur,1,Nill,-,Unmatched
+1923,Arjun Nagar,1,Sarojini Nagar,213,AI Match (80%)
+1924,Neharu Palace,1,Nehru Place,13,AI Match (91%)
+1925,Sangamon Vihar,1,Sangam Vihar,292,AI Match (92%)
+1926,Huda City Centre Millennium City Gurugram,1,Huda City Centre Millennium City Gurugram,Outside,Outside Delhi
+1927,Cannought Place,1,Connaught Place,211,AI Match (86%)
+1928,Pvr-3Cs Lajpat Nagar,1,Lajpat Nagar,6,Alias Match
+1929,Indrapuram Gajiyabad,1,Nill,-,Unmatched
+1930,Govind Nagar,1,Vinod Nagar,208,AI Match (86%)
+1931,Subroto Park,1,Nill,-,Unmatched
+1932,Deer Park Huaz Khas,1,Nill,-,Unmatched
+1933,Inderpuri Khrishi Kunj,1,Nill,-,Unmatched
+1934,Rajorighrgn,1,Nill,-,Unmatched
+1935,Sikanderganj Terminal,1,Nill,-,Unmatched
+1936,Huaz Khas Village Park,1,Hauz Khas Village,8,AI Match (82%)
+1937,Hotel Pink City,1,Nill,-,Unmatched
+1938,Indrapuri Krishi Kunj South Delhi,1,South Extension,12,AI Match (76%)
+1939,Dwarka Anand Vihar,1,Dwarka,246,Alias Match
+1940,Noor Vihar,1,Nehru Vihar,64,AI Match (76%)
+1941,Mcd,1,Nill,-,Unmatched
+1942,Kewal Park Mcd Flats,1,Nill,-,Unmatched
+1943,Mohani Nivas,1,Nill,-,Unmatched
+1944,Dwarka More Metro Station (Terminal),1,Dwarka,246,Alias Match
+1945,Naheru Stadium,1,Nill,-,Unmatched
+1946,Natinal Park,1,National Park (Lajpat Nagar),6,AI Match (96%)
+1947,South Extensions,1,South Extension,12,AI Match (96%)
+1948,Syed Gaon Nanglo (T),1,Nill,-,Unmatched
+1949,Sector 4/5 Virat Cinema,1,Nill,-,Unmatched
+1950,Motibaag,1,Moti Bagh,217,AI Match (87%)
+1951,Pnb Geetanjali,1,Nill,-,Unmatched
+1952,Holy Family,1,Nill,-,Unmatched
+1953,Gaizibaad,1,Nill,-,Unmatched
+1954,A Block Dilsad Garden,1,Nill,-,Unmatched
+1955,Noida Sec -62,1,Noida Sec 62,Outside,Outside Delhi
+1956,A Block Dilshad Garden,1,Dilshad Garden,236,Alias Match
+1957,Mahatma Gandhi Marg,1,Nill,-,Unmatched
+1958,Punjabi Bag,1,Punjabi Bagh,141,Sub-Ward Match
+1959,Sangambihar Holi Chok,1,Nill,-,Unmatched
+1960,Gk-2,1,Greater Kailash II,15,Alias Match
+1961,Jalvayu Vihar,1,Jasola Vihar,273,AI Match (80%)
+1962,Gk -2,1,Greater Kailash II,15,Alias Match
+1963,Udaypark,1,Nill,-,Unmatched
+1964,Ncr Grugram,1,Nill,-,Unmatched
+1965,Shree Ram Sharman,1,Nill,-,Unmatched
+1966,Okhla Sabji Mandi,1,Okhla,287,Alias Match
+1967,Cp Colony,1,Connaught Place,211,AI Match (100%)
+1968,Qamaruddin Station,1,Nill,-,Unmatched
+1969,Jamud Pur,1,Nill,-,Unmatched
+1970,Airport (Delhi),1,Nill,-,Unmatched
+1971,Modi Meal,1,Nill,-,Unmatched
+1972,Aashram Aashram Mein,1,Nill,-,Unmatched
+1973,Lajpat Nagar Vikaram Hotel,1,Lajpat Nagar,6,Alias Match
+1974,Sarai Khale Kha Dblock,1,Nill,-,Unmatched
+1975,Greater Class,1,Greater Kailash,9,AI Match (78%)
+1976,Mandi Villag,1,Ali Village,283,AI Match (78%)
+1977,South Sector,1,South Extension,12,AI Match (76%)
+1978,Gk 1 C Block,1,Greater Kailash I,9,Alias Match
+1979,South Extansion,1,South Extension,12,AI Match (93%)
+1980,Subdarjan,1,Nill,-,Unmatched
+1981,Nehru Place For,1,Nehru Place,13,Alias Match
+1982,Sarai Khale Kha,1,Nill,-,Unmatched
+1983,Diwarika,1,Dwarka,246,AI Match (85%)
+1984,Mulchan,1,Nill,-,Unmatched
+1985,Gateer Kelash,1,Greater Kailash,9,AI Match (78%)
+1986,New Friens Colony,1,New Friends Colony,14,AI Match (97%)
+1987,Uttam Vihar,1,Nill,-,Unmatched
+1988,Kushal Jain,1,Nill,-,Unmatched
+1989,Ahmed Colony,1,Amar Colony,6,AI Match (78%)
+1990,Holi Family Hospital,1,Nill,-,Unmatched
+1991,Mulchandar Matro Station,1,Nill,-,Unmatched
+1992,Sayed Gaon,1,Nill,-,Unmatched
+1993,Getter Kelash,1,Greater Kailash,9,AI Match (78%)
+1994,Janjpur,1,Jiwanpur,60,AI Match (80%)
+1995,Olkha Phase 1,1,Okhla Industrial Area Phase I,287,AI Match (92%)
+1996,Mool,1,Nill,-,Unmatched
+1997,Vinobpuri,1,Vinobapuri (Lajpat Nagar),3,AI Match (94%)
+1998,Vikaram Hotel,1,Nill,-,Unmatched
+1999,Gatter Kelash -1,1,Greater Kailash I,9,AI Match (81%)
+2000,Aolirpot Bagdogar,1,Nill,-,Unmatched
+2001,Noida Noida,1,Noida Noida,Outside,Outside Delhi
+2002,South Exsataion,1,South Extension,12,AI Match (80%)
+2003,Gurudwarpur Pur,1,Nill,-,Unmatched
+2004,Ashram Me,1,Ashram Chowk,14,Alias Match
+2005,Stop Kailashem,1,Nill,-,Unmatched
+2006,Naraina Vihar,1,Naraina,204,Sub-Ward Match
+2007,Kalak Ji,1,Nill,-,Unmatched
+2008,Badarpur Road,1,Badarpur,283,Alias Match
+2009,Tagore Garden,1,Tagore Garden,198,Alias Match
+2010,Sabdarjanganj,1,Nill,-,Unmatched
+2011,Madan Dairy,1,Nill,-,Unmatched
+2012,Dayan Nand Colani,1,Dayanand Colony,6,AI Match (81%)
+2013,Rajorai Garden,1,Rajouri Garden,185,AI Match (92%)
+2014,Chirag Y,1,Chirag Delhi,14,AI Match (85%)
+2015,Saket Cort,1,Saket,16,Alias Match
+2016,Hauzkhas,1,Hauz Khas,8,AI Match (94%)
+2017,Noida Monthly,1,Noida Monthly,Outside,Outside Delhi
+2018,Haryana Kulana,1,Haryana Kulana,Outside,Outside Delhi
+2019,Stop Class,1,Nill,-,Unmatched
+2020,Tara Apartment,1,Nill,-,Unmatched
+2021,Aligarh,1,Nill,-,Unmatched
+2022,Shrinivaspuri,1,Nill,-,Unmatched
+2023,Gadi,1,Nill,-,Unmatched
+2024,Summer Field,1,Nill,-,Unmatched
+2025,East Kailash,1,East Of Kailash,10,AI Match (100%)
+2026,Greeter Kelash,1,Greater Kailash,9,AI Match (82%)
+2027,Blue Berry School,1,Nill,-,Unmatched
+2028,Samrudpur,1,Nill,-,Unmatched
+2029,Kailashpur Market,1,Nill,-,Unmatched
+2030,Bawal,1,Nill,-,Unmatched
+2031,South Extension Grocery Items,1,South Extension,12,Alias Match
+2032,Madava,1,Nill,-,Unmatched
+2033,Madhu Vihar,1,Madhu Vihar,235,Exact Ward Match
+2034,Ashrama,1,Ashram Chowk,14,AI Match (92%)
+2035,Tughlaka Baad,1,Nill,-,Unmatched
+2036,Cng Pump Gajipur,1,Nill,-,Unmatched
+2037,Noida Sector 36,1,Noida Sector 36,Outside,Outside Delhi
+2038,Gk 1 N Block Market,1,Greater Kailash I,9,Alias Match
+2039,Moolchand Metro4-,1,Nill,-,Unmatched
+2040,Chirag Thank You,1,Nill,-,Unmatched
+2041,Narela,1,Narela,17,Alias Match
+2042,Dwarka Mor,1,Dwarka Mor,246,Alias Match
+2043,Noida Sector 52,1,Noida Sector 52,Outside,Outside Delhi
+2044,Chirag Pur,1,Dhir Pur,51,AI Match (77%)
+2045,Iscon Temple,1,Nill,-,Unmatched
+2046,Nagar Chowk Gajipur,1,Nill,-,Unmatched
+2047,Giri Nagar,1,Kirti Nagar,160,AI Match (85%)
+2048,Surajpur,1,Nill,-,Unmatched
+2049,Gajipur Village,1,Khanpur Village,26,AI Match (80%)
+2050,Haldi Ram Hotel Lajpat Nagar,1,Lajpat Nagar,6,Alias Match
+2051,Jawahar Gate Gajiabad,1,Nill,-,Unmatched
+2052,Mulchand Metro,1,Nill,-,Unmatched
+2053,Tcre Bus Stand,1,Nill,-,Unmatched
+2054,Greek Park,1,Green Park,8,AI Match (90%)
+2055,Metro Station 15 Sector 2,1,Nill,-,Unmatched
+2056,Modi Mill,1,Nill,-,Unmatched
+2057,Soni Service Centre Lajpat Nagar,1,Lajpat Nagar,6,Alias Match
+2058,Gajipur Ganga Ghat,1,Nill,-,Unmatched
+2059,Modi Mil,1,Nill,-,Unmatched
+2060,Deep Park,1,Nill,-,Unmatched
+2061,Sector 7 Noida,1,Sector 7 Noida,Outside,Outside Delhi
+2062,Jairam Ashram Lajpat Nagar,1,Lajpat Nagar,6,Alias Match
+2063,Gajipur,1,Wajirpur,108,AI Match (80%)
+2064,Mehrauli Job,1,Mehrauli,278,Alias Match
+2065,Ashok Nagar Noida,1,Ashok Nagar Noida,Outside,Outside Delhi
+2066,Dhola Kuaa,1,Dhaula Kuan,215,AI Match (76%)
+2067,Mayuri Ghat,1,Nill,-,Unmatched
+2068,Sidharth Vihar Noida,1,Sidharth Vihar Noida,Outside,Outside Delhi
+2069,Dlf Phase 2 Gurgaon,1,Dlf Phase 2 Gurgaon,Outside,Outside Delhi
+2070,Seikh Sarai,1,Sheikh Sarai,11,AI Match (95%)
+2071,Lajpat Nagar Service Centre,1,Lajpat Nagar,6,Alias Match
+2072,Defance Colony,1,Defence Colony,14,AI Match (92%)
+2073,Smailpur,1,Madipur,136,AI Match (80%)
+2074,Gk One,1,Greater Kailash,9,AI Match (100%)
+2075,Rashtrapati Parliament,1,Nill,-,Unmatched
+2076,Sector 62 Noida Hotel Surya Place,1,Sector 62 Noida Hotel Surya Place,Outside,Outside Delhi
+2077,Chrag Delhi,1,Chirag Delhi,14,AI Match (95%)
+2078,Noida Sector 10,1,Noida Sector 10,Outside,Outside Delhi
+2079,Geeta Colony Noida,1,Geeta Colony Noida,Outside,Outside Delhi
+2080,Sarup Nagar,1,Sant Nagar (East of Kailash),10,AI Match (76%)
+2081,Old Faridabad,1,Old Faridabad,Outside,Outside Delhi
+2082,Allen Coaching Centre Lajpat,1,Lajpat Nagar,6,Alias Match
+2083,Noida Sector 130,1,Noida Sector 130,Outside,Outside Delhi
+2084,Nehar Place,1,Nehru Place,13,AI Match (90%)
+2085,Nehru Place Delhi Jana Hai Na,1,Nehru Place,13,Alias Match
+2086,Asharam,1,Ashram Chowk,14,AI Match (92%)
+2087,Tirlok Puri,1,Trilok Puri,242,AI Match (90%)
+2088,Nagar Sector 5,1,Nill,-,Unmatched
+2089,Kashna Pari Chowk,1,Nill,-,Unmatched
+2090,"Madanpur Khadar J.J. Colony,",1,Madanpur Khadar,283,Alias Match
+2091,Indian Cares Clinic Lajpat Nagar,1,Lajpat Nagar,6,Alias Match
+2092,Oyo Hotel Nijamuddin Near India Gate,1,Nill,-,Unmatched
+2093,Nijamuddin Near India Gate,1,Nill,-,Unmatched
+2094,Kitwai Nagar,1,Kidwai Nagar,213,AI Match (91%)
+2095,Dwarika Mod,1,Dwarka Mor,246,AI Match (85%)
+2096,Mubarak Pur Crossing,1,Nill,-,Unmatched
+2097,Patel Nagar Gajiyabad,1,Patel Nagar,182,Alias Match
+2098,Devli Thank You,1,Deoli,26,Alias Match
+2099,Anand Lok,1,Nill,-,Unmatched
+2100,Vinoba Puri Nehru Nagar,1,Nill,-,Unmatched
+2101,Haldiram,1,Nill,-,Unmatched
+2102,Gazipur Village,1,Khanpur Village,26,AI Match (80%)
+2103,Katevara Village,1,Ali Village,283,AI Match (77%)
+2104,Noida Sector 22,1,Noida Sector 22,Outside,Outside Delhi
+2105,Karkardooma,1,Nill,-,Unmatched
+2106,Noida Sector 60,1,Noida Sector 60,Outside,Outside Delhi
+2107,Kalikaji Mandir,1,Nill,-,Unmatched
+2108,Shahdar Sagar North Delhi,1,Nill,-,Unmatched
+2109,Naya Bajar,1,Nill,-,Unmatched
+2110,Gajipur Noida,1,Gajipur Noida,Outside,Outside Delhi
+2111,Rampuri,1,Rampura,123,AI Match (85%)
+2112,Gokalpuri,1,Gokalpur,72,Sub-Ward Match
+2113,Bakarwala J J Colony,1,INA Colony,213,AI Match (75%)
+2114,Padh Padh Ganj,1,Pahar Ganj,184,AI Match (84%)
+2115,Ghaziabad Yard,1,Ghaziabad Yard,Outside,Outside Delhi
+2116,Red K Velvet Hotel Gajiyabad,1,Nill,-,Unmatched
+2117,Sec 14 Noida,1,Sec 14 Noida,Outside,Outside Delhi
+2118,"Dda Flats, Kalika Ji Alaknanda",1,Alaknanda,15,Alias Match
+2119,Sarai Kale Khan Nizamuddin,1,Hazrat Nizamuddin,14,Alias Match
+2120,Highlane Comedy Club Gajiyabad,1,Nill,-,Unmatched
+2121,Jetpur,1,Jaitpur,282,AI Match (76%)
+2122,Dhadar,1,Nill,-,Unmatched
+2123,Parparganj,1,Patparganj,229,AI Match (90%)
+2124,Jailpur,1,Jaitpur,282,AI Match (85%)
+2125,Sket,1,Saket,16,AI Match (88%)
+2126,Tigaon,1,Nill,-,Unmatched
+2127,Pheladpur,1,Nill,-,Unmatched
+2128,Kanpur Faridabad,1,Kanpur Faridabad,Outside,Outside Delhi
+2129,Sainik Farm Colony,1,INA Colony,213,AI Match (75%)
+2130,Molarband,1,Molarband,283,Alias Match
+2131,"Noida Sector 32,",1,Noida Sector 32,Outside,Outside Delhi
+2132,Baghola,1,Nill,-,Unmatched
+2133,Virat Cinema Crossing,1,Nill,-,Unmatched
+2134,Jabahar Lal Nehru Stadium Terminal,1,Nill,-,Unmatched
+2135,Nanakpura,1,Nanak Pura,259,AI Match (94%)
+2136,Khichdipur,1,Khichripur,225,AI Match (90%)
+2137,Noida Sector 104,1,Noida Sector 104,Outside,Outside Delhi
+2138,Kailas Colony,1,Kailash Colony,9,AI Match (96%)
+2139,Chhaprula Gajiyabad,1,Nill,-,Unmatched
+2140,Ashok Nagar Market,1,Ashok Nagar,84,Sub-Ward Match
+2141,Indra Puram,1,R.K. Puram,216,AI Match (76%)
+2142,Mdhan Gate,1,Nill,-,Unmatched
+2143,Suraj Pur,1,Nill,-,Unmatched
+2144,Santi Nikunj Pitampura,1,Pitampura,66,Alias Match
+2145,Noida Sector 120,1,Noida Sector 120,Outside,Outside Delhi
+2146,Mansarovar,1,Nill,-,Unmatched
+2147,Naheru Place Terminal,1,Nill,-,Unmatched
+2148,Dilli Haat Ina,1,INA Colony / Market,213,Alias Match
+2149,Noida Sector 58,1,Noida Sector 58,Outside,Outside Delhi
+2150,Rohini Sector 12,1,Rohini,44,Alias Match
+2151,Kale Khan,1,Nill,-,Unmatched
+2152,New Ashok Nagar,1,New Ashok Nagar,245,Exact Ward Match
+2153,Suriya Nagar,1,Kasturba Nagar,254,AI Match (76%)
+2154,Badar Pur,1,Badar Pur,284,Exact Ward Match
+2155,Kalkaji (Alaknanda),1,Kalkaji,13,Alias Match
+2156,Dwarka Sec 2,1,Dwarka,246,Alias Match
+2157,Nizamuddin Near By India Gate,1,Hazrat Nizamuddin,14,Alias Match
+2158,Nange Nagri,1,Nand Nagri,88,AI Match (85%)
+2159,Noida Sector 17,1,Noida Sector 17,Outside,Outside Delhi
+2160,Vasundhara Ghaziabad,1,Vasundhara Ghaziabad,Outside,Outside Delhi
+2161,Lalganj,1,Malkaganj,130,AI Match (75%)
+2162,Loni Ghaziabad Uttar Pradesh,1,Loni Ghaziabad Uttar Pradesh,Outside,Outside Delhi
+2163,Rishikesh,1,Nill,-,Unmatched
+2164,Dadari,1,Nill,-,Unmatched
+2165,Nagar Terminal,1,Tri Nagar,126,AI Match (78%)
+2166,Sunny Bihar,1,Nill,-,Unmatched
+2167,Mandan Giri,1,Nill,-,Unmatched
+2168,Lado Place,1,Nill,-,Unmatched
+2169,Lado Sarai F Firni Road,1,Nill,-,Unmatched
+2170,Radisson Hotel,1,Nill,-,Unmatched
+2171,Sarita Vihar K Block,1,Sarita Vihar,273,Alias Match
+2172,Getter Kelash Phase -1,1,Nill,-,Unmatched
+2173,Pushap Vihar,1,Pushp Vihar,19,AI Match (95%)
+2174,Noida Sector 32 Terminal,1,Noida Sector 32 Terminal,Outside,Outside Delhi
+2175,Tehkhand,1,Tekhand,279,AI Match (93%)
+2176,Khanpur Market Empty,1,Khanpur,26,Alias Match
+2177,Ambedkar Nagar Sector 4 (Virat Cinema),1,Ambedkar Nagar,18,Alias Match
+2178,Rangpur,1,Nill,-,Unmatched
+2179,Lado Sarai Firini Road,1,Nill,-,Unmatched
+2180,Krishna Park,1,Krishna  Nagar,154,AI Match (80%)
+2181,Faridabad Sector 16,1,Faridabad Sector 16,Outside,Outside Delhi
+2182,North Point,1,Rohini North,43,AI Match (78%)
+2183,Sheetala Mandirgurugram,1,Nill,-,Unmatched
+2184,Shahbad,1,Nill,-,Unmatched
+2185,Shahbad Mohammad Pur Village,1,Ali Village,283,AI Match (77%)
+2186,Madipur,1,Madipur,136,Exact Ward Match
+2187,Indira Gandhi Ou Road,1,Nill,-,Unmatched
+2188,Arjangarh Metro Station,1,Nill,-,Unmatched
+2189,Maruti Kunj(Gurgaon),1,Maruti Kunj Gurgaon,Outside,Outside Delhi
+2190,Noida Sec -32,1,Noida Sec 32,Outside,Outside Delhi
+2191,Palam Vihar (Gurugram),1,Palam Vihar Gurugram,Outside,Outside Delhi
+2192,Kapashera Border Badarpur Border,1,Badarpur Border,283,Alias Match
+2193,Fazal Enclave,1,Abul Fazal Enclave,273,AI Match (100%)
+2194,Jashol Vihar,1,Jasola Vihar,273,AI Match (91%)
+2195,Lado Sarai Karni Road,1,Nill,-,Unmatched
+2196,Shahbad Mohammadpur Village,1,Ali Village,283,AI Match (77%)
+2197,Kishan Garh,1,Kishan Ganj,143,AI Match (81%)
+2198,Sanjay Van,1,Nill,-,Unmatched
+2199,Dda Flats Kalkaji Alaknanda,1,Alaknanda,15,Alias Match
+2200,Sri Niwas Puri,1,Sri Niwaspuri,266,AI Match (96%)
+2201,Igi Airport T 2,1,Nill,-,Unmatched
+2202,Fatehpur Sikri,1,Nill,-,Unmatched
+2203,Gateer Kelash Phase 1,1,Nill,-,Unmatched
+2204,Rajender Nagar,1,Rajender Nagar,190,Exact Ward Match
+2205,Sector 53,1,Vasant Kunj Sector A,274,AI Match (80%)
+2206,Humdard Nager,1,Nill,-,Unmatched
+2207,Shahbad Mohammad Puri Village,1,Ali Village,283,AI Match (77%)
+2208,Kishangarh,1,Kishangarh,283,Exact Ward Match
+2209,Bijwasan,1,Bijwasan,271,Exact Ward Match
+2210,Gatter Kelash Phase -2,1,Nill,-,Unmatched
+2211,Arjan Garh Metro Station,1,Nill,-,Unmatched
+2212,Sanik School,1,Nill,-,Unmatched
+2213,Lado Sarani Firni Road,1,Nill,-,Unmatched
+2214,Igi T2,1,Nill,-,Unmatched
+2215,Vathura Hospital,1,Nill,-,Unmatched
+2216,Rohini Sector 16,1,Rohini,44,Alias Match
+2217,Badarpur Mb Road,1,Badarpur,283,Alias Match
+2218,Rajiv Gandhi Stadium,1,Nill,-,Unmatched
+2219,Suraj Kuand,1,Nill,-,Unmatched
+2220,Shayam Kunj (Gurugram),1,Shayam Kunj Gurugram,Outside,Outside Delhi
+2221,Load Sarai Firni Road,1,Nill,-,Unmatched
+2222,Minto Road Terminal,1,Minto Road,192,Alias Match
+2223,Suraj Kund,1,Nill,-,Unmatched
+2224,Badalpur Border,1,Badarpur Border,283,AI Match (93%)
+2225,Jamia Hamdard,1,Jamia Millia Islamia,273,Alias Match
+2226,Raju Par,1,Nill,-,Unmatched
+2227,Piyush Vihar,1,Pushp Vihar,19,AI Match (86%)
+2228,Sargam,1,Nill,-,Unmatched
+2229,Kanta Chowk,1,Nill,-,Unmatched
+2230,Tehkhand Village,1,Ali Village,283,AI Match (77%)
+2231,Nehru Park,1,Nehru Place,13,AI Match (76%)
+2232,Seva Nagar Railway Station,1,New Delhi Railway Station,182,AI Match (75%)
+2233,Lado Sarai Terminal,1,Nill,-,Unmatched
+2234,Saini Form,1,Nill,-,Unmatched
+2235,Surajkunda,1,Nill,-,Unmatched
+2236,Doctor Karni Singh Southing Range,1,Nill,-,Unmatched
+2237,An Blok Markat,1,Nill,-,Unmatched
+2238,Lodi Kaloni,1,Nill,-,Unmatched
+2239,Vihar,1,Yamuna Vihar,76,Sub-Ward Match
+2240,Jiban Hospital,1,Nill,-,Unmatched
+2241,Sundar Vihar,1,Sonia Vihar,46,AI Match (78%)
+2242,Sakit Kot,1,Nill,-,Unmatched
+2243,Gokul Puri,1,Gokalpur,72,AI Match (77%)
+2244,Sundar Nagr,1,Sunder Nagar,212,AI Match (86%)
+2245,Badarpur Delhi Abdullah कभी-कभी Kya Malish Mein Kya Hai Furniture,1,Badarpur,283,Alias Match
+2246,Prakriti Maidan,1,Nill,-,Unmatched
+2247,Anna Nagar,1,Aya Nagar,294,AI Match (84%)
+2248,Indira Gandhi Arena,1,Nill,-,Unmatched
+2249,Mukhya Jhil Rajghat,1,Nill,-,Unmatched
+2250,Shantivan,1,Nill,-,Unmatched
+2251,G Block,1,Nill,-,Unmatched
+2252,Nijamuddin Railway Station,1,Hazrat Nizamuddin Railway Station,14,AI Match (96%)
+2253,Kriti Nagar,1,Kirti Nagar,160,AI Match (90%)
+2254,Drain,1,Nill,-,Unmatched
+2255,Shri Shiv Mandir,1,Nill,-,Unmatched
+2256,Gautampuri,1,Nill,-,Unmatched
+2257,Kelas Nagar,1,Kamla Nagar,124,AI Match (81%)
+2258,Dhoula Kua Delhi,1,Nill,-,Unmatched
+2259,Khanpur Dani,1,Khanpur,26,Alias Match
+2260,Bhagya Rathi Bihar,1,Nill,-,Unmatched
+2261,Name Sarai,1,Nill,-,Unmatched
+2262,Kaya Maya Hospital,1,Nill,-,Unmatched
+2263,Gokhala,1,Okhla,268,AI Match (83%)
+2264,Subhash Vihar,1,Harsh Vihar,68,AI Match (83%)
+2265,Sib Bihar,1,Nill,-,Unmatched
+2266,Modl Park,1,Nill,-,Unmatched
+2267,Sundar Nursri,1,Nill,-,Unmatched
+2268,Sundr Nagr,1,Sunder Nagar,212,AI Match (90%)
+2269,Sarojini Nagar Depot,1,Sarojini Nagar,213,Alias Match
+2270,Rani Ramgarh Marg,1,Nill,-,Unmatched
+2271,Sector 48 Noida,1,Sector 48 Noida,Outside,Outside Delhi
+2272,Taimur Nagar,1,Zakir Nagar,261,AI Match (78%)
+2273,Okhla Phase,1,Okhla,287,Alias Match
+2274,Nallah,1,Nill,-,Unmatched
+2275,Ohlka,1,Okhla,268,AI Match (80%)
+2276,Bharatpur Border,1,Badarpur Border,283,AI Match (83%)
+2277,Surajpur Noida,1,Surajpur Noida,Outside,Outside Delhi
+2278,Hamdad Nagar,1,Azad Nagar,142,AI Match (81%)
+2279,Mehrauli Madarpur Marg,1,Mehrauli,278,Alias Match
+2280,Mhroli,1,Gharoli,217,AI Match (76%)
+2281,Firni Road Terminal,1,Nill,-,Unmatched
+2282,Sabha Pur Village,1,Ali Village,283,AI Match (77%)
+2283,Gurgaon Sector 52,1,Gurgaon Sector 52,Outside,Outside Delhi
+2284,Sangam Vihar Dda Park,1,Sangam Vihar,292,Alias Match
+2285,Vayusenabad,1,Nill,-,Unmatched
+2286,Dr Ambedkar Park,1,Nill,-,Unmatched
+2287,Gurgaon Sector 9,1,Gurgaon Sector 9,Outside,Outside Delhi
+2288,Gurugram Sector 62,1,Gurugram Sector 62,Outside,Outside Delhi
+2289,Rps Colony,1,Amar Colony,6,AI Match (76%)
+2290,Doctor Ambedkar Park,1,Nill,-,Unmatched
+2291,Yatharth Super Speciality Hospital Noida 110,1,Yatharth Super Speciality Hospital Noida 110,Outside,Outside Delhi
+2292,Deoli Gaon Nai Basti,1,Deoli,26,Alias Match
+2293,Hridoy,1,Nill,-,Unmatched
+2294,Seth Sarai,1,Sheikh Sarai,11,AI Match (81%)
+2295,Sector 44 Noida,1,Sector 44 Noida,Outside,Outside Delhi
+2296,Jheel Terminal,1,Nill,-,Unmatched
+2297,Shakti Vihar,1,Shiv Vihar,48,AI Match (81%)
+2298,Tringa Chawk,1,Nill,-,Unmatched
+2299,Gurgaon Sector 51,1,Gurgaon Sector 51,Outside,Outside Delhi
+2300,Gurgaon Sector 64,1,Gurgaon Sector 64,Outside,Outside Delhi
+2301,Malwiye Nagar,1,Malviya Nagar,13,AI Match (84%)
+2302,Laddu Sarai,1,Ladosarai,20,AI Match (80%)
+2303,Gurgaon Sector 62,1,Gurgaon Sector 62,Outside,Outside Delhi
+2304,Chatar Pur Mandir,1,Nill,-,Unmatched
+2305,Ahmednagar,1,Ambedkar Nagar,22,AI Match (75%)
+2306,Hariyan,1,Nill,-,Unmatched
+2307,Badarpur Bihar,1,Badarpur,283,Alias Match
+2308,Badr Pur,1,Badar Pur,284,AI Match (94%)
+2309,Shiv Mandir,1,Nill,-,Unmatched
+2310,Milan Garden,1,Mohan Garden,209,AI Match (83%)
+2311,Gurgaon Sector 63,1,Gurgaon Sector 63,Outside,Outside Delhi
+2312,Noida Sector 37,1,Noida Sector 37,Outside,Outside Delhi
+2313,Bandwari,1,Nill,-,Unmatched
+2314,Bas Kar,1,Nill,-,Unmatched
+2315,Sarijan Basti,1,Nill,-,Unmatched
+2316,Shani Bajar,1,Nill,-,Unmatched
+2317,Aya Nagar Extension,1,Aya Nagar,282,Alias Match
+2318,Bihari Park,1,Nill,-,Unmatched
+2319,Ansal Villas,1,Nill,-,Unmatched
+2320,Badro,1,Nill,-,Unmatched
+2321,Sanik Park,1,Sawan Park,98,AI Match (80%)
+2322,Naiwala,1,Nawada,216,AI Match (76%)
+2323,Sal,1,Hastsal,186,Sub-Ward Match
+2324,Nizamuddin Dargah Near India Gate,1,Hazrat Nizamuddin,14,Alias Match
+2325,Kashmere Gate Isbt,1,ISBT Kashmere Gate,153,Alias Match
+2326,Greater Noida Sector 16,1,Greater Noida Sector 16,Outside,Outside Delhi
+2327,Iit Metro,1,IIT Delhi,8,Alias Match
+2328,Gp Janpath,1,Nill,-,Unmatched
+2329,Cannot Place,1,Nill,-,Unmatched
+2330,Indian Institute Of Technology Delhi,1,Nill,-,Unmatched
+2331,Kharcha Ni,1,Nill,-,Unmatched
+2332,Mother Dairy Jamunapar,1,Nill,-,Unmatched
+2333,Molarband Village Chock,1,Molarband,283,Alias Match
+2334,Sadaarjung,1,Safdarjung Hospital / Enclave,218,AI Match (90%)
+2335,Nanda Hospital,1,Nill,-,Unmatched
+2336,Sushant Lok (Gurgaon),1,Sushant Lok Gurgaon,Outside,Outside Delhi
+2337,Greatest Kailash,1,Greater Kailash,9,AI Match (90%)
+2338,Cgo Complex Vihar,1,Nill,-,Unmatched
+2339,Saint Anthony Colony,1,INA Colony,213,AI Match (75%)
+2340,Radha Swami Society,1,Nill,-,Unmatched
+2341,Sarojani Nagar,1,Sarojini Nagar,213,AI Match (92%)
+2342,Dhulakuna,1,Dhaula Kuan,215,AI Match (80%)
+2343,Katwariya,1,Nill,-,Unmatched
+2344,Inderpuri Kunj,1,Inder Puri,202,AI Match (75%)
+2345,Inder Puri (Krishi Kunj),1,Inder Puri,202,Sub-Ward Match
+2346,Sadar Bazar (Gurgaon),1,Sadar Bazar Gurgaon,Outside,Outside Delhi
+2347,Mother'S Angel International School,1,Nill,-,Unmatched
+2348,Gold Market,1,Nill,-,Unmatched
+2349,Dhaula,1,Dhaula Kuan,215,AI Match (100%)
+2350,Vasant Kunj C-9,1,Vasant Kunj,274,Alias Match
+2351,Aanndvihar,1,Anand Vihar,151,AI Match (85%)
+2352,I.Lt,1,Nill,-,Unmatched
+2353,Aiims( Hospital),1,AIIMS (Ansari Nagar),218,Alias Match
+2354,Dera Gaon,1,Nill,-,Unmatched
+2355,Nangal Devat Gaon,1,Nill,-,Unmatched
+2356,Dehra,1,Nill,-,Unmatched
+2357,New Delhi Station,1,New Delhi Railway Station,182,AI Match (100%)
+2358,Mundrika,1,Munirka,270,AI Match (80%)
+2359,Safdarjung (Hospital),1,Safdarjung Hospital,218,Alias Match
+2360,Igloo Campus,1,Nill,-,Unmatched
+2361,Ramakrishna Puram,1,R.K. Puram,216,AI Match (76%)
+2362,Sarvodaya Enclave,1,Sarvodaya Enclave,11,Alias Match
+2363,I. I..T College,1,Nill,-,Unmatched
+2364,Laxmi Bai College,1,Nill,-,Unmatched
+2365,Inder Puri,1,Inder Puri,202,Exact Ward Match
+2366,Main Road,1,Minto Road,192,AI Match (84%)
+2367,Archana Village,1,Ali Village,283,AI Match (77%)
+2368,Katori Sarai,1,Katwaria Sarai,269,AI Match (84%)
+2369,Katwari,1,Nill,-,Unmatched
+2370,Mehrauli Delhi Work,1,Mehrauli,278,Alias Match
+2371,Okhla Enclave,1,Okhla,287,Alias Match
+2372,Delhi Haat (I.N.A),1,Nill,-,Unmatched
+2373,Abdul Fazal Enclave,1,Abul Fazal Enclave,273,AI Match (97%)
+2374,Katwariya Sarai,1,Katwaria Sarai,269,AI Match (96%)
+2375,Okhla Junction,1,Okhla,287,Alias Match

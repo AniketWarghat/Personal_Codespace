@@ -1,9 +1,72 @@
 {
-  "recorded_at": "2026-08-24 17:43:30",
+  "recorded_at": "2026-09-08 13:33:22",
   "start_url": "https://www.trafficlenz.com/",
   "final_url": "https://www.trafficlenz.com/Home/viewgraph",
-  "download_url": "blob:https://www.trafficlenz.com/8cfcc730-950b-4d97-aca5-ab607e972928",
+  "download_url": "blob:https://www.trafficlenz.com/171d204e-261b-4a50-9bd5-cfef396f43dc",
   "clicks": [
+    {
+      "tag": "a",
+      "id": "",
+      "cls": "close white-text btn black-text",
+      "name": "",
+      "text": "ACCEPT FUNCTIONAL COOKIES ONLY",
+      "href": "",
+      "selector": ".close.white-text.btn.black-text"
+    },
+    {
+      "tag": "button",
+      "id": "portal_login_btn",
+      "cls": "btn btn-primary magic-button-one nav-link",
+      "name": "",
+      "text": "PORTAL LOGIN",
+      "href": "",
+      "selector": "#portal_login_btn"
+    },
+    {
+      "tag": "div",
+      "id": "",
+      "cls": "recaptcha-checkbox-border",
+      "name": "",
+      "text": "",
+      "href": "",
+      "selector": ".recaptcha-checkbox-border"
+    },
+    {
+      "tag": "img",
+      "id": "",
+      "cls": "rc-image-tile-44",
+      "name": "",
+      "text": "",
+      "href": "",
+      "selector": ".rc-image-tile-44"
+    },
+    {
+      "tag": "img",
+      "id": "",
+      "cls": "rc-image-tile-44",
+      "name": "",
+      "text": "",
+      "href": "",
+      "selector": ".rc-image-tile-44"
+    },
+    {
+      "tag": "button",
+      "id": "recaptcha-verify-button",
+      "cls": "rc-button-default goog-inline-block",
+      "name": "",
+      "text": "VERIFY",
+      "href": "",
+      "selector": "#recaptcha-verify-button"
+    },
+    {
+      "tag": "button",
+      "id": "",
+      "cls": "btn btn-secondary",
+      "name": "",
+      "text": "LOGIN",
+      "href": "",
+      "selector": ".btn.btn-secondary"
+    },
     {
       "tag": "a",
       "id": "dashboardBtn",
@@ -36,7 +99,7 @@
       "id": "",
       "cls": " modal-trigger",
       "name": "",
-      "text": "DC513DL01 - Delhi OD",
+      "text": "DC513MH06 -WTP Survey",
       "href": "",
       "selector": ".modal-trigger"
     },
@@ -69,12 +132,12 @@
     },
     {
       "tag": "button",
-      "id": "button_642AD95B",
+      "id": "button_86FE4915",
       "cls": "",
       "name": "",
       "text": "+",
       "href": "",
-      "selector": "#button_642AD95B"
+      "selector": "#button_86FE4915"
     },
     {
       "tag": "a",
@@ -91,7 +154,7 @@
       "cls": "",
       "name": "",
       "text": "",
-      "href": "blob:https://www.trafficlenz.com/8cfcc730-950b-4d97-aca5-ab607e972928",
+      "href": "blob:https://www.trafficlenz.com/171d204e-261b-4a50-9bd5-cfef396f43dc",
       "selector": ""
     }
   ]
