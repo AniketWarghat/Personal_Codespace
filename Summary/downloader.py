@@ -92,11 +92,16 @@ def _ensure_chromium_installed() -> None:
     except Exception as e:
         logger.info("Playwright Chromium browser binary not found (%s). Installing now...", e)
         try:
-            cmd = [sys.executable, "-m", "playwright", "install", "chromium"]
+            cmd = [sys.executable, "-m", "playwright", "install", "--with-deps", "chromium"]
             res = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            logger.info("Playwright Chromium installed successfully: %s", res.stdout)
+            logger.info("Playwright Chromium & dependencies installed successfully: %s", res.stdout)
         except Exception as install_err:
             logger.error("Failed to auto-install chromium: %s", install_err)
+            try:
+                cmd_fallback = [sys.executable, "-m", "playwright", "install", "chromium"]
+                subprocess.run(cmd_fallback, capture_output=True, text=True, check=True)
+            except Exception:
+                pass
 
 
 # Run check on import in cloud environments
