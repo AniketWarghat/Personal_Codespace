@@ -41,6 +41,65 @@ st.set_page_config(
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
+# OPTIONAL PASSWORD AUTH (FROM SECRETS)
+# ─────────────────────────────────────────────────────────────────────────────
+def _get_app_password() -> str | None:
+    try:
+        if "APP_PASSWORD" in st.secrets:
+            return str(st.secrets["APP_PASSWORD"])
+    except Exception:
+        pass
+    toml_path = os.path.join(os.path.dirname(__file__), ".streamlit", "secrets.toml")
+    if os.path.exists(toml_path):
+        try:
+            import tomllib
+            with open(toml_path, "rb") as f:
+                t = tomllib.load(f)
+                if "APP_PASSWORD" in t:
+                    return str(t["APP_PASSWORD"])
+        except Exception:
+            pass
+    return os.environ.get("APP_PASSWORD", None)
+
+def _check_password() -> None:
+    app_pwd = _get_app_password()
+    if not app_pwd:
+        return
+
+    def _on_pwd_enter():
+        if st.session_state.get("entered_password") == app_pwd:
+            st.session_state["authenticated"] = True
+        else:
+            st.session_state["authenticated"] = False
+
+    if "authenticated" not in st.session_state:
+        st.session_state["authenticated"] = False
+
+    if not st.session_state["authenticated"]:
+        c1, c2, c3 = st.columns([1, 1.5, 1])
+        with c2:
+            st.markdown("### 🔒 Thane WTP PRT Dashboard")
+            st.info("Please enter the dashboard access password to continue.")
+            st.text_input(
+                "Password",
+                type="password",
+                on_change=_on_pwd_enter,
+                key="entered_password",
+                placeholder="Enter password..."
+            )
+            if st.button("Unlock Dashboard", use_container_width=True):
+                _on_pwd_enter()
+                if st.session_state["authenticated"]:
+                    st.rerun()
+                else:
+                    st.error("❌ Incorrect password. Please try again.")
+            elif st.session_state.get("entered_password") and not st.session_state["authenticated"]:
+                st.error("❌ Incorrect password. Please try again.")
+        st.stop()
+
+_check_password()
+
+# ─────────────────────────────────────────────────────────────────────────────
 # CONSTANTS & THEME
 # ─────────────────────────────────────────────────────────────────────────────
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -465,31 +524,21 @@ except Exception as _dl_err:
 if _downloader_available and _tl_config:
     _has_session = has_saved_session(_tl_config)
     if _has_session:
-        st.sidebar.success("🟢 TrafficLenz Session Active")
+        st.sidebar.success("🟢 TrafficLenz Connected")
     else:
-        st.sidebar.warning("🟠 Session Login Required")
+        st.sidebar.info("ℹ️ Using TrafficLenz credentials from Secrets")
 
-    col_s1, col_s2 = st.sidebar.columns(2)
-    with col_s1:
-        if st.button("🔑 Login", use_container_width=True, help="Perform one-time interactive login"):
-            with st.spinner("Opening browser to log in..."):
-                if perform_interactive_login(_tl_config):
-                    st.sidebar.success("Session saved!")
-                    time.sleep(1)
-                    st.rerun()
-
-    with col_s2:
-        if st.button("🔄 Sync Live", use_container_width=True, help="Download latest questionnaire report"):
-            with st.spinner(f"Downloading latest WTP data for '{DEFAULT_SURVEY_ID}'..."):
-                try:
-                    raw_b, ts = download_excel_bytes(_tl_config)
-                    st.session_state["wtp_raw_bytes"] = raw_b
-                    st.session_state["wtp_sync_ts"] = ts
-                    st.sidebar.success(f"Synced at {ts}")
-                    process_dataframe.clear()
-                    st.rerun()
-                except Exception as e:
-                    st.sidebar.error(f"Sync error: {e}")
+    if st.sidebar.button("🔄 Sync Live Data", use_container_width=True, type="primary", help="Download latest survey data from TrafficLenz"):
+        with st.spinner(f"Downloading latest WTP data for '{DEFAULT_SURVEY_ID}'..."):
+            try:
+                raw_b, ts = download_excel_bytes(_tl_config)
+                st.session_state["wtp_raw_bytes"] = raw_b
+                st.session_state["wtp_sync_ts"] = ts
+                st.sidebar.success(f"Synced at {ts}")
+                process_dataframe.clear()
+                st.rerun()
+            except Exception as e:
+                st.sidebar.error(f"Sync error: {e}")
 
     if "wtp_sync_ts" in st.session_state:
         st.sidebar.caption(f"Last synced: **{st.session_state['wtp_sync_ts']}**")
