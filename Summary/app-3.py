@@ -757,13 +757,13 @@ if "Location" in filtered_df.columns and filtered_df["Location"].notna().any():
 # ─────────────────────────────────────────────────────────────────────────────
 tabs = st.tabs(
     [
-        "📊 Summary",                # tabs[0] — surveyor progress, pace, stations at a glance
-        "👷 Surveyor Activity",      # tabs[1] — per-enumerator deep dive
-        "🚩 Flagged Entries",        # tabs[2] — data quality issues to action immediately
-        "📈 KPIs & Mode Share",      # tabs[3] — overall KPI metrics & travel patterns
-        "🚆 PRT Willingness",        # tabs[4] — willingness & fare analytics
-        "👥 Demographics",           # tabs[5] — respondent profile
-        "📄 Raw Data",               # tabs[6] — full records grid + CSV export
+        " 📊 Summary ",                # tabs[0] — surveyor progress, pace, stations at a glance
+        " 👷 Surveyor Activity ",      # tabs[1] — per-enumerator deep dive
+        " 🚩 Flagged Entries ",        # tabs[2] — data quality issues to action immediately
+        " 📈 KPIs & Mode Share ",      # tabs[3] — overall KPI metrics & travel patterns
+        " 🚆 PRT Willingness ",        # tabs[4] — willingness & fare analytics
+        " 👥 Demographics ",           # tabs[5] — respondent profile
+        " 📄 Raw Data ",               # tabs[6] — full records grid + CSV export
     ]
 )
 
