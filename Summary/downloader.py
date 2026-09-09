@@ -84,11 +84,22 @@ def _ensure_cloud_session(config: TrafficLenzConfig) -> None:
 
 
 def _ensure_chromium_installed() -> None:
-    """Automatically install Chromium on Linux cloud containers if missing."""
+    """Automatically install Chromium on Linux cloud containers if missing.
+
+    NOTE: On Streamlit Cloud / headless Linux, Playwright's bundled Chromium shell
+    requires system libraries (libglib-2.0.so.0, etc.) that are NOT installed.
+    This function must NEVER try to launch a browser on those environments.
+    """
+    import sys
+    # Hard guard: never attempt a browser launch on headless Linux (Streamlit Cloud)
+    if sys.platform.startswith("linux") or not os.environ.get("DISPLAY"):
+        raise RuntimeError(
+            "Cannot launch Chromium on headless Linux / Streamlit Cloud. "
+            "Use direct HTTP sync instead."
+        )
     if not PLAYWRIGHT_AVAILABLE:
         return
     import subprocess
-    import sys
     try:
         with sync_playwright() as p:
             b = p.chromium.launch(headless=True)
