@@ -108,11 +108,8 @@ def _ensure_chromium_installed() -> None:
                 pass
 
 
-# Run check on import in cloud environments
-if PLAYWRIGHT_AVAILABLE:
-    import sys
-    if sys.platform.startswith("linux"):
-        _ensure_chromium_installed()
+# Do not eagerly launch or install Chromium on import
+# Direct HTTP session download is used on cloud containers.
 
 
 def has_saved_session(config: TrafficLenzConfig) -> bool:
@@ -211,59 +208,122 @@ def download_excel_bytes(config: TrafficLenzConfig) -> Tuple[bytes, str]:
     Path(config.save_dir).mkdir(parents=True, exist_ok=True)
     _ensure_cloud_session(config)
 
-    # ── Attempt 1: Direct Fast HTTP Session Download (Instant, 0 RAM, 0 browser dependencies) ──
-    try:
-        if config.session_path.exists():
-            with open(config.session_path, "r", encoding="utf-8") as sf:
-                s_data = json.load(sf)
-            cookies_dict = {c["name"]: c["value"] for c in s_data.get("cookies", [])}
-            cookie_hdr = "; ".join(f"{k}={v}" for k, v in cookies_dict.items())
-            csrf = cookies_dict.get("csrftoken", "")
-            survey_code = config.survey_id or "DC513MH06"
+def _direct_http_download(config: TrafficLenzConfig) -> Tuple[bytes, str]:
+    """
+    Downloads survey questionnaire report directly via HTTP session requests.
+    Fast, reliable, and requires 0 browser / Chromium dependencies.
+    """
+    if not config.session_path.exists():
+        raise FileNotFoundError(
+            "Session file not found. Please paste TL_SESSION_JSON into Streamlit Secrets."
+        )
 
-            # 1. Check dashboard to get job_id
-            dash_req = urllib.request.Request(
-                "https://www.trafficlenz.com/Home/myDashboardView",
+    with open(config.session_path, "r", encoding="utf-8") as sf:
+        s_data = json.load(sf)
+    cookies_dict = {c["name"]: c["value"] for c in s_data.get("cookies", [])}
+    cookie_hdr = "; ".join(f"{k}={v}" for k, v in cookies_dict.items())
+    csrf = cookies_dict.get("csrftoken", "")
+    survey_code = config.survey_id or "DC513MH06"
+
+    # 1. Fetch dashboard to find matching jobs
+    dash_req = urllib.request.Request(
+        "https://www.trafficlenz.com/Home/myDashboardView",
+        headers={
+            "Cookie": cookie_hdr,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        }
+    )
+    dash_html = urllib.request.urlopen(dash_req, timeout=25).read().decode("utf-8", errors="ignore")
+
+    # Check for session expiration
+    if "/portal_login_btn" in dash_html or "portal_login" in dash_html:
+        raise PermissionError("TrafficLenz session expired. Please re-authenticate and update TL_SESSION_JSON.")
+
+    # 2. Parse all candidate jobs matching survey_code
+    rows = re.findall(r"<tr>(.*?)</tr>", dash_html, re.DOTALL)
+    candidate_jobs = []
+    for r in rows:
+        m_id = re.search(r"submitThisJob\('([A-Za-z0-9]+)'\)", r)
+        if m_id:
+            jid = m_id.group(1)
+            cells = [re.sub(r"<[^>]+>", "", c).strip() for c in re.findall(r"<td.*?>(.*?)</td>", r, re.DOTALL)]
+            cells = [c for c in cells if c]
+            row_text = " ".join(cells)
+            if survey_code.lower() in row_text.lower():
+                score = 0
+                if any(w in row_text.lower() for w in ["wtp", "questionnaire"]):
+                    score += 10
+                if "survey" in row_text.lower():
+                    score += 5
+                candidate_jobs.append((score, jid, row_text))
+
+    candidate_jobs.sort(key=lambda x: x[0], reverse=True)
+    if not candidate_jobs:
+        raise ValueError(f"Job code '{survey_code}' not found in TrafficLenz dashboard.")
+
+    logger.info("Direct HTTP: Found candidate jobs for %s: %s", survey_code, candidate_jobs)
+
+    # 3. For each candidate job, inspect sites and tasks
+    for score, jid, row_text in candidate_jobs:
+        logger.info("Checking job %s (%s)...", jid, row_text)
+        sites_post = urllib.parse.urlencode({
+            "job_id": jid,
+            "csrfmiddlewaretoken": csrf,
+        }).encode("utf-8")
+        sites_req = urllib.request.Request(
+            "https://www.trafficlenz.com/Home/getSitesOrTasks/",
+            data=sites_post,
+            headers={
+                "Cookie": cookie_hdr,
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                "Referer": "https://www.trafficlenz.com/Home/viewgraph",
+                "X-CSRFToken": csrf,
+                "X-Requested-With": "XMLHttpRequest",
+            }
+        )
+        try:
+            sites_res = urllib.request.urlopen(sites_req, timeout=15).read().decode("utf-8", errors="ignore")
+            sites_data = json.loads(sites_res)
+        except Exception as se:
+            logger.warning("Failed to fetch sites for job %s: %s", jid, se)
+            continue
+
+        sites = sites_data.get("data", {}).get("sites", [])
+        for site in sites:
+            site_id = site.get("site_id")
+            # Check tasks for this site
+            task_post = urllib.parse.urlencode({
+                "job_id": jid,
+                "select_dropdown_sites": site_id,
+                "csrfmiddlewaretoken": csrf,
+            }).encode("utf-8")
+            task_req = urllib.request.Request(
+                "https://www.trafficlenz.com/Home/getSitesOrTasks/",
+                data=task_post,
                 headers={
                     "Cookie": cookie_hdr,
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                    "Referer": "https://www.trafficlenz.com/Home/viewgraph",
+                    "X-CSRFToken": csrf,
+                    "X-Requested-With": "XMLHttpRequest",
                 }
             )
-            dash_html = urllib.request.urlopen(dash_req, timeout=20).read().decode("utf-8", errors="ignore")
-            
-            # Find job_id for survey_code
-            m_job = re.search(rf"submitThisJob\('([A-Za-z0-9]+)'\)[^<]*{survey_code}", dash_html) or \
-                    re.search(rf"{survey_code}[^<]*</a></td>\s*<td><a onclick=\"submitThisJob\('([A-Za-z0-9]+)'\)", dash_html) or \
-                    re.search(rf"submitThisJob\('([A-Za-z0-9]+)'\)", dash_html)
-            
-            if m_job:
-                internal_job_id = m_job.group(1)
-                # 2. Viewgraph
-                vg_post = urllib.parse.urlencode({
-                    "job_id": internal_job_id,
-                    "nature_my_dashboard": "",
-                    "csrfmiddlewaretoken": csrf,
-                }).encode("utf-8")
-                vg_req = urllib.request.Request(
-                    "https://www.trafficlenz.com/Home/viewgraph",
-                    data=vg_post,
-                    headers={
-                        "Cookie": cookie_hdr,
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-                        "Referer": "https://www.trafficlenz.com/Home/myDashboardView",
-                        "X-CSRFToken": csrf,
-                    }
-                )
-                vg_html = urllib.request.urlopen(vg_req, timeout=25).read().decode("utf-8", errors="ignore")
+            try:
+                task_res = urllib.request.urlopen(task_req, timeout=15).read().decode("utf-8", errors="ignore")
+                task_data = json.loads(task_res)
+            except Exception as te:
+                logger.warning("Failed to fetch tasks for site %s: %s", site_id, te)
+                continue
 
-                # 3. Extract site_id and task_id
-                m_dl = re.search(r"downloadQuestionnaireReport\(\s*'([^']+)'\s*,\s*'([^']+)'\s*\)", vg_html) or \
-                       re.search(r"downloadQuestionnaireReport\(\s*\"([^\"]+)\"\s*,\s*\"([^\"]+)\"\s*\)", vg_html)
-                if m_dl:
-                    site_id, task_id = m_dl.group(1), m_dl.group(2)
+            tasks = task_data.get("data", {}).get("task_types", [])
+            for task in tasks:
+                t_type = task.get("task_type", "")
+                t_id = task.get("task_id", "")
+                if "questionnaire" in t_type.lower() or "survey" in t_type.lower():
+                    logger.info("Found Questionnaire Report: site=%s, task=%s. Downloading...", site_id, t_id)
                     dl_post = urllib.parse.urlencode({
                         "site_id": site_id,
-                        "task_id": task_id,
+                        "task_id": t_id,
                         "csrfmiddlewaretoken": csrf,
                     }).encode("utf-8")
                     dl_req = urllib.request.Request(
@@ -277,15 +337,43 @@ def download_excel_bytes(config: TrafficLenzConfig) -> Tuple[bytes, str]:
                             "X-Requested-With": "XMLHttpRequest",
                         }
                     )
-                    dl_bytes = urllib.request.urlopen(dl_req, timeout=60).read()
+                    dl_bytes = urllib.request.urlopen(dl_req, timeout=90).read()
                     if dl_bytes.startswith(b"PK") and len(dl_bytes) > 2000:
-                        logger.info("Direct HTTP download succeeded: %d bytes", len(dl_bytes))
                         from datetime import timezone, timedelta
                         ist = timezone(timedelta(hours=5, minutes=30))
                         timestamp = datetime.now(ist).strftime("%d-%m-%Y %I:%M:%S %p")
+                        logger.info("Direct HTTP download successful (%d bytes).", len(dl_bytes))
                         return dl_bytes, timestamp
+
+    raise RuntimeError(f"Could not find an active Questionnaire export task for {survey_code}.")
+
+
+def download_excel_bytes(config: TrafficLenzConfig) -> Tuple[bytes, str]:
+    """
+    Download latest Excel file into memory (bytes) using the saved session.
+    Uses fast direct HTTP API calls (0 browser dependencies, 100% cloud-compatible).
+    Falls back to Playwright only on desktop environments.
+
+    Returns:
+        (file_bytes, timestamp_str)
+    """
+    Path(config.save_dir).mkdir(parents=True, exist_ok=True)
+    _ensure_cloud_session(config)
+
+    # ── Attempt 1: Direct Fast HTTP Session Download (Instant, 0 RAM, 0 browser dependencies) ──
+    try:
+        return _direct_http_download(config)
+    except (PermissionError, FileNotFoundError) as user_err:
+        raise user_err
     except Exception as http_err:
-        logger.warning("Direct HTTP session download failed, falling back to Playwright: %s", http_err)
+        logger.warning("Direct HTTP session download failed: %s", http_err)
+        import sys
+        # On Linux/headless cloud containers (e.g. Streamlit Cloud), Playwright cannot launch without C libraries
+        if sys.platform.startswith("linux") or not os.environ.get("DISPLAY"):
+            raise RuntimeError(
+                f"Direct HTTP sync failed: {http_err}. "
+                "Please verify your session is valid by running 'python login.py' locally and updating TL_SESSION_JSON in Streamlit Secrets."
+            )
 
     # ── Attempt 2: Full Headless Playwright Browser ────────────────────────────
     if not PLAYWRIGHT_AVAILABLE:
