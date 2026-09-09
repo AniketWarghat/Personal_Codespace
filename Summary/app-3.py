@@ -326,20 +326,41 @@ def process_dataframe(raw_bytes: bytes) -> pd.DataFrame:
 # QUALITY CHECKS & FLAGGED ENTRIES EVALUATION
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _contains_thane_auto_stand(text: str) -> bool:
-    """Returns True if the text refers to Thane Auto Stand."""
+def _contains_valid_thane_terminal(text: str) -> bool:
+    """Returns True if the text refers to any valid Thane terminal/stand.
+
+    Accepted values (any of):
+      - Thane Auto Stand
+      - Thane Bus Stand
+      - Thane Railway Station
+    """
     if not text:
         return False
     t = str(text).strip().lower()
     if not t or t in ["-", "nan", "none"]:
         return False
+    # Auto Stand
     if "auto stand" in t or "autostand" in t or "auto-stand" in t:
         return True
     if "thane auto" in t:
         return True
     if "auto" in t and "stand" in t:
         return True
+    # Bus Stand
+    if "bus stand" in t or "busstand" in t or "bus-stand" in t:
+        return True
+    if "thane bus" in t:
+        return True
+    # Railway Station
+    if "railway station" in t or "railway" in t or "rail station" in t:
+        return True
+    if "thane station" in t or "thane rail" in t:
+        return True
     return False
+
+
+# Keep old name as alias for any existing callers
+_contains_thane_auto_stand = _contains_valid_thane_terminal
 
 
 def compute_wtp_quality_flags(
@@ -402,7 +423,8 @@ def compute_wtp_quality_flags(
         if orig_l in ["-", "nan", ""] or dest_l in ["-", "nan", ""]:
             flags.append("Missing Origin or Destination")
 
-        # 6. Check if Origin or Destination contains 'Thane Auto Stand'
+        # 6. Check if Origin or Destination contains a valid Thane terminal
+        #    Valid: Thane Auto Stand, Thane Bus Stand, Thane Railway Station
         stn = str(row.get("station_location", "")).lower()
         is_auto_stand_stn = "auto" in stn
 
@@ -413,10 +435,18 @@ def compute_wtp_quality_flags(
             apply_auto_check = True
 
         if apply_auto_check:
-            has_auto_orig = _contains_thane_auto_stand(orig)
-            has_auto_dest = _contains_thane_auto_stand(dest)
-            if not has_auto_orig and not has_auto_dest:
+            has_valid_orig = _contains_valid_thane_terminal(orig)
+            has_valid_dest = _contains_valid_thane_terminal(dest)
+            if not has_valid_orig and not has_valid_dest:
                 flags.append("Missing 'Thane Auto Stand' in Origin or Destination")
+
+        # 7. Income bracket mismatch: Unemployed / Student / Housewife should have No Income
+        occ_val  = str(row.get("occupation", "")).strip().lower()
+        inc_val  = str(row.get("income", "")).strip().lower()
+        _no_income_occupations = {"unemployed", "student", "housewife", "house wife", "house-wife"}
+        _no_income_values      = {"no income", "noincome", "0", "nil", "none", "-", "nan", ""}
+        if occ_val in _no_income_occupations and inc_val not in _no_income_values:
+            flags.append(f"Income Mismatch: '{row.get('occupation')}' should have No Income (got '{row.get('income')}')")
 
         return "; ".join(flags) if flags else ""
 
@@ -1063,14 +1093,15 @@ with tabs[2]:
 
     flagged_df = filtered_df[filtered_df["is_flagged"]].copy()
 
-    tt_flags_cnt    = int(filtered_df["quality_flags"].str.contains("Travel Time <", case=False, na=False).sum())
-    tc_flags_cnt    = int(filtered_df["quality_flags"].str.contains(r"Travel Cost <|Non-Zero Cost", case=False, na=False, regex=True).sum())
-    wt_flags_cnt    = int(filtered_df["quality_flags"].str.contains(r"Waiting Time <|Non-Zero Waiting", case=False, na=False, regex=True).sum())
-    od_eq_cnt       = int(filtered_df["quality_flags"].str.contains("equals Destination", case=False, na=False).sum())
-    missing_od_cnt  = int(filtered_df["quality_flags"].str.contains("Missing Origin", case=False, na=False).sum())
-    auto_stand_cnt  = int(filtered_df["quality_flags"].str.contains("Missing 'Thane Auto Stand'", case=False, na=False).sum())
+    tt_flags_cnt       = int(filtered_df["quality_flags"].str.contains("Travel Time <", case=False, na=False).sum())
+    tc_flags_cnt       = int(filtered_df["quality_flags"].str.contains(r"Travel Cost <|Non-Zero Cost", case=False, na=False, regex=True).sum())
+    wt_flags_cnt       = int(filtered_df["quality_flags"].str.contains(r"Waiting Time <|Non-Zero Waiting", case=False, na=False, regex=True).sum())
+    od_eq_cnt          = int(filtered_df["quality_flags"].str.contains("equals Destination", case=False, na=False).sum())
+    missing_od_cnt     = int(filtered_df["quality_flags"].str.contains("Missing Origin", case=False, na=False).sum())
+    auto_stand_cnt     = int(filtered_df["quality_flags"].str.contains("Missing 'Thane Auto Stand'", case=False, na=False).sum())
+    income_mismatch_cnt = int(filtered_df["quality_flags"].str.contains("Income Mismatch", case=False, na=False).sum())
 
-    q1, q2, q3, q4, q5, q6 = st.columns(6)
+    q1, q2, q3, q4, q5, q6, q7 = st.columns(7)
     q1.metric("Total Flagged",            len(flagged_df),
               f"{round(len(flagged_df)/total_filt*100,1) if total_filt else 0}%",
               delta_color="inverse")
@@ -1079,6 +1110,7 @@ with tabs[2]:
     q4.metric(f"Wait < {t_waiting_time}m",wt_flags_cnt)
     q5.metric("OD Errors / Missing",      od_eq_cnt + missing_od_cnt)
     q6.metric("Missing Auto Stand",       auto_stand_cnt)
+    q7.metric("Income Mismatch",          income_mismatch_cnt)
 
     st.markdown("---")
 
@@ -1101,14 +1133,18 @@ with tabs[2]:
             display_cols_tcw = [
                 "Date_str", "start_time", "end_time", "surveyor", "station_location",
                 "mode_of_travel", "travel_time_min", "travel_cost_rs", "waiting_time_min",
-                "origin", "destination", "quality_flags"
+                "travel_distance_km", "origin", "destination", "quality_flags"
             ]
-            tcw_display = tcw_rows[display_cols_tcw].copy()
-            tcw_display.columns = [
-                "Date", "Start Time", "End Time", "Surveyor", "Station",
-                "Mode", "Travel Time (min)", "Travel Cost (₹)", "Waiting Time (min)",
-                "Origin", "Destination", "Flags Triggered"
-            ]
+            tcw_display = tcw_rows[[c for c in display_cols_tcw if c in tcw_rows.columns]].copy()
+            col_labels_tcw = {
+                "Date_str": "Date", "start_time": "Start Time", "end_time": "End Time",
+                "surveyor": "Surveyor", "station_location": "Station",
+                "mode_of_travel": "Mode", "travel_time_min": "Travel Time (min)",
+                "travel_cost_rs": "Travel Cost (₹)", "waiting_time_min": "Waiting Time (min)",
+                "travel_distance_km": "Distance (km)",
+                "origin": "Origin", "destination": "Destination", "quality_flags": "Flags Triggered",
+            }
+            tcw_display.rename(columns={k: v for k, v in col_labels_tcw.items() if k in tcw_display.columns}, inplace=True)
             st.dataframe(tcw_display, use_container_width=True, hide_index=True)
             st.markdown("---")
 
@@ -1136,8 +1172,11 @@ with tabs[2]:
         auto_stand_rows = filtered_df[auto_stand_mask].copy()
 
         if not auto_stand_rows.empty:
-            st.markdown(f"### 🛺 Missing 'Thane Auto Stand' in Origin / Destination ({len(auto_stand_rows)} entries)")
-            st.caption("Entries flagged because neither Origin nor Destination contains **Thane Auto Stand**.")
+            st.markdown(f"### 🛺 Missing Valid Thane Terminal in Origin / Destination ({len(auto_stand_rows)} entries)")
+            st.caption(
+                "Entries flagged because neither Origin nor Destination contains any of: "
+                "**Thane Auto Stand**, **Thane Bus Stand**, or **Thane Railway Station**."
+            )
             display_cols_auto = [
                 "Date_str", "start_time", "end_time", "surveyor", "station_location",
                 "origin", "destination", "travel_time_min", "travel_cost_rs", "prt_willingness", "quality_flags"
@@ -1150,27 +1189,53 @@ with tabs[2]:
             st.dataframe(auto_display, use_container_width=True, hide_index=True)
             st.markdown("---")
 
+        # ── 4. Income Bracket Mismatch Table ─────────────────────────────────
+        income_mask = filtered_df["quality_flags"].str.contains("Income Mismatch", case=False, na=False)
+        income_rows = filtered_df[income_mask].copy()
+
+        if not income_rows.empty:
+            st.markdown(f"### 💰 Income Bracket Mismatch ({len(income_rows)} entries)")
+            st.caption(
+                "Entries where **Unemployed**, **Student**, or **Housewife** respondents "
+                "have an income bracket selected other than **No Income**."
+            )
+            display_cols_income = [
+                "Date_str", "start_time", "end_time", "surveyor", "station_location",
+                "occupation", "income", "quality_flags"
+            ]
+            income_display = income_rows[[c for c in display_cols_income if c in income_rows.columns]].copy()
+            col_labels_inc = {
+                "Date_str": "Date", "start_time": "Start Time", "end_time": "End Time",
+                "surveyor": "Surveyor", "station_location": "Station",
+                "occupation": "Occupation", "income": "Income Bracket", "quality_flags": "Flags",
+            }
+            income_display.rename(columns={k: v for k, v in col_labels_inc.items() if k in income_display.columns}, inplace=True)
+            st.dataframe(income_display, use_container_width=True, hide_index=True)
+            st.markdown("---")
+
         # ── Flagged by Surveyor Summary ───────────────────────────────────────
         st.markdown("### 👷 Flagged Count by Surveyor")
         surveyor_flags = (
             flagged_df.groupby("surveyor")
             .agg(
-                Flagged_Total   =("surveyor",       "size"),
-                Time_Flags      =("quality_flags",  lambda x: sum("Travel Time <"  in str(f) for f in x)),
-                Cost_Flags      =("quality_flags",  lambda x: sum("Travel Cost <"  in str(f) for f in x)),
-                Wait_Flags      =("quality_flags",  lambda x: sum("Waiting Time <" in str(f) for f in x)),
-                OD_Eq_Flags     =("quality_flags",  lambda x: sum("equals Destination" in str(f) or "Missing Origin" in str(f) for f in x)),
-                Auto_Stand_Flags=("quality_flags",  lambda x: sum("Missing 'Thane Auto Stand'" in str(f) for f in x)),
+                Flagged_Total    =("surveyor",       "size"),
+                Time_Flags       =("quality_flags",  lambda x: sum("Travel Time <"  in str(f) for f in x)),
+                Cost_Flags       =("quality_flags",  lambda x: sum("Travel Cost <"  in str(f) for f in x)),
+                Wait_Flags       =("quality_flags",  lambda x: sum("Waiting Time <" in str(f) for f in x)),
+                OD_Eq_Flags      =("quality_flags",  lambda x: sum("equals Destination" in str(f) or "Missing Origin" in str(f) for f in x)),
+                Auto_Stand_Flags =("quality_flags",  lambda x: sum("Missing 'Thane Auto Stand'" in str(f) for f in x)),
+                Income_Flags     =("quality_flags",  lambda x: sum("Income Mismatch" in str(f) for f in x)),
             )
             .reset_index()
             .rename(columns={
-                "surveyor":         "Surveyor",
-                "Flagged_Total":    "Total Flagged",
-                "Time_Flags":       f"Time < {t_travel_time}m",
-                "Cost_Flags":       f"Cost < ₹{t_travel_cost}",
-                "Wait_Flags":       f"Wait < {t_waiting_time}m",
-                "OD_Eq_Flags":      "OD Errors",
-                "Auto_Stand_Flags": "Missing Auto Stand",
+                "surveyor":          "Surveyor",
+                "Flagged_Total":     "Total Flagged",
+                "Time_Flags":        f"Time < {t_travel_time}m",
+                "Cost_Flags":        f"Cost < ₹{t_travel_cost}",
+                "Wait_Flags":        f"Wait < {t_waiting_time}m",
+                "OD_Eq_Flags":       "OD Errors",
+                "Auto_Stand_Flags":  "Missing Terminal",
+                "Income_Flags":      "Income Mismatch",
             })
             .sort_values("Total Flagged", ascending=False)
         )
