@@ -322,36 +322,9 @@ def process_dataframe(raw_bytes: bytes) -> pd.DataFrame:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 # QUALITY CHECKS & FLAGGED ENTRIES EVALUATION
 # ─────────────────────────────────────────────────────────────────────────────
-
-# Generic Thane pattern checking — case-insensitive regex
-_GENERIC_THANE_PATTERNS = [
-    r"^th(?:an|na)[ea]?$",                                       # thane, thana
-    r"^th(?:an|na)[ea]?\s+(?:w(?:est|east|st)?|w)$",             # thane west, thane weast, thane w
-    r"^th(?:an|na)[ea]?\s+(?:e(?:ast|st)?|e)$",                  # thane east, thane e
-    r"^(?:w(?:est|east|st)?|e(?:ast|st)?)\s+th(?:an|na)[ea]?$",  # west thane, east thane
-    r"^th(?:an|na)[ea]?\s+(?:station|stn|railway\s*station)$",    # thane station
-    r"^th(?:an|na)[ea]?\s+(?:city|central)$",                     # thane city, thane central
-]
-_GENERIC_THANE_REGEX = re.compile(r"|".join(f"(?:{p})" for p in _GENERIC_THANE_PATTERNS), re.IGNORECASE)
-
-
-def _is_generic_thane(location_str: str) -> bool:
-    """
-    Returns True ONLY if location is entered generically as 'Thane', 'Thane West', 'Thane East',
-    or minor spelling variations (e.g. 'Thane Weast', 'Thane (W)', 'Thane (E)').
-    Specific localities (e.g. 'Maziwada Thane', 'Thane West Kolshet', 'Thane Waglesh', 'Gogul Nagar Thane')
-    contain detailed area information and return False (Clean).
-    """
-    s = str(location_str).strip().lower()
-    if not s or s in ["-", "nan", "none"]:
-        return False
-    cleaned = re.sub(r"[\(\)]", " ", s)
-    cleaned = re.sub(r"[,\.\-_/]+", " ", cleaned)
-    cleaned = " ".join(cleaned.split())
-    return bool(_GENERIC_THANE_REGEX.match(cleaned))
-
 
 def compute_wtp_quality_flags(
     df: pd.DataFrame,
@@ -364,11 +337,10 @@ def compute_wtp_quality_flags(
 
     Rules:
     1. Travel Time < min_travel_time minutes
-    2. Travel Cost < min_cost Rs
-    3. Waiting Time < min_waiting_time minutes
-    4. Only generic 'Thane', 'Thane West', 'Thane East' in Origin or Destination
-    5. Origin equals Destination (after normalisation)
-    6. Origin or Destination missing
+    2. Travel Cost < min_cost Rs (Walk mode: flags if cost > 0)
+    3. Waiting Time < min_waiting_time minutes (Walk mode: flags if wait > 0)
+    4. Origin equals Destination (after normalisation)
+    5. Origin or Destination missing
     """
     df = df.copy()
 
@@ -404,23 +376,11 @@ def compute_wtp_quality_flags(
             if pd.notna(wt) and wt < min_waiting_time:
                 flags.append(f"Waiting Time < {min_waiting_time}m ({wt} min)")
 
-
-        # 4. Only generic 'Thane', 'Thane West', 'Thane East' in Origin or Destination
-        has_generic_orig = _is_generic_thane(orig)
-        has_generic_dest = _is_generic_thane(dest)
-        if has_generic_orig or has_generic_dest:
-            loc_parts = []
-            if has_generic_orig:
-                loc_parts.append(f"Origin '{orig}'")
-            if has_generic_dest:
-                loc_parts.append(f"Destination '{dest}'")
-            flags.append(f"Generic Thane ({', '.join(loc_parts)})")
-
-        # 5. Origin equals Destination
+        # 4. Origin equals Destination
         if orig_l == dest_l and orig_l not in ["-", "nan", ""]:
             flags.append(f"Origin equals Destination ('{orig}')")
 
-        # 6. Missing Origin or Destination
+        # 5. Missing Origin or Destination
         if orig_l in ["-", "nan", ""] or dest_l in ["-", "nan", ""]:
             flags.append("Missing Origin or Destination")
 
@@ -1057,7 +1017,7 @@ with tabs[2]:
         f"Active thresholds — Travel Time < **{t_travel_time}m** | "
         f"Travel Cost < **₹{t_travel_cost}** (Walk=₹0) | "
         f"Waiting Time < **{t_waiting_time}m** (Walk=0m) | "
-        f"Generic Thane in Origin or Destination | Origin = Destination"
+        f"Origin = Destination | Missing Origin or Destination"
     )
 
     flagged_df = filtered_df[filtered_df["is_flagged"]].copy()
@@ -1065,19 +1025,17 @@ with tabs[2]:
     tt_flags_cnt    = int(filtered_df["quality_flags"].str.contains("Travel Time <", case=False, na=False).sum())
     tc_flags_cnt    = int(filtered_df["quality_flags"].str.contains(r"Travel Cost <|Non-Zero Cost", case=False, na=False, regex=True).sum())
     wt_flags_cnt    = int(filtered_df["quality_flags"].str.contains(r"Waiting Time <|Non-Zero Waiting", case=False, na=False, regex=True).sum())
-    thane_loc_cnt   = int(filtered_df["quality_flags"].str.contains("Generic Thane", case=False, na=False).sum())
     od_eq_cnt       = int(filtered_df["quality_flags"].str.contains("equals Destination", case=False, na=False).sum())
     missing_od_cnt  = int(filtered_df["quality_flags"].str.contains("Missing Origin", case=False, na=False).sum())
 
-    q1, q2, q3, q4, q5, q6 = st.columns(6)
+    q1, q2, q3, q4, q5 = st.columns(5)
     q1.metric("Total Flagged",            len(flagged_df),
               f"{round(len(flagged_df)/total_filt*100,1) if total_filt else 0}%",
               delta_color="inverse")
     q2.metric(f"Time < {t_travel_time}m", tt_flags_cnt)
     q3.metric(f"Cost < ₹{t_travel_cost}", tc_flags_cnt)
     q4.metric(f"Wait < {t_waiting_time}m",wt_flags_cnt)
-    q5.metric("Generic Thane OD",         thane_loc_cnt)
-    q6.metric("Origin = Destination",     od_eq_cnt + missing_od_cnt)
+    q5.metric("OD Errors / Missing",      od_eq_cnt + missing_od_cnt)
 
     st.markdown("---")
 
@@ -1111,43 +1069,23 @@ with tabs[2]:
             st.dataframe(tcw_display, use_container_width=True, hide_index=True)
             st.markdown("---")
 
-        # ── 2. Generic Thane in Origin or Destination Table ──────────────────
-        thane_od_rows = filtered_df[
-            filtered_df["quality_flags"].str.contains("Generic Thane", case=False, na=False)
-        ].copy()
+        # ── 2. OD Pair Errors (Origin = Destination or Missing) Table ─────────
+        od_err_mask = filtered_df["quality_flags"].str.contains("equals Destination|Missing Origin", case=False, na=False)
+        od_err_rows = filtered_df[od_err_mask].copy()
 
-        if not thane_od_rows.empty:
-            st.markdown(f"### 🛑 Generic Thane in Origin / Destination ({len(thane_od_rows)} entries)")
-            st.caption(
-                "Entries flagged because the surveyor entered only **Thane**, **Thane West**, or **Thane East** "
-                "(without a specific locality like Kolshet, Maziwada, Wagle, etc.)."
-            )
-
-            def _get_match_type(r):
-                o_match = _is_generic_thane(r.get("origin", ""))
-                d_match = _is_generic_thane(r.get("destination", ""))
-                if o_match and d_match:
-                    return "Both Origin & Destination"
-                elif o_match:
-                    return "Origin"
-                elif d_match:
-                    return "Destination"
-                return "-"
-
-            thane_od_rows["Generic Entry In"] = thane_od_rows.apply(_get_match_type, axis=1)
-
-            display_cols_thane = [
+        if not od_err_rows.empty:
+            st.markdown(f"### 🔁 Origin = Destination or Missing Location ({len(od_err_rows)} entries)")
+            st.caption("Entries where Origin equals Destination or where Origin/Destination is blank.")
+            display_cols_od = [
                 "Date_str", "start_time", "end_time", "surveyor", "station_location",
-                "origin", "destination", "Generic Entry In",
-                "travel_time_min", "travel_cost_rs", "prt_willingness", "quality_flags"
+                "origin", "destination", "travel_time_min", "travel_cost_rs", "prt_willingness", "quality_flags"
             ]
-            thane_od_display = thane_od_rows[display_cols_thane].copy()
-            thane_od_display.columns = [
+            od_display = od_err_rows[display_cols_od].copy()
+            od_display.columns = [
                 "Date", "Start Time", "End Time", "Surveyor", "Station",
-                "Origin", "Destination", "Generic Entry In",
-                "Travel Time (min)", "Travel Cost (₹)", "PRT Willingness", "Flags"
+                "Origin", "Destination", "Travel Time (min)", "Travel Cost (₹)", "PRT Willingness", "Flags"
             ]
-            st.dataframe(thane_od_display, use_container_width=True, hide_index=True)
+            st.dataframe(od_display, use_container_width=True, hide_index=True)
             st.markdown("---")
 
         # ── Flagged by Surveyor Summary ───────────────────────────────────────
@@ -1159,8 +1097,7 @@ with tabs[2]:
                 Time_Flags     =("quality_flags",  lambda x: sum("Travel Time <"  in str(f) for f in x)),
                 Cost_Flags     =("quality_flags",  lambda x: sum("Travel Cost <"  in str(f) for f in x)),
                 Wait_Flags     =("quality_flags",  lambda x: sum("Waiting Time <" in str(f) for f in x)),
-                Thane_OD_Flags =("quality_flags",  lambda x: sum("Generic Thane"  in str(f) for f in x)),
-                OD_Eq_Flags    =("quality_flags",  lambda x: sum("equals Destination" in str(f) for f in x)),
+                OD_Eq_Flags    =("quality_flags",  lambda x: sum("equals Destination" in str(f) or "Missing Origin" in str(f) for f in x)),
             )
             .reset_index()
             .rename(columns={
@@ -1169,8 +1106,7 @@ with tabs[2]:
                 "Time_Flags":     f"Time < {t_travel_time}m",
                 "Cost_Flags":     f"Cost < ₹{t_travel_cost}",
                 "Wait_Flags":     f"Wait < {t_waiting_time}m",
-                "Thane_OD_Flags": "Generic Thane",
-                "OD_Eq_Flags":    "Origin = Dest",
+                "OD_Eq_Flags":    "OD Errors",
             })
             .sort_values("Total Flagged", ascending=False)
         )
@@ -1186,7 +1122,6 @@ with tabs[2]:
             data=make_download_csv(flagged_display),
             file_name="thane_wtp_flagged_entries.csv",
             mime="text/csv",
-
         )
 
 
