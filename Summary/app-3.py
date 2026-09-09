@@ -326,11 +326,28 @@ def process_dataframe(raw_bytes: bytes) -> pd.DataFrame:
 # QUALITY CHECKS & FLAGGED ENTRIES EVALUATION
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _contains_thane_auto_stand(text: str) -> bool:
+    """Returns True if the text refers to Thane Auto Stand."""
+    if not text:
+        return False
+    t = str(text).strip().lower()
+    if not t or t in ["-", "nan", "none"]:
+        return False
+    if "auto stand" in t or "autostand" in t or "auto-stand" in t:
+        return True
+    if "thane auto" in t:
+        return True
+    if "auto" in t and "stand" in t:
+        return True
+    return False
+
+
 def compute_wtp_quality_flags(
     df: pd.DataFrame,
     min_travel_time: int = 10,
     min_cost: int = 10,
     min_waiting_time: float = 5.0,
+    check_auto_stand: str = "Auto Stand Surveys Only",
 ) -> pd.DataFrame:
     """
     Evaluates quality rules and tags suspicious/flagged entries.
@@ -341,6 +358,7 @@ def compute_wtp_quality_flags(
     3. Waiting Time < min_waiting_time minutes (Walk mode: flags if wait > 0)
     4. Origin equals Destination (after normalisation)
     5. Origin or Destination missing
+    6. Missing 'Thane Auto Stand' in Origin or Destination
     """
     df = df.copy()
 
@@ -383,6 +401,22 @@ def compute_wtp_quality_flags(
         # 5. Missing Origin or Destination
         if orig_l in ["-", "nan", ""] or dest_l in ["-", "nan", ""]:
             flags.append("Missing Origin or Destination")
+
+        # 6. Check if Origin or Destination contains 'Thane Auto Stand'
+        stn = str(row.get("station_location", "")).lower()
+        is_auto_stand_stn = "auto" in stn
+
+        apply_auto_check = False
+        if check_auto_stand == "All Records":
+            apply_auto_check = True
+        elif check_auto_stand == "Auto Stand Surveys Only" and is_auto_stand_stn:
+            apply_auto_check = True
+
+        if apply_auto_check:
+            has_auto_orig = _contains_thane_auto_stand(orig)
+            has_auto_dest = _contains_thane_auto_stand(dest)
+            if not has_auto_orig and not has_auto_dest:
+                flags.append("Missing 'Thane Auto Stand' in Origin or Destination")
 
         return "; ".join(flags) if flags else ""
 
@@ -561,12 +595,19 @@ with st.sidebar.expander("⚙️ Quality Flags Thresholds", expanded=False):
     t_travel_time  = st.slider("Min Travel Time (min)", 1, 30, 10,  help="Flag trips with travel time below this")
     t_travel_cost  = st.slider("Min Travel Cost (₹)",   0, 50, 10,  help="Flag fares below this amount")
     t_waiting_time = st.slider("Min Waiting Time (min)", 1.0, 15.0, 5.0, 0.5, help="Flag waiting times below this")
+    t_auto_stand_scope = st.selectbox(
+        "Require 'Thane Auto Stand' in OD",
+        options=["Auto Stand Surveys Only", "All Records", "Off"],
+        index=0,
+        help="Flags entries where neither Origin nor Destination mentions 'Thane Auto Stand'.",
+    )
 
 df_annotated = compute_wtp_quality_flags(
     df_base,
     min_travel_time=t_travel_time,
     min_cost=t_travel_cost,
     min_waiting_time=t_waiting_time,
+    check_auto_stand=t_auto_stand_scope,
 )
 
 
@@ -1017,7 +1058,7 @@ with tabs[2]:
         f"Active thresholds — Travel Time < **{t_travel_time}m** | "
         f"Travel Cost < **₹{t_travel_cost}** (Walk=₹0) | "
         f"Waiting Time < **{t_waiting_time}m** (Walk=0m) | "
-        f"Origin = Destination | Missing Origin or Destination"
+        f"Origin = Destination | Missing OD | Require 'Thane Auto Stand' in OD ({t_auto_stand_scope})"
     )
 
     flagged_df = filtered_df[filtered_df["is_flagged"]].copy()
@@ -1027,8 +1068,9 @@ with tabs[2]:
     wt_flags_cnt    = int(filtered_df["quality_flags"].str.contains(r"Waiting Time <|Non-Zero Waiting", case=False, na=False, regex=True).sum())
     od_eq_cnt       = int(filtered_df["quality_flags"].str.contains("equals Destination", case=False, na=False).sum())
     missing_od_cnt  = int(filtered_df["quality_flags"].str.contains("Missing Origin", case=False, na=False).sum())
+    auto_stand_cnt  = int(filtered_df["quality_flags"].str.contains("Missing 'Thane Auto Stand'", case=False, na=False).sum())
 
-    q1, q2, q3, q4, q5 = st.columns(5)
+    q1, q2, q3, q4, q5, q6 = st.columns(6)
     q1.metric("Total Flagged",            len(flagged_df),
               f"{round(len(flagged_df)/total_filt*100,1) if total_filt else 0}%",
               delta_color="inverse")
@@ -1036,6 +1078,7 @@ with tabs[2]:
     q3.metric(f"Cost < ₹{t_travel_cost}", tc_flags_cnt)
     q4.metric(f"Wait < {t_waiting_time}m",wt_flags_cnt)
     q5.metric("OD Errors / Missing",      od_eq_cnt + missing_od_cnt)
+    q6.metric("Missing Auto Stand",       auto_stand_cnt)
 
     st.markdown("---")
 
@@ -1088,25 +1131,46 @@ with tabs[2]:
             st.dataframe(od_display, use_container_width=True, hide_index=True)
             st.markdown("---")
 
+        # ── 3. Missing 'Thane Auto Stand' in Origin / Destination Table ─────
+        auto_stand_mask = filtered_df["quality_flags"].str.contains("Missing 'Thane Auto Stand'", case=False, na=False)
+        auto_stand_rows = filtered_df[auto_stand_mask].copy()
+
+        if not auto_stand_rows.empty:
+            st.markdown(f"### 🛺 Missing 'Thane Auto Stand' in Origin / Destination ({len(auto_stand_rows)} entries)")
+            st.caption("Entries flagged because neither Origin nor Destination contains **Thane Auto Stand**.")
+            display_cols_auto = [
+                "Date_str", "start_time", "end_time", "surveyor", "station_location",
+                "origin", "destination", "travel_time_min", "travel_cost_rs", "prt_willingness", "quality_flags"
+            ]
+            auto_display = auto_stand_rows[display_cols_auto].copy()
+            auto_display.columns = [
+                "Date", "Start Time", "End Time", "Surveyor", "Station",
+                "Origin", "Destination", "Travel Time (min)", "Travel Cost (₹)", "PRT Willingness", "Flags"
+            ]
+            st.dataframe(auto_display, use_container_width=True, hide_index=True)
+            st.markdown("---")
+
         # ── Flagged by Surveyor Summary ───────────────────────────────────────
         st.markdown("### 👷 Flagged Count by Surveyor")
         surveyor_flags = (
             flagged_df.groupby("surveyor")
             .agg(
-                Flagged_Total  =("surveyor",       "size"),
-                Time_Flags     =("quality_flags",  lambda x: sum("Travel Time <"  in str(f) for f in x)),
-                Cost_Flags     =("quality_flags",  lambda x: sum("Travel Cost <"  in str(f) for f in x)),
-                Wait_Flags     =("quality_flags",  lambda x: sum("Waiting Time <" in str(f) for f in x)),
-                OD_Eq_Flags    =("quality_flags",  lambda x: sum("equals Destination" in str(f) or "Missing Origin" in str(f) for f in x)),
+                Flagged_Total   =("surveyor",       "size"),
+                Time_Flags      =("quality_flags",  lambda x: sum("Travel Time <"  in str(f) for f in x)),
+                Cost_Flags      =("quality_flags",  lambda x: sum("Travel Cost <"  in str(f) for f in x)),
+                Wait_Flags      =("quality_flags",  lambda x: sum("Waiting Time <" in str(f) for f in x)),
+                OD_Eq_Flags     =("quality_flags",  lambda x: sum("equals Destination" in str(f) or "Missing Origin" in str(f) for f in x)),
+                Auto_Stand_Flags=("quality_flags",  lambda x: sum("Missing 'Thane Auto Stand'" in str(f) for f in x)),
             )
             .reset_index()
             .rename(columns={
-                "surveyor":       "Surveyor",
-                "Flagged_Total":  "Total Flagged",
-                "Time_Flags":     f"Time < {t_travel_time}m",
-                "Cost_Flags":     f"Cost < ₹{t_travel_cost}",
-                "Wait_Flags":     f"Wait < {t_waiting_time}m",
-                "OD_Eq_Flags":    "OD Errors",
+                "surveyor":         "Surveyor",
+                "Flagged_Total":    "Total Flagged",
+                "Time_Flags":       f"Time < {t_travel_time}m",
+                "Cost_Flags":       f"Cost < ₹{t_travel_cost}",
+                "Wait_Flags":       f"Wait < {t_waiting_time}m",
+                "OD_Eq_Flags":      "OD Errors",
+                "Auto_Stand_Flags": "Missing Auto Stand",
             })
             .sort_values("Total Flagged", ascending=False)
         )
