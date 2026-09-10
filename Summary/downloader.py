@@ -67,17 +67,15 @@ class TrafficLenzConfig:
 def _ensure_cloud_session(config: TrafficLenzConfig) -> None:
     """Restore session cookies from Streamlit Secrets to disk.
 
-    Preferred approach: store two simple plain-string secrets:
+    Always called before each sync. Preferred approach:
         TL_SESSIONID = "o0rvfmtu1v7ewpy6lfq28r9bwuecnn53"
         TL_CSRFTOKEN = "7wQnfq95xSDIJX2KKaotkCfunXeeGXGZ"
 
-    These are always short alphanumeric strings — no JSON, no escaping issues.
-
-    Fallback: TL_SESSION_JSON (large JSON blob — may have TOML encoding issues
-    if it contains localStorage data with nested JSON strings).
+    These are plain short strings — zero TOML/JSON encoding issues.
+    If present in secrets they ALWAYS overwrite any existing session file
+    (ensures stale or corrupt files are replaced on every sync).
     """
-    if config.session_path.exists():
-        return  # Already have a session file, nothing to do
+    import re as _re
 
     try:
         import streamlit as st
@@ -87,6 +85,7 @@ def _ensure_cloud_session(config: TrafficLenzConfig) -> None:
         csrftoken = str(st.secrets.get("TL_CSRFTOKEN", "")).strip()
 
         if sessionid and csrftoken:
+            # Always write fresh — don't trust whatever is on disk
             Path(config.save_dir).mkdir(parents=True, exist_ok=True)
             minimal_session = {
                 "cookies": [
@@ -115,57 +114,67 @@ def _ensure_cloud_session(config: TrafficLenzConfig) -> None:
             }
             with open(config.session_path, "w", encoding="utf-8") as f:
                 json.dump(minimal_session, f, indent=2)
-            logger.info(
-                "Restored session from Streamlit Secrets (TL_SESSIONID + TL_CSRFTOKEN)."
-            )
+            logger.info("Session written from TL_SESSIONID + TL_CSRFTOKEN secrets.")
             return
+
+        # ── If session file already exists and is valid JSON, use it ─────────
+        if config.session_path.exists():
+            try:
+                with open(config.session_path, "r", encoding="utf-8") as f:
+                    json.load(f)  # validate
+                logger.info("Using existing valid session file.")
+                return
+            except (json.JSONDecodeError, ValueError):
+                logger.warning("Existing session file is corrupt — deleting and regenerating.")
+                config.session_path.unlink(missing_ok=True)
 
         # ── Fallback: TL_SESSION_JSON large blob ─────────────────────────────
         session_val = st.secrets.get("TL_SESSION_JSON")
-        if session_val:
-            Path(config.save_dir).mkdir(parents=True, exist_ok=True)
+        if not session_val:
+            return  # Nothing to do
+
+        Path(config.save_dir).mkdir(parents=True, exist_ok=True)
+        if isinstance(session_val, (dict, list)):
             with open(config.session_path, "w", encoding="utf-8") as f:
-                if isinstance(session_val, (dict, list)):
-                    json.dump(session_val, f, indent=2)
-                else:
-                    raw = str(session_val).strip()
-                    # TOML triple-quoted strings may corrupt inner \" escapes.
-                    # Validate JSON; if broken, try to extract just the cookies array.
-                    try:
-                        json.loads(raw)   # validation only
-                        f.write(raw)
-                    except json.JSONDecodeError:
-                        # JSON is corrupt — extract sessionid & csrftoken via regex
-                        import re
-                        sid_m  = re.search(r'"name"\s*:\s*"sessionid"\s*,\s*"value"\s*:\s*"([^"]+)"', raw)
-                        csrf_m = re.search(r'"name"\s*:\s*"csrftoken"\s*,\s*"value"\s*:\s*"([^"]+)"', raw)
-                        if sid_m and csrf_m:
-                            minimal = {
-                                "cookies": [
-                                    {"name": "sessionid", "value": sid_m.group(1),
-                                     "domain": "www.trafficlenz.com", "path": "/",
-                                     "expires": -1, "httpOnly": True, "secure": False, "sameSite": "Lax"},
-                                    {"name": "csrftoken", "value": csrf_m.group(1),
-                                     "domain": "www.trafficlenz.com", "path": "/",
-                                     "expires": -1, "httpOnly": False, "secure": False, "sameSite": "Lax"},
-                                ],
-                                "origins": [],
-                            }
-                            json.dump(minimal, f, indent=2)
-                            logger.info(
-                                "TL_SESSION_JSON was corrupt — extracted sessionid & csrftoken via regex."
-                            )
-                        else:
-                            raise ValueError(
-                                "TL_SESSION_JSON is corrupt and sessionid/csrftoken could not be extracted. "
-                                "Please set TL_SESSIONID and TL_CSRFTOKEN in Streamlit Secrets instead."
-                            )
-            logger.info("Restored session from Streamlit Secrets (TL_SESSION_JSON).")
+                json.dump(session_val, f, indent=2)
+            logger.info("Session written from TL_SESSION_JSON (dict/list).")
+            return
+
+        raw = str(session_val).strip()
+        # Validate; if TOML-corrupted, extract sessionid+csrftoken via regex
+        try:
+            json.loads(raw)
+            with open(config.session_path, "w", encoding="utf-8") as f:
+                f.write(raw)
+            logger.info("Session written from TL_SESSION_JSON (valid JSON string).")
+        except json.JSONDecodeError:
+            logger.warning("TL_SESSION_JSON is TOML-corrupted — extracting cookies via regex.")
+            sid_m  = _re.search(r'"name"\s*:\s*"sessionid"\s*,\s*"value"\s*:\s*"([^"]+)"', raw)
+            csrf_m = _re.search(r'"name"\s*:\s*"csrftoken"\s*,\s*"value"\s*:\s*"([^"]+)"', raw)
+            if sid_m and csrf_m:
+                minimal = {
+                    "cookies": [
+                        {"name": "sessionid", "value": sid_m.group(1),
+                         "domain": "www.trafficlenz.com", "path": "/",
+                         "expires": -1, "httpOnly": True, "secure": False, "sameSite": "Lax"},
+                        {"name": "csrftoken", "value": csrf_m.group(1),
+                         "domain": "www.trafficlenz.com", "path": "/",
+                         "expires": -1, "httpOnly": False, "secure": False, "sameSite": "Lax"},
+                    ],
+                    "origins": [],
+                }
+                with open(config.session_path, "w", encoding="utf-8") as f:
+                    json.dump(minimal, f, indent=2)
+                logger.info("Session recovered from corrupt TL_SESSION_JSON via regex.")
+            else:
+                raise ValueError(
+                    "TL_SESSION_JSON is corrupt and sessionid/csrftoken could not be "
+                    "extracted. Please add TL_SESSIONID and TL_CSRFTOKEN to Streamlit Secrets."
+                )
 
     except Exception as e:
         logger.warning("Could not restore cloud session: %s", e)
         raise
-
 
 
 def _ensure_chromium_installed() -> None:
