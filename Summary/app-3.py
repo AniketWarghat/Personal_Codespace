@@ -425,9 +425,11 @@ def compute_wtp_quality_flags(
         if orig_l in ["-", "nan", ""] or dest_l in ["-", "nan", ""]:
             flags.append("Missing Origin or Destination")
 
-        # 6. Check if Origin or Destination contains a valid Thane terminal
-        #    Valid: Thane Auto Stand, Thane Bus Stand, Thane Railway Station
-        stn = str(row.get("station_location", "")).lower()
+        # 6. Check if Origin or Destination contains the survey station name
+        #    The station name (from station_location) must appear in either
+        #    Origin or Destination — case-insensitive, irrespective of sentence case.
+        stn_raw = str(row.get("station_location", "")).strip()
+        stn = stn_raw.lower()
         is_auto_stand_stn = "auto" in stn
 
         apply_auto_check = False
@@ -436,11 +438,11 @@ def compute_wtp_quality_flags(
         elif check_auto_stand == "Auto Stand Surveys Only" and is_auto_stand_stn:
             apply_auto_check = True
 
-        if apply_auto_check:
-            has_valid_orig = _contains_valid_thane_terminal(orig)
-            has_valid_dest = _contains_valid_thane_terminal(dest)
-            if not has_valid_orig and not has_valid_dest:
-                flags.append("Missing 'Thane Auto Stand' in Origin or Destination")
+        if apply_auto_check and stn and stn not in ["-", "nan", "none"]:
+            station_in_orig = stn in orig_l
+            station_in_dest = stn in dest_l
+            if not station_in_orig and not station_in_dest:
+                flags.append(f"Missing '{stn_raw}' in Origin or Destination")
 
         # 7. Income bracket mismatch: Unemployed / Student / Housewife should have No Income
         occ_val  = str(row.get("occupation", "")).strip().lower()
@@ -628,10 +630,10 @@ with st.sidebar.expander("⚙️ Quality Flags Thresholds", expanded=False):
     t_travel_cost  = st.slider("Min Travel Cost (₹)",   0, 50, 10,  help="Flag fares below this amount")
     t_waiting_time = st.slider("Min Waiting Time (min)", 1.0, 15.0, 5.0, 0.5, help="Flag waiting times below this")
     t_auto_stand_scope = st.selectbox(
-        "Require 'Thane Auto Stand' in OD",
+        "Station name in Origin / Destination",
         options=["Auto Stand Surveys Only", "All Records", "Off"],
         index=0,
-        help="Flags entries where neither Origin nor Destination mentions 'Thane Auto Stand'.",
+        help="Flags entries where neither Origin nor Destination contains the survey station name (case-insensitive).",
     )
 
 df_annotated = compute_wtp_quality_flags(
@@ -1090,7 +1092,7 @@ with tabs[2]:
         f"Active thresholds — Travel Time < **{t_travel_time}m** | "
         f"Travel Cost < **₹{t_travel_cost}** (Walk=₹0) | "
         f"Waiting Time < **{t_waiting_time}m** (Walk=0m) | "
-        f"Origin = Destination | Missing OD | Require 'Thane Auto Stand' in OD ({t_auto_stand_scope})"
+        f"Origin = Destination | Missing OD | Station name must appear in Origin or Destination ({t_auto_stand_scope})"
     )
 
     flagged_df = filtered_df[filtered_df["is_flagged"]].copy()
@@ -1100,7 +1102,7 @@ with tabs[2]:
     wt_flags_cnt       = int(filtered_df["quality_flags"].str.contains(r"Waiting Time <|Non-Zero Waiting", case=False, na=False, regex=True).sum())
     od_eq_cnt          = int(filtered_df["quality_flags"].str.contains("equals Destination", case=False, na=False).sum())
     missing_od_cnt     = int(filtered_df["quality_flags"].str.contains("Missing Origin", case=False, na=False).sum())
-    auto_stand_cnt     = int(filtered_df["quality_flags"].str.contains("Missing 'Thane Auto Stand'", case=False, na=False).sum())
+    auto_stand_cnt     = int(filtered_df["quality_flags"].str.contains("in Origin or Destination", case=False, na=False).sum())
     income_mismatch_cnt = int(filtered_df["quality_flags"].str.contains("Income Mismatch", case=False, na=False).sum())
 
     q1, q2, q3, q4, q5, q6, q7 = st.columns(7)
@@ -1169,15 +1171,15 @@ with tabs[2]:
             st.dataframe(od_display, use_container_width=True, hide_index=True)
             st.markdown("---")
 
-        # ── 3. Missing 'Thane Auto Stand' in Origin / Destination Table ─────
-        auto_stand_mask = filtered_df["quality_flags"].str.contains("Missing 'Thane Auto Stand'", case=False, na=False)
+        # ── 3. Missing Station Name in Origin / Destination Table ────────────
+        auto_stand_mask = filtered_df["quality_flags"].str.contains("in Origin or Destination", case=False, na=False)
         auto_stand_rows = filtered_df[auto_stand_mask].copy()
 
         if not auto_stand_rows.empty:
-            st.markdown(f"### 🛺 Missing Valid Thane Terminal in Origin / Destination ({len(auto_stand_rows)} entries)")
+            st.markdown(f"### 🛺 Station Name Missing in Origin / Destination ({len(auto_stand_rows)} entries)")
             st.caption(
-                "Entries flagged because neither Origin nor Destination contains any of: "
-                "**Thane Auto Stand**, **Thane Bus Stand**, or **Thane Railway Station**."
+                "Entries flagged because neither Origin nor Destination contains the **Survey Station name** "
+                "(case-insensitive match)."
             )
             display_cols_auto = [
                 "Date_str", "start_time", "end_time", "surveyor", "station_location",
@@ -1225,7 +1227,7 @@ with tabs[2]:
                 Cost_Flags       =("quality_flags",  lambda x: sum("Travel Cost <"  in str(f) for f in x)),
                 Wait_Flags       =("quality_flags",  lambda x: sum("Waiting Time <" in str(f) for f in x)),
                 OD_Eq_Flags      =("quality_flags",  lambda x: sum("equals Destination" in str(f) or "Missing Origin" in str(f) for f in x)),
-                Auto_Stand_Flags =("quality_flags",  lambda x: sum("Missing 'Thane Auto Stand'" in str(f) for f in x)),
+                Auto_Stand_Flags =("quality_flags",  lambda x: sum("in Origin or Destination" in str(f) for f in x)),
                 Income_Flags     =("quality_flags",  lambda x: sum("Income Mismatch" in str(f) for f in x)),
             )
             .reset_index()
