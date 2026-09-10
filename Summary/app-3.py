@@ -104,11 +104,13 @@ _check_password()
 # ─────────────────────────────────────────────────────────────────────────────
 IST = timezone(timedelta(hours=5, minutes=30))
 DEFAULT_SURVEY_ID = "DC513MH06"
-DEFAULT_FILE = os.path.join(
-    os.path.dirname(__file__),
-    "Input",
-    "DC513MH06 _WTP Survey_WTP Survey_2026-09-08 03_09_43__survey_results.xlsx",
+_INPUT_DIR = os.path.join(os.path.dirname(__file__), "Input")
+_input_files = sorted(
+    [f for f in os.listdir(_INPUT_DIR) if f.endswith(".xlsx")] if os.path.isdir(_INPUT_DIR) else [],
+    key=lambda f: os.path.getmtime(os.path.join(_INPUT_DIR, f)),
+    reverse=True,  # newest first
 )
+DEFAULT_FILE = os.path.join(_INPUT_DIR, _input_files[0]) if _input_files else ""
 
 PRIMARY_COLOR = "#4f46e5"    # Indigo
 SECONDARY_COLOR = "#06b6d4"  # Cyan
