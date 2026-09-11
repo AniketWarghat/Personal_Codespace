@@ -277,7 +277,11 @@ def process_dataframe(raw_bytes: bytes) -> pd.DataFrame:
     df["age"] = df["1.Age (years)"].astype(str).str.strip() if "1.Age (years)" in df.columns else "-"
     df["gender"] = df["2.Gender"].astype(str).str.strip().str.capitalize() if "2.Gender" in df.columns else "-"
     df["occupation"] = df["3.Occupation"].astype(str).str.strip() if "3.Occupation" in df.columns else "-"
-    df["group_size"] = pd.to_numeric(df.get("4.Group Size"), errors="coerce").fillna(1).astype(int)
+    def _col(col_name):
+        """Safely get a DataFrame column as a Series, or NaN Series if missing."""
+        return df[col_name] if col_name in df.columns else pd.Series(pd.NA, index=df.index, dtype=object)
+
+    df["group_size"] = pd.to_numeric(_col("4.Group Size"), errors="coerce").fillna(1).astype(int)
     df["income"] = df["5.Individual Monthly Income (Rs.)"].astype(str).str.strip() if "5.Individual Monthly Income (Rs.)" in df.columns else "-"
 
     # 6. Trip Attributes
@@ -286,10 +290,10 @@ def process_dataframe(raw_bytes: bytes) -> pd.DataFrame:
     df["od_pair"] = df["origin"] + " ➔ " + df["destination"]
 
     df["mode_of_travel"] = df["8.Mode of Travel"].astype(str).str.strip() if "8.Mode of Travel" in df.columns else "Other"
-    df["travel_time_min"] = pd.to_numeric(df.get("9.Travel Time (Min)"), errors="coerce")
-    df["travel_cost_rs"] = pd.to_numeric(df.get("10.Travel Cost (Rs.)"), errors="coerce")
-    df["waiting_time_min"] = pd.to_numeric(df.get("11.Waiting Time (Min)"), errors="coerce")
-    df["travel_distance_km"] = pd.to_numeric(df.get("12.Travel Distance (km)"), errors="coerce")
+    df["travel_time_min"]    = pd.to_numeric(_col("9.Travel Time (Min)"),      errors="coerce")
+    df["travel_cost_rs"]     = pd.to_numeric(_col("10.Travel Cost (Rs.)"),     errors="coerce")
+    df["waiting_time_min"]   = pd.to_numeric(_col("11.Waiting Time (Min)"),    errors="coerce")
+    df["travel_distance_km"] = pd.to_numeric(_col("12.Travel Distance (km)"),  errors="coerce")
     df["trip_frequency"] = df["13.Trip Frequency"].astype(str).str.strip() if "13.Trip Frequency" in df.columns else "-"
     df["trip_purpose"] = df["14.Trip Purpose"].astype(str).str.strip() if "14.Trip Purpose" in df.columns else "-"
 
@@ -311,17 +315,20 @@ def process_dataframe(raw_bytes: bytes) -> pd.DataFrame:
                 return f
         return "Not Specified"
 
-    df["acceptable_prt_fare"] = df.apply(derive_acceptable_fare, axis=1)
+    df["acceptable_prt_fare"] = df.apply(derive_acceptable_fare, axis=1, result_type="reduce")
 
     # Derived speed (km/h)
     def calc_speed(row):
-        dist = row.get("travel_distance_km")
-        time_m = row.get("travel_time_min")
-        if pd.notna(dist) and pd.notna(time_m) and time_m > 0:
-            return round(dist / (time_m / 60.0), 1)
-        return None
+        try:
+            dist   = row["travel_distance_km"]
+            time_m = row["travel_time_min"]
+            if pd.notna(dist) and pd.notna(time_m) and float(time_m) > 0:
+                return round(float(dist) / (float(time_m) / 60.0), 1)
+        except Exception:
+            pass
+        return pd.NA
 
-    df["speed_kmh"] = df.apply(calc_speed, axis=1)
+    df["speed_kmh"] = df.apply(calc_speed, axis=1, result_type="reduce")
 
     return df
 
