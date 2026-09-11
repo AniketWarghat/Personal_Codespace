@@ -106,7 +106,12 @@ IST = timezone(timedelta(hours=5, minutes=30))
 DEFAULT_SURVEY_ID = "DC513MH06"
 _INPUT_DIR = os.path.join(os.path.dirname(__file__), "Input")
 _input_files = sorted(
-    [f for f in os.listdir(_INPUT_DIR) if f.endswith(".xlsx")] if os.path.isdir(_INPUT_DIR) else [],
+    [
+        f for f in (os.listdir(_INPUT_DIR) if os.path.isdir(_INPUT_DIR) else [])
+        if f.endswith(".xlsx")
+        and DEFAULT_SURVEY_ID in f
+        and os.path.getsize(os.path.join(_INPUT_DIR, f)) > 20000
+    ],
     key=lambda f: os.path.getmtime(os.path.join(_INPUT_DIR, f)),
     reverse=True,  # newest first
 )
