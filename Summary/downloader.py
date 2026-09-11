@@ -78,44 +78,48 @@ def _ensure_cloud_session(config: TrafficLenzConfig) -> None:
     import re as _re
 
     try:
-        import streamlit as st
+        try:
+            import streamlit as st
+        except ImportError:
+            st = None
 
-        # ── Preferred: two simple plain strings ──────────────────────────────
-        sessionid = str(st.secrets.get("TL_SESSIONID", "")).strip()
-        csrftoken = str(st.secrets.get("TL_CSRFTOKEN", "")).strip()
+        if st is not None:
+            # ── Preferred: two simple plain strings ──────────────────────────────
+            sessionid = str(st.secrets.get("TL_SESSIONID", "")).strip()
+            csrftoken = str(st.secrets.get("TL_CSRFTOKEN", "")).strip()
 
-        if sessionid and csrftoken:
-            # Always write fresh — don't trust whatever is on disk
-            Path(config.save_dir).mkdir(parents=True, exist_ok=True)
-            minimal_session = {
-                "cookies": [
-                    {
-                        "name": "sessionid",
-                        "value": sessionid,
-                        "domain": "www.trafficlenz.com",
-                        "path": "/",
-                        "expires": -1,
-                        "httpOnly": True,
-                        "secure": False,
-                        "sameSite": "Lax",
-                    },
-                    {
-                        "name": "csrftoken",
-                        "value": csrftoken,
-                        "domain": "www.trafficlenz.com",
-                        "path": "/",
-                        "expires": -1,
-                        "httpOnly": False,
-                        "secure": False,
-                        "sameSite": "Lax",
-                    },
-                ],
-                "origins": [],
-            }
-            with open(config.session_path, "w", encoding="utf-8") as f:
-                json.dump(minimal_session, f, indent=2)
-            logger.info("Session written from TL_SESSIONID + TL_CSRFTOKEN secrets.")
-            return
+            if sessionid and csrftoken:
+                # Always write fresh — don't trust whatever is on disk
+                Path(config.save_dir).mkdir(parents=True, exist_ok=True)
+                minimal_session = {
+                    "cookies": [
+                        {
+                            "name": "sessionid",
+                            "value": sessionid,
+                            "domain": "www.trafficlenz.com",
+                            "path": "/",
+                            "expires": -1,
+                            "httpOnly": True,
+                            "secure": False,
+                            "sameSite": "Lax",
+                        },
+                        {
+                            "name": "csrftoken",
+                            "value": csrftoken,
+                            "domain": "www.trafficlenz.com",
+                            "path": "/",
+                            "expires": -1,
+                            "httpOnly": False,
+                            "secure": False,
+                            "sameSite": "Lax",
+                        },
+                    ],
+                    "origins": [],
+                }
+                with open(config.session_path, "w", encoding="utf-8") as f:
+                    json.dump(minimal_session, f, indent=2)
+                logger.info("Session written from TL_SESSIONID + TL_CSRFTOKEN secrets.")
+                return
 
         # ── If session file already exists and is valid JSON, use it ─────────
         if config.session_path.exists():
@@ -128,53 +132,55 @@ def _ensure_cloud_session(config: TrafficLenzConfig) -> None:
                 logger.warning("Existing session file is corrupt — deleting and regenerating.")
                 config.session_path.unlink(missing_ok=True)
 
-        # ── Fallback: TL_SESSION_JSON large blob ─────────────────────────────
-        session_val = st.secrets.get("TL_SESSION_JSON")
-        if not session_val:
-            return  # Nothing to do
+        if st is not None:
+            # ── Fallback: TL_SESSION_JSON large blob ─────────────────────────────
+            session_val = st.secrets.get("TL_SESSION_JSON")
+            if not session_val:
+                return  # Nothing to do
 
-        Path(config.save_dir).mkdir(parents=True, exist_ok=True)
-        if isinstance(session_val, (dict, list)):
-            with open(config.session_path, "w", encoding="utf-8") as f:
-                json.dump(session_val, f, indent=2)
-            logger.info("Session written from TL_SESSION_JSON (dict/list).")
-            return
-
-        raw = str(session_val).strip()
-        # Validate; if TOML-corrupted, extract sessionid+csrftoken via regex
-        try:
-            json.loads(raw)
-            with open(config.session_path, "w", encoding="utf-8") as f:
-                f.write(raw)
-            logger.info("Session written from TL_SESSION_JSON (valid JSON string).")
-        except json.JSONDecodeError:
-            logger.warning("TL_SESSION_JSON is TOML-corrupted — extracting cookies via regex.")
-            sid_m  = _re.search(r'"name"\s*:\s*"sessionid"\s*,\s*"value"\s*:\s*"([^"]+)"', raw)
-            csrf_m = _re.search(r'"name"\s*:\s*"csrftoken"\s*,\s*"value"\s*:\s*"([^"]+)"', raw)
-            if sid_m and csrf_m:
-                minimal = {
-                    "cookies": [
-                        {"name": "sessionid", "value": sid_m.group(1),
-                         "domain": "www.trafficlenz.com", "path": "/",
-                         "expires": -1, "httpOnly": True, "secure": False, "sameSite": "Lax"},
-                        {"name": "csrftoken", "value": csrf_m.group(1),
-                         "domain": "www.trafficlenz.com", "path": "/",
-                         "expires": -1, "httpOnly": False, "secure": False, "sameSite": "Lax"},
-                    ],
-                    "origins": [],
-                }
+            Path(config.save_dir).mkdir(parents=True, exist_ok=True)
+            if isinstance(session_val, (dict, list)):
                 with open(config.session_path, "w", encoding="utf-8") as f:
-                    json.dump(minimal, f, indent=2)
-                logger.info("Session recovered from corrupt TL_SESSION_JSON via regex.")
-            else:
-                raise ValueError(
-                    "TL_SESSION_JSON is corrupt and sessionid/csrftoken could not be "
-                    "extracted. Please add TL_SESSIONID and TL_CSRFTOKEN to Streamlit Secrets."
-                )
+                    json.dump(session_val, f, indent=2)
+                logger.info("Session written from TL_SESSION_JSON (dict/list).")
+                return
+
+            raw = str(session_val).strip()
+            # Validate; if TOML-corrupted, extract sessionid+csrftoken via regex
+            try:
+                json.loads(raw)
+                with open(config.session_path, "w", encoding="utf-8") as f:
+                    f.write(raw)
+                logger.info("Session written from TL_SESSION_JSON (valid JSON string).")
+            except json.JSONDecodeError:
+                logger.warning("TL_SESSION_JSON is TOML-corrupted — extracting cookies via regex.")
+                sid_m  = _re.search(r'"name"\s*:\s*"sessionid"\s*,\s*"value"\s*:\s*"([^"]+)"', raw)
+                csrf_m = _re.search(r'"name"\s*:\s*"csrftoken"\s*,\s*"value"\s*:\s*"([^"]+)"', raw)
+                if sid_m and csrf_m:
+                    minimal = {
+                        "cookies": [
+                            {"name": "sessionid", "value": sid_m.group(1),
+                             "domain": "www.trafficlenz.com", "path": "/",
+                             "expires": -1, "httpOnly": True, "secure": False, "sameSite": "Lax"},
+                            {"name": "csrftoken", "value": csrf_m.group(1),
+                             "domain": "www.trafficlenz.com", "path": "/",
+                             "expires": -1, "httpOnly": False, "secure": False, "sameSite": "Lax"},
+                        ],
+                        "origins": [],
+                    }
+                    with open(config.session_path, "w", encoding="utf-8") as f:
+                        json.dump(minimal, f, indent=2)
+                    logger.info("Session recovered from corrupt TL_SESSION_JSON via regex.")
+                else:
+                    raise ValueError(
+                        "TL_SESSION_JSON is corrupt and sessionid/csrftoken could not be "
+                        "extracted. Please add TL_SESSIONID and TL_CSRFTOKEN to Streamlit Secrets."
+                    )
 
     except Exception as e:
         logger.warning("Could not restore cloud session: %s", e)
-        raise
+        if not config.session_path.exists():
+            raise
 
 
 def _ensure_chromium_installed() -> None:
@@ -300,19 +306,8 @@ def perform_interactive_login(config: TrafficLenzConfig, wait_timeout_sec: int =
 
 
 # ---------------------------------------------------------------------------
-# AUTOMATED DOWNLOAD (USES SAVED SESSION & TARGET SURVEY CODE)
+# AUTOMATED DOWNLOAD (DIRECT HTTP API)
 # ---------------------------------------------------------------------------
-def download_excel_bytes(config: TrafficLenzConfig) -> Tuple[bytes, str]:
-    """
-    Download latest Excel file into memory (bytes) using the saved session.
-    Automatically navigates: myDashboardView -> search survey_id -> map marker -> export report.
-
-    Returns:
-        (file_bytes, timestamp_str)
-    """
-    Path(config.save_dir).mkdir(parents=True, exist_ok=True)
-    _ensure_cloud_session(config)
-
 def _direct_http_download(config: TrafficLenzConfig) -> Tuple[bytes, str]:
     """
     Downloads survey questionnaire report directly via HTTP session requests.
@@ -320,7 +315,7 @@ def _direct_http_download(config: TrafficLenzConfig) -> Tuple[bytes, str]:
     """
     if not config.session_path.exists():
         raise FileNotFoundError(
-            "Session file not found. Please paste TL_SESSION_JSON into Streamlit Secrets."
+            "Session file not found. Please paste TL_SESSION_JSON or TL_SESSIONID into Streamlit Secrets."
         )
 
     with open(config.session_path, "r", encoding="utf-8") as sf:
@@ -342,7 +337,7 @@ def _direct_http_download(config: TrafficLenzConfig) -> Tuple[bytes, str]:
 
     # Check for session expiration
     if "/portal_login_btn" in dash_html or "portal_login" in dash_html:
-        raise PermissionError("TrafficLenz session expired. Please re-authenticate and update TL_SESSION_JSON.")
+        raise PermissionError("TrafficLenz session expired. Please re-authenticate and update TL_SESSION_JSON / TL_SESSIONID.")
 
     # 2. Parse all candidate jobs matching survey_code
     rows = re.findall(r"<tr>(.*?)</tr>", dash_html, re.DOTALL)
@@ -357,7 +352,7 @@ def _direct_http_download(config: TrafficLenzConfig) -> Tuple[bytes, str]:
             if survey_code.lower() in row_text.lower():
                 score = 0
                 if any(w in row_text.lower() for w in ["wtp", "questionnaire"]):
-                    score += 10
+                    score += 20
                 if "survey" in row_text.lower():
                     score += 5
                 candidate_jobs.append((score, jid, row_text))
@@ -367,6 +362,8 @@ def _direct_http_download(config: TrafficLenzConfig) -> Tuple[bytes, str]:
         raise ValueError(f"Job code '{survey_code}' not found in TrafficLenz dashboard.")
 
     logger.info("Direct HTTP: Found candidate jobs for %s: %s", survey_code, candidate_jobs)
+
+    best_download = None  # (byte_length, dl_bytes, timestamp)
 
     # 3. For each candidate job, inspect sites and tasks
     for score, jid, row_text in candidate_jobs:
@@ -394,8 +391,21 @@ def _direct_http_download(config: TrafficLenzConfig) -> Tuple[bytes, str]:
             continue
 
         sites = sites_data.get("data", {}).get("sites", [])
+
+        # Priority: Prioritize "WTP Survey" over empty sites like "RNI"
+        def site_score(s):
+            sn = s.get("site_name", "").lower()
+            sc = 0
+            if "wtp" in sn: sc += 20
+            if "survey" in sn: sc += 10
+            if "rni" in sn: sc -= 10
+            return sc
+
+        sites.sort(key=site_score, reverse=True)
+
         for site in sites:
             site_id = site.get("site_id")
+            site_name = site.get("site_name", "")
             # Check tasks for this site
             task_post = urllib.parse.urlencode({
                 "job_id": jid,
@@ -421,11 +431,25 @@ def _direct_http_download(config: TrafficLenzConfig) -> Tuple[bytes, str]:
                 continue
 
             tasks = task_data.get("data", {}).get("task_types", [])
+
+            # Prioritize task 86FE4915 or Questionnaire
+            def task_score(t):
+                tid = t.get("task_id", "")
+                ttype = t.get("task_type", "").lower()
+                sc = 0
+                if tid == "86FE4915": sc += 30
+                if "questionnaire" in ttype: sc += 15
+                if "survey" in ttype: sc += 5
+                return sc
+
+            tasks.sort(key=task_score, reverse=True)
+
             for task in tasks:
                 t_type = task.get("task_type", "")
                 t_id = task.get("task_id", "")
                 if "questionnaire" in t_type.lower() or "survey" in t_type.lower():
-                    logger.info("Found Questionnaire Report: site=%s, task=%s. Downloading...", site_id, t_id)
+                    logger.info("Found Questionnaire Report: site=%s (%s), task=%s (%s). Downloading...",
+                                site_id, site_name, t_id, t_type)
                     dl_post = urllib.parse.urlencode({
                         "site_id": site_id,
                         "task_id": t_id,
@@ -442,13 +466,30 @@ def _direct_http_download(config: TrafficLenzConfig) -> Tuple[bytes, str]:
                             "X-Requested-With": "XMLHttpRequest",
                         }
                     )
-                    dl_bytes = urllib.request.urlopen(dl_req, timeout=90).read()
+                    try:
+                        dl_bytes = urllib.request.urlopen(dl_req, timeout=90).read()
+                    except Exception as de:
+                        logger.warning("Failed to download report for task %s: %s", t_id, de)
+                        continue
+
                     if dl_bytes.startswith(b"PK") and len(dl_bytes) > 2000:
                         from datetime import timezone, timedelta
                         ist = timezone(timedelta(hours=5, minutes=30))
                         timestamp = datetime.now(ist).strftime("%d-%m-%Y %I:%M:%S %p")
-                        logger.info("Direct HTTP download successful (%d bytes).", len(dl_bytes))
-                        return dl_bytes, timestamp
+                        logger.info("Direct HTTP download candidate: site=%s (%s), task=%s -> %d bytes",
+                                    site_id, site_name, t_id, len(dl_bytes))
+
+                        # If file contains substantial survey data (>50KB), return immediately!
+                        if len(dl_bytes) > 50000:
+                            logger.info("Direct HTTP download successful with substantial data (%d bytes).", len(dl_bytes))
+                            return dl_bytes, timestamp
+
+                        if best_download is None or len(dl_bytes) > best_download[0]:
+                            best_download = (len(dl_bytes), dl_bytes, timestamp)
+
+    if best_download and best_download[0] > 2000:
+        logger.info("Returning best download found (%d bytes).", best_download[0])
+        return best_download[1], best_download[2]
 
     raise RuntimeError(f"Could not find an active Questionnaire export task for {survey_code}.")
 

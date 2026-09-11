@@ -1,8 +1,8 @@
 {
-  "recorded_at": "2026-09-08 13:33:22",
+  "recorded_at": "2026-09-10 17:27:09",
   "start_url": "https://www.trafficlenz.com/",
   "final_url": "https://www.trafficlenz.com/Home/viewgraph",
-  "download_url": "blob:https://www.trafficlenz.com/171d204e-261b-4a50-9bd5-cfef396f43dc",
+  "download_url": "blob:https://www.trafficlenz.com/20468863-0458-4568-b846-a31740968a12",
   "clicks": [
     {
       "tag": "a",
@@ -30,33 +30,6 @@
       "text": "",
       "href": "",
       "selector": ".recaptcha-checkbox-border"
-    },
-    {
-      "tag": "img",
-      "id": "",
-      "cls": "rc-image-tile-44",
-      "name": "",
-      "text": "",
-      "href": "",
-      "selector": ".rc-image-tile-44"
-    },
-    {
-      "tag": "img",
-      "id": "",
-      "cls": "rc-image-tile-44",
-      "name": "",
-      "text": "",
-      "href": "",
-      "selector": ".rc-image-tile-44"
-    },
-    {
-      "tag": "button",
-      "id": "recaptcha-verify-button",
-      "cls": "rc-button-default goog-inline-block",
-      "name": "",
-      "text": "VERIFY",
-      "href": "",
-      "selector": "#recaptcha-verify-button"
     },
     {
       "tag": "button",
@@ -154,7 +127,7 @@
       "cls": "",
       "name": "",
       "text": "",
-      "href": "blob:https://www.trafficlenz.com/171d204e-261b-4a50-9bd5-cfef396f43dc",
+      "href": "blob:https://www.trafficlenz.com/20468863-0458-4568-b846-a31740968a12",
       "selector": ""
     }
   ]
