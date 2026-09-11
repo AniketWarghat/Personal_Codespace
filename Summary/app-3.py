@@ -249,18 +249,21 @@ def process_dataframe(raw_bytes: bytes) -> pd.DataFrame:
 
     # Compute entry duration in seconds & minutes
     def calc_duration_sec(row):
-        st_t = row.get("start_time_obj")
-        et_t = row.get("end_time_obj")
-        if st_t and et_t:
-            td = datetime.combine(datetime.today(), et_t) - datetime.combine(datetime.today(), st_t)
-            sec = td.total_seconds()
-            if sec < 0:
-                sec += 86400  # Cross midnight
-            return int(sec)
-        return None
+        st_t = row["start_time_obj"]
+        et_t = row["end_time_obj"]
+        if st_t is not None and et_t is not None and not (isinstance(st_t, float) and pd.isna(st_t)) and not (isinstance(et_t, float) and pd.isna(et_t)):
+            try:
+                td = datetime.combine(datetime.today(), et_t) - datetime.combine(datetime.today(), st_t)
+                sec = td.total_seconds()
+                if sec < 0:
+                    sec += 86400  # Cross midnight
+                return int(sec)
+            except Exception:
+                pass
+        return pd.NA
 
-    df["entry_duration_sec"] = df.apply(calc_duration_sec, axis=1)
-    df["survey_duration_mins"] = df["entry_duration_sec"].apply(lambda s: round(s / 60.0, 2) if s is not None else None)
+    df["entry_duration_sec"] = df.apply(calc_duration_sec, axis=1, result_type="reduce")
+    df["survey_duration_mins"] = df["entry_duration_sec"].apply(lambda s: round(float(s) / 60.0, 2) if pd.notna(s) else None)
     df["start_hour"] = df["start_time_obj"].apply(lambda t: t.hour if t else None)
 
     # 3. Surveyor & Contact Info
