@@ -464,8 +464,8 @@ def compute_wtp_quality_flags(
 
         return "; ".join(flags) if flags else ""
 
-    df["quality_flags"] = df.apply(evaluate_row, axis=1)
-    df["is_flagged"]    = df["quality_flags"] != ""
+    df["quality_flags"] = df.apply(evaluate_row, axis=1, result_type="reduce").fillna("").astype(str)
+    df["is_flagged"]    = df["quality_flags"].str.strip() != ""
     return df
 
 
@@ -1107,13 +1107,16 @@ with tabs[2]:
 
     flagged_df = filtered_df[filtered_df["is_flagged"]].copy()
 
-    tt_flags_cnt       = int(filtered_df["quality_flags"].str.contains("Travel Time <", case=False, na=False).sum())
-    tc_flags_cnt       = int(filtered_df["quality_flags"].str.contains(r"Travel Cost <|Non-Zero Cost", case=False, na=False, regex=True).sum())
-    wt_flags_cnt       = int(filtered_df["quality_flags"].str.contains(r"Waiting Time <|Non-Zero Waiting", case=False, na=False, regex=True).sum())
-    od_eq_cnt          = int(filtered_df["quality_flags"].str.contains("equals Destination", case=False, na=False).sum())
-    missing_od_cnt     = int(filtered_df["quality_flags"].str.contains("Missing Origin", case=False, na=False).sum())
-    auto_stand_cnt     = int(filtered_df["quality_flags"].str.contains("in Origin or Destination", case=False, na=False).sum())
-    income_mismatch_cnt = int(filtered_df["quality_flags"].str.contains("Income Mismatch", case=False, na=False).sum())
+    # Ensure quality_flags is always a string Series before .str accessor
+    _qf = filtered_df["quality_flags"].fillna("").astype(str)
+
+    tt_flags_cnt        = int(_qf.str.contains("Travel Time <",                  case=False, na=False).sum())
+    tc_flags_cnt        = int(_qf.str.contains(r"Travel Cost <|Non-Zero Cost",   case=False, na=False, regex=True).sum())
+    wt_flags_cnt        = int(_qf.str.contains(r"Waiting Time <|Non-Zero Wait",  case=False, na=False, regex=True).sum())
+    od_eq_cnt           = int(_qf.str.contains("equals Destination",             case=False, na=False).sum())
+    missing_od_cnt      = int(_qf.str.contains("Missing Origin",                 case=False, na=False).sum())
+    auto_stand_cnt      = int(_qf.str.contains("in Origin or Destination",       case=False, na=False).sum())
+    income_mismatch_cnt = int(_qf.str.contains("Income Mismatch",                case=False, na=False).sum())
 
     q1, q2, q3, q4, q5, q6, q7 = st.columns(7)
     q1.metric("Total Flagged",            len(flagged_df),
@@ -1132,7 +1135,7 @@ with tabs[2]:
         st.success("🎉 No flagged or suspicious survey entries found at current thresholds!")
     else:
         # ── 1. Flagged by Travel Time, Cost or Waiting Time Table ─────────────
-        tcw_mask = filtered_df["quality_flags"].str.contains(
+        tcw_mask = _qf.str.contains(
             r"Travel Time <|Travel Cost <|Waiting Time <|Walk Mode with", case=False, na=False, regex=True
         )
         tcw_rows = filtered_df[tcw_mask].copy()
@@ -1163,7 +1166,7 @@ with tabs[2]:
             st.markdown("---")
 
         # ── 2. OD Pair Errors (Origin = Destination or Missing) Table ─────────
-        od_err_mask = filtered_df["quality_flags"].str.contains("equals Destination|Missing Origin", case=False, na=False)
+        od_err_mask = _qf.str.contains("equals Destination|Missing Origin", case=False, na=False)
         od_err_rows = filtered_df[od_err_mask].copy()
 
         if not od_err_rows.empty:
@@ -1182,7 +1185,7 @@ with tabs[2]:
             st.markdown("---")
 
         # ── 3. Missing Station Name in Origin / Destination Table ────────────
-        auto_stand_mask = filtered_df["quality_flags"].str.contains("in Origin or Destination", case=False, na=False)
+        auto_stand_mask = _qf.str.contains("in Origin or Destination", case=False, na=False)
         auto_stand_rows = filtered_df[auto_stand_mask].copy()
 
         if not auto_stand_rows.empty:
@@ -1204,7 +1207,7 @@ with tabs[2]:
             st.markdown("---")
 
         # ── 4. Income Bracket Mismatch Table ─────────────────────────────────
-        income_mask = filtered_df["quality_flags"].str.contains("Income Mismatch", case=False, na=False)
+        income_mask = _qf.str.contains("Income Mismatch", case=False, na=False)
         income_rows = filtered_df[income_mask].copy()
 
         if not income_rows.empty:
