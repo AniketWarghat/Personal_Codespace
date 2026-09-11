@@ -566,13 +566,19 @@ if _downloader_available and _tl_config:
     else:
         st.sidebar.info("ℹ️ Using TrafficLenz credentials from Secrets")
 
+
     if st.sidebar.button("🔄 Sync Live Data", use_container_width=True, type="primary", help="Download latest survey data from TrafficLenz"):
         with st.spinner(f"Downloading latest WTP data for '{DEFAULT_SURVEY_ID}'..."):
             try:
                 raw_b, ts = download_excel_bytes(_tl_config)
                 st.session_state["wtp_raw_bytes"] = raw_b
                 st.session_state["wtp_sync_ts"] = ts
-                st.sidebar.success(f"Synced at {ts}")
+                # Save to disk so it persists across Streamlit container restarts
+                os.makedirs(_INPUT_DIR, exist_ok=True)
+                _synced_path = os.path.join(_INPUT_DIR, f"synced_{ts.replace(':', '-').replace(' ', '_')}.xlsx")
+                with open(_synced_path, "wb") as _sf:
+                    _sf.write(raw_b)
+                st.sidebar.success(f"✅ Synced at {ts}")
                 process_dataframe.clear()
                 st.rerun()
             except Exception as e:
@@ -589,7 +595,7 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("📂 Or Upload Excel File")
 uploaded_file = st.sidebar.file_uploader("Upload WTP Survey Excel (.xlsx)", type=["xlsx"])
 
-# Resolve file priority: Uploaded > Live Synced
+# Resolve file priority: Uploaded > Live Synced > Latest file in Input/
 file_bytes: bytes = b""
 file_label: str = ""
 
@@ -600,6 +606,12 @@ if uploaded_file is not None:
 elif "wtp_raw_bytes" in st.session_state and st.session_state["wtp_raw_bytes"]:
     file_bytes = st.session_state["wtp_raw_bytes"]
     file_label = f"TrafficLenz Live ({st.session_state.get('wtp_sync_ts', 'Recent')})"
+elif DEFAULT_FILE and os.path.exists(DEFAULT_FILE):
+    # Auto-load the latest Excel from Input/ (newest file by mtime)
+    with open(DEFAULT_FILE, "rb") as _df_fh:
+        file_bytes = _df_fh.read()
+    file_label = os.path.basename(DEFAULT_FILE)
+    st.sidebar.info(f"📂 Auto-loaded: **{file_label}**")
 else:
     # ── FIRST RUN / EMPTY STATE (No data loaded automatically) ──
     st.title("🚆 Thane WTP (Personal Rapid Transit) Survey Dashboard")
